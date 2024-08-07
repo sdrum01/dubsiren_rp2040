@@ -4,17 +4,30 @@
 
 #define PIN 5         // Definiere den Pin, an dem der Rechteckton ausgegeben wird
 
-#define LFO_FREQ 10    // Frequenz des LFO in Hertz (0.5 Hz = 2 Sekunden pro Zyklus)
-#define LFO_DEPTH 100   // Tiefe des LFO 
 
-// Konstanten für den minimalen und maximalen Wert der Frequenz
-const float minVal = 20.0;
-const float maxVal = 8000.0;
+const int LOGLEVEL = 1;
 
 const int freqPotPin = A0;
+const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
+const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
+
+const int waveFormPin_0 = 3;
+const int waveFormPin_1 = 4;
+
 
 const int controlPin = 2;  // Steuerpin für die Tonaktivierung
+
+// Konstanten für den minimalen und maximalen Wert der Frequenz
+const float minVal = 50.0;
+const float maxVal = 8000.0;
+
+float lfoFrequency = 100;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
+float lfoAmplitude = 0;
 bool startButton = 1;
+
+enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
+LfoWaveform lfoWaveform = TRIANGLE;  // Gewünschte LFO-Wellenform: SQUARE, TRIANGLE, SAWTOOTH
+
 
 
 // Messwerte runden
@@ -22,8 +35,13 @@ const int numReadings = 50;
 int pitchReadings[numReadings];
 int pitchReadIndex = 0;
 int pitchTotal = 0;
-//int pitch_average = 0;
 int valPitch = 0;
+
+void debug(String s){
+  if (LOGLEVEL > 0){
+    Serial.println(s);
+  }
+}
 
 void setup() {
   // Initialisiere die GPIO-Pin-Funktion für PWM
@@ -38,17 +56,22 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(controlPin, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
-
-  Serial.begin(115200);
-  while (!Serial) {   }
-
-  Serial.println("Setup abgeschlossen.");
+  pinMode(waveFormPin_0, INPUT_PULLUP);
+  pinMode(waveFormPin_1, INPUT_PULLUP);
+  
+  
   digitalWrite(LED_BUILTIN, HIGH);
 
   for (int i = 0; i < numReadings; i++) {
     pitchReadings[i] = 0;
   }
+  if(LOGLEVEL > 0){
+    Serial.begin(115200);
+    debug("Setup abgeschlossen.");
+  }
 }
+
+
 
 // Funktion zur Umwandlung einer linearen Eingangsgröße in eine logarithmische Ausgabe
 float linearToLogarithmic(float percentage) {
@@ -81,6 +104,8 @@ float calculateLFO(float baseFreq, float lfoFreq, float lfoDepth) {
 
   // Berechne die aktuelle LFO-Phase
   float lfoPhase = time * lfoFreq * 2 * PI;
+  
+  // debug("LFO-Phase: "+String(lfoPhase));
 
   // Berechne die modulierte Frequenz
   return baseFreq + lfoDepth * sin(lfoPhase);
@@ -113,17 +138,32 @@ void loop() {
   // valPitch = analogRead(freqPotPin);
   pitchAverage();
 
-  
+  int lfoFreqValue = analogRead(lfoFreqPotPin);
+  int lfoAmpValue = analogRead(lfoAmpPotPin);
 
-  //Serial.println(valPitch);
-  
+  lfoFrequency = map(lfoFreqValue, 4, 1023, 1, 50);   // LFO-Frequenzbereich von 1 Hz bis 30 Hz
+  lfoAmplitude = map(lfoAmpValue, 4, 1023, 0, 200);   // LFO-Amplitudenbereich von 0 bis 100
+
+  if (( digitalRead(waveFormPin_0) == 0 )&&( digitalRead(waveFormPin_1) == 1 )){
+    lfoWaveform = TRIANGLE;
+  } 
+  if(( digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 1 )){
+    lfoWaveform = SQUARE;
+  }
+  if ((digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 0)){
+    lfoWaveform = SAWTOOTH;
+  }
+
+  debug("Waveform:"+String(lfoWaveform));
+
+  // debug("LFO1: "+ String(lfoFreqValue)+" LFO1 Amp: "+ String(lfoAmpValue));
   // int baseFrequency = map(valPitch, 0, 1023, 50, 4000); // direkte Ausgabe der Frequenz
   
   // Serial.println(mapFloat(valPitch, 0, 1023, 0, 100));
   int baseFrequency = linearToLogarithmic( mapFloat(valPitch, 0, 1023, 0, 100) );
   
   // Berechne die modulierte Frequenz
-  float modulatedFreq = calculateLFO(baseFrequency, LFO_FREQ, LFO_DEPTH);
+  float modulatedFreq = calculateLFO(baseFrequency, lfoFrequency, lfoAmpValue);
 
   // Berechne den PWM-Wert für die modulierte Frequenz
 
