@@ -25,13 +25,21 @@ float lfoFrequency = 100;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float lfoAmplitude = 0;
 bool startButton = 1;
 
+bool oldval;
+
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
 LfoWaveform lfoWaveform = TRIANGLE;  // Gewünschte LFO-Wellenform: SQUARE, TRIANGLE, SAWTOOTH
 
+// Variablen für den LFO
+
+volatile float lfoValue = 0;
+volatile int lfoDirection = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
+volatile unsigned long previousMillis = 0;
+// float modulatedFrequency = baseFrequency;
 
 
 // Messwerte runden
-const int numReadings = 50;
+const int numReadings = 10;
 int pitchReadings[numReadings];
 int pitchReadIndex = 0;
 int pitchTotal = 0;
@@ -98,6 +106,53 @@ float linearToLogarithmic(float percentage) {
   return outputValue;
 }
 
+// LFO-Variante aus dem Arduino-Nano-Script
+float calculateLFOWave(float lfoFrequency, float lfoAmplitude) {
+  unsigned long currentMillis = millis();
+  float lfoPeriod = 5000 / lfoFrequency;  // LFO-Periode in Millisekunden
+  static float triggeredLfoValue = 0;
+
+  
+  if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
+    previousMillis += lfoPeriod / 100.0;
+    switch (lfoWaveform) {
+      case SQUARE:
+        
+        
+        lfoValue += 0.05 * lfoDirection;  // Schrittweite für den LFO (kann angepasst werden)
+        if (lfoValue >= 1.0 || lfoValue <= 0.0) {
+          lfoDirection = -lfoDirection;  // Richtung umkehren
+        }
+        triggeredLfoValue = (lfoValue >= 0.5) ? 1 : 0;
+       
+        break;
+      case TRIANGLE:
+        lfoValue += 0.01 * lfoDirection;  // Schrittweite für den LFO (kann angepasst werden)
+        if (lfoValue >= 1.0 || lfoValue <= 0.0) {
+          lfoDirection = -lfoDirection;  // Richtung umkehren
+        }
+        break;
+      case SAWTOOTH:
+        lfoValue += 0.025;  // Schrittweite für den LFO (kann angepasst werden)
+        if (lfoValue >= 1.0) {
+          lfoValue = 0;  // Zurücksetzen
+        }
+        break;
+    }
+  }
+
+  float lfovalue_final = 0;
+  // Skalierung des LFO-Wertes
+  if(lfoWaveform != SQUARE){
+    lfovalue_final = 1.0 + (lfoValue * (lfoAmplitude/100));
+  }else{
+    lfovalue_final = 1.0 + (triggeredLfoValue * (lfoAmplitude/100));
+  }
+  debug(String(lfovalue_final));
+  return lfovalue_final;
+}
+
+// LFO-Variante Sinuns
 float calculateLFO(float baseFreq, float lfoFreq, float lfoDepth) {
   // Berechne die aktuelle Zeit in Sekunden
   float time = millis() / 1000.0;
@@ -135,6 +190,21 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
 
 void loop() {
   startButton = !digitalRead(controlPin);
+
+  //taster_val = digitalRead(inputPin);           // Wert auslesen
+  if (startButton != oldval){
+    // normale Bearbeitung: losgelassen / gedrückt etc...
+    oldval = startButton;
+   delay(10);              // 10 millisekunden warten, eine Änderung danach wird wieder eine echte sein.
+  }
+
+  // Reset LFO values if the start button is false
+  if (!startButton) {
+    lfoValue = 0;
+    lfoDirection = 1;
+    previousMillis = millis();
+  }
+  
   // valPitch = analogRead(freqPotPin);
   pitchAverage();
 
@@ -154,23 +224,28 @@ void loop() {
     lfoWaveform = SAWTOOTH;
   }
 
-  debug("Waveform:"+String(lfoWaveform));
+  // debug("Waveform:"+String(lfoWaveform));
 
   // debug("LFO1: "+ String(lfoFreqValue)+" LFO1 Amp: "+ String(lfoAmpValue));
   // int baseFrequency = map(valPitch, 0, 1023, 50, 4000); // direkte Ausgabe der Frequenz
   
   // Serial.println(mapFloat(valPitch, 0, 1023, 0, 100));
-  int baseFrequency = linearToLogarithmic( mapFloat(valPitch, 0, 1023, 0, 100) );
+  //int baseFrequency = linearToLogarithmic( mapFloat(valPitch, 0, 1023, 0, 100) );
+  int baseFrequency =  mapFloat(valPitch, 0, 1023, 20, 8000);
   
   // Berechne die modulierte Frequenz
-  float modulatedFreq = calculateLFO(baseFrequency, lfoFrequency, lfoAmpValue);
+  // float modulatedFreq = (calculateLFO(baseFrequency, lfoFrequency, lfoAmpValue));
+  
+  // Modulierte Frequenz berechnen
+   float newModulatedFrequency = baseFrequency * calculateLFOWave(lfoFrequency, lfoAmplitude);
 
+  
   // Berechne den PWM-Wert für die modulierte Frequenz
 
 
   
   // float pwm_val = setFrequency(baseFrequency); // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
-  float pwm_val = setFrequency(modulatedFreq);
+  float pwm_val = setFrequency(newModulatedFrequency);
   // Setze die PWM-Periode
   // Serial.println(pwm_val);
 
