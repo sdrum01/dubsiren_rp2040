@@ -18,8 +18,11 @@ const int waveFormPin_1 = 4;
 const int controlPin = 2;  // Steuerpin für die Tonaktivierung
 
 // Konstanten für den minimalen und maximalen Wert der Frequenz
-const float minVal = 50.0;
-const float maxVal = 8000.0;
+const float minVal = 20;
+const float maxVal = 8000;
+
+const float minValMod = 5;
+const float maxValMod = 14000;
 
 unsigned int lfoFrequency = 1;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float lfoAmplitude = 0;
@@ -44,6 +47,12 @@ int pitchReadings[numReadings];
 int pitchReadIndex = 0;
 int pitchTotal = 0;
 int valPitch = 0;
+
+void debugStr(String s){
+  if (LOGLEVEL > 0){
+    Serial.println(s);
+  }
+}
 
 void debugFloat(float f){
   if (LOGLEVEL > 0){
@@ -89,10 +98,10 @@ void setup() {
 
 
 // Funktion zur Umwandlung einer linearen Eingangsgröße in eine logarithmische Ausgabe
-float linearToLogarithmic(float percentage) {
+float linearToLogarithmic(float freq) {
   
   
-  
+  float percentage = (freq - minVal )/ ((maxVal - minVal)/100);
   // Überprüfen, ob die Eingabewerte sinnvoll sind
   if (percentage < 0.0) percentage = 0.0;
   if (percentage > 100.0) percentage = 100.0;
@@ -110,7 +119,7 @@ float linearToLogarithmic(float percentage) {
   
   // Rückkonvertieren in den linearen Raum
   float outputValue = pow(10, logValue);
-  
+  // debugStr(String(freq)+';'+String(percentage)+';'+String(outputValue));
   return outputValue;
 }
 
@@ -181,6 +190,9 @@ float calculateLFO(float baseFreq, float lfoFreq, float lfoDepth) {
 }
 
 float setFrequency(float freq){
+  //debugFloat(freq);
+  if(freq < minValMod){freq = minValMod;}
+  if(freq > maxValMod){freq = maxValMod;}
   return(2070 / (freq/1000));
 }
 
@@ -226,21 +238,20 @@ void loop() {
   int lfoFreqValue = analogRead(lfoFreqPotPin);
   int lfoAmpValue = analogRead(lfoAmpPotPin);
 
-  //lfoFrequency = mapFloat(lfoFreqValue, 5, 1023, 1, 50);   // LFO-Frequenzbereich von 1 Hz bis 30 Hz
+  lfoFrequency = map(lfoFreqValue, 5, 1023, 1, 50);   // LFO-Frequenzbereich von 1 Hz bis 50 Hz
+  //lfoFrequency = map(lfoFreqValue, 5, 1023, 1, 100);
 
-  lfoFrequency = map(lfoFreqValue, 5, 1023, 1, 50);   // LFO-Frequenzbereich von 1 Hz bis 30 Hz
-
-
-  lfoAmplitude = mapFloat(lfoAmpValue, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von 0 bis 100
+  lfoAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von 0 bis 100
+  //debugStr(String(lfoFrequency)+';'+String(linearToLogarithmic(lfoFrequency)));
 
   if (( digitalRead(waveFormPin_0) == 0 )&&( digitalRead(waveFormPin_1) == 1 )){
     lfoWaveform = TRIANGLE;
   } 
   if(( digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 1 )){
-    lfoWaveform = SQUARE;
+    lfoWaveform = SAWTOOTH;
   }
   if ((digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 0)){
-    lfoWaveform = SAWTOOTH;
+    lfoWaveform = SQUARE;
   }
 
   // debug("Waveform:"+String(lfoWaveform));
@@ -250,7 +261,8 @@ void loop() {
   
   // Serial.println(mapFloat(valPitch, 0, 1023, 0, 100));
   //int baseFrequency =  mapFloat(valPitch, 0, 1023, 0, 100) ;
-  int baseFrequency =  mapFloat(valPitch, 0, 1023, 20, 8000);
+  int baseFrequency =  mapFloat(valPitch, 4, 1022, minVal, maxVal);
+  //baseFrequency = linearToLogarithmic(baseFrequency);
   
   // Berechne die modulierte Frequenz
   // float modulatedFreq = (calculateLFO(baseFrequency, lfoFrequency, lfoAmpValue));
@@ -264,7 +276,7 @@ void loop() {
 
   
   // float pwm_val = setFrequency(baseFrequency); // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
-  float pwm_val = setFrequency(newModulatedFrequency);
+  float pwm_val = setFrequency(linearToLogarithmic(newModulatedFrequency));
   
   
   // Setze die PWM-Periode
