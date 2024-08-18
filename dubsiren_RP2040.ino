@@ -1,9 +1,7 @@
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 #include "math.h"
-
-#define PIN 5         // Definiere den Pin, an dem der Rechteckton ausgegeben wird
-
+        
 
 const int LOGLEVEL = 1;
 
@@ -11,24 +9,34 @@ const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
 const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
 
-const int waveFormPin_0 = 3;
-const int waveFormPin_1 = 4;
+const int waveFormPin_0 = 3; // WaveForm Kippschalter PIN 1
+const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
+const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
 
-
+const int wave_output = 5; // Pin, an dem der Rechteckton ausgegeben wird
 const int controlPin = 2;  // Steuerpin für die Tonaktivierung
 
-// Konstanten für den minimalen und maximalen Wert der Frequenz
-const float minVal = 20;
-const float maxVal = 8000;
+const int firePin1 = 18;  // Steuerpin für die Tonaktivierung
+const int firePin2 = 19;  // Steuerpin für die Tonaktivierung
+const int firePin3 = 20;  // Steuerpin für die Tonaktivierung
+const int firePin4 = 21;  // Steuerpin für die Tonaktivierung
 
+
+
+
+
+// Konstanten für den minimalen und maximalen Wert der blanken Frequenz ohne Modulation
+const float minVal = 20;
+const float maxVal = 4000;
+// minimaler und maximaler Wert der Frequenz nach der LFO-Modulation
 const float minValMod = 5;
 const float maxValMod = 14000;
 
-unsigned int lfoFrequency = 1;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
+float lfoFrequency = 1;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float lfoAmplitude = 0;
 bool startButton = 1;
 
-bool oldval;
+bool startButton_oldval;
 
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
 LfoWaveform lfoWaveform = TRIANGLE;  // Gewünschte LFO-Wellenform: SQUARE, TRIANGLE, SAWTOOTH
@@ -48,29 +56,12 @@ int pitchReadIndex = 0;
 int pitchTotal = 0;
 int valPitch = 0;
 
-void debugStr(String s){
-  if (LOGLEVEL > 0){
-    Serial.println(s);
-  }
-}
-
-void debugFloat(float f){
-  if (LOGLEVEL > 0){
-
-    
-    char buffer[10];  // Puffer für die Zeichenkette, stelle sicher, dass er groß genug ist
-    dtostrf(f, 6, 4, buffer);  // 6 Zeichen insgesamt, 4 Dezimalstellen
-    String myString = String(buffer);
-
-
-    Serial.println(myString);
-  }
-}
+///////////////////////////////////
 
 void setup() {
-  // Initialisiere die GPIO-Pin-Funktion für PWM
-  gpio_set_function(PIN, GPIO_FUNC_PWM);
-  uint slice_num = pwm_gpio_to_slice_num(PIN);
+  // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
+  gpio_set_function(wave_output, GPIO_FUNC_PWM);
+  uint slice_num = pwm_gpio_to_slice_num(wave_output);
 
   // Setze den PWM-Teilungsverhältnis
   pwm_set_clkdiv(slice_num, 64.f);
@@ -78,14 +69,20 @@ void setup() {
   // Starte den PWM-Output
   pwm_set_enabled(slice_num, true); 
 
+  // Normale IO's
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(controlPin, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  
+  pinMode(firePin1, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  pinMode(firePin2, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  pinMode(firePin3, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  pinMode(firePin4, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  
   pinMode(waveFormPin_0, INPUT_PULLUP);
   pinMode(waveFormPin_1, INPUT_PULLUP);
+  pinMode(waveFormFunctionPin, INPUT_PULLUP);
   
-  
-  digitalWrite(LED_BUILTIN, HIGH);
-
+  // Initialisieren des Arrays für die Mittelwertbildung des Pitch
   for (int i = 0; i < numReadings; i++) {
     pitchReadings[i] = 0;
   }
@@ -93,15 +90,33 @@ void setup() {
     Serial.begin(115200);
     //debug("Setup abgeschlossen.");
   }
+  // Lampe an, nur zur Kontrolle, dass die SW läuft
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
+///////////// allgem. Funktionen
 
+void debugStr(String s){
+  if (LOGLEVEL > 0){
+    Serial.println(s);
+  }
+}
+
+// Serielle Ausgabe eines Float oder int, mit mehr Zeichen als die Standardmethode
+void debugFloat(float f){
+  if (LOGLEVEL > 0){
+    char buffer[10];  // Puffer für die Zeichenkette, stelle sicher, dass er groß genug ist
+    dtostrf(f, 6, 4, buffer);  // 6 Zeichen insgesamt, 4 Dezimalstellen
+    String myString = String(buffer);
+    Serial.println(myString);
+  }
+}
 
 // Funktion zur Umwandlung einer linearen Eingangsgröße in eine logarithmische Ausgabe
 float linearToLogarithmic(float freq) {
   
   
-  float percentage = (freq - minVal )/ ((maxVal - minVal)/100);
+  float percentage = (freq - minVal ) / ((maxVal - minVal)/100);
   // Überprüfen, ob die Eingabewerte sinnvoll sind
   if (percentage < 0.0) percentage = 0.0;
   if (percentage > 100.0) percentage = 100.0;
@@ -123,60 +138,67 @@ float linearToLogarithmic(float freq) {
   return outputValue;
 }
 
-// LFO-Variante aus dem Arduino-Nano-Script
-float calculateLFOWave(float lfoFrequency, float lfoAmplitude) {
+// LFO-Variante mit Dreieck, abgeleiteten Rechteck und Sägezahn
+float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunction) {
 
   float schrittweite = lfoFrequency / 1000;
-  //float schrittweite = 0.01;
   unsigned long currentMillis = millis();
 
-  //float lfoPeriod = 5000 / lfoFrequency;  // LFO-Periode in Millisekunden
-  float lfoPeriod = 5000 / 50;  // LFO-Periode in Millisekunden
+  const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
   //debugFloat(schrittweite);
   static float triggeredLfoValue = 0;
+  static float lfovalue_final = 0;
 
-  
   if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
     previousMillis += lfoPeriod / 100.0;
     switch (lfoWaveform) {
       case SQUARE:
-        
-        
-        lfoValue += schrittweite * lfoDirection;  // Schrittweite für den LFO (kann angepasst werden)
+        lfoValue += schrittweite * lfoDirection;  // 
         if (lfoValue >= 1.0 || lfoValue <= 0.0) {
           lfoDirection = -lfoDirection;  // Richtung umkehren
         }
         triggeredLfoValue = (lfoValue >= 0.5) ? 1 : 0;
-       
+        lfovalue_final = triggeredLfoValue;
         break;
+        
       case TRIANGLE:
-        lfoValue += schrittweite * lfoDirection;  // Schrittweite für den LFO (kann angepasst werden)
+        lfoValue += schrittweite * lfoDirection;  // 
         if (lfoValue >= 1.0 || lfoValue <= 0.0) {
           lfoDirection = -lfoDirection;  // Richtung umkehren
         }
+        //lfovalue_final = lfoValue;
+        lfovalue_final = lfoValue;
         break;
+        
       case SAWTOOTH:
-        lfoValue += schrittweite / 2;  // Schrittweite für den LFO (kann angepasst werden)
-        if (lfoValue >= 1.0) {
-          lfoValue = 0;  // Zurücksetzen
+        if(waveFormFunction == 0){
+          lfoValue += schrittweite / 2;  // Schrittweite für den LFO (kann angepasst werden)
+          if (lfoValue >= 1.0) {
+            lfoValue = 0;  // Zurücksetzen
+          }
+        }else{
+          lfoValue -= schrittweite / 2;  // Schrittweite für den LFO (kann angepasst werden)
+          if (lfoValue <= 0) {
+            lfoValue = 1;  // Zurücksetzen
+          }
         }
+        lfovalue_final = lfoValue;
         break;
     }
   }
 
-  float lfovalue_final = 0;
-  // Skalierung des LFO-Wertes
-  if(lfoWaveform != SQUARE){
-    lfovalue_final = 1.0 + (lfoValue * (lfoAmplitude/100));
-  }else{
-    lfovalue_final = 1.0 + (triggeredLfoValue * (lfoAmplitude/100));
-  }
-  //debug(String(lfovalue_final));
-  return lfovalue_final;
+  // lfovalue_final liegt zwischen 0..1: verschieben der Mitte auf den NullPunkt
+  // Skalierung des LFO-Wertes mit der LFO-Amplitude 
+  // verschieben des Nullpunktes auf 1: damit kann der Wert als Multiplikator genutzt werden
+
+  float lfovalue_final1 = (lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0;
+  
+  // debugFloat(lfovalue_final1);
+  return(lfovalue_final1);
 }
 
-// LFO-Variante Sinuns
-float calculateLFO(float baseFreq, float lfoFreq, float lfoDepth) {
+// LFO-Variante Sinus 
+float calculateLFOSin(float baseFreq, float lfoFreq, float lfoDepth) {
   // Berechne die aktuelle Zeit in Sekunden
   float time = millis() / 1000.0;
 
@@ -213,14 +235,31 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+void soundCreate(float freqVal){
+  // float pwm_val = setFrequency(baseFrequency); // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
+  float pwm_val = setFrequency(linearToLogarithmic(freqVal));
+  
+  
+  // Setze die PWM-Periode
+  uint slice_num = pwm_gpio_to_slice_num(wave_output);
+
+  pwm_set_wrap(slice_num, pwm_val);
+  if (!startButton) {
+    
+    pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), 0);
+  }else{
+    pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), pwm_val / 2);
+  }
+  //return(true);
+}
 
 void loop() {
-  startButton = !digitalRead(controlPin);
+  startButton = !digitalRead(firePin1);
 
   //taster_val = digitalRead(inputPin);           // Wert auslesen
-  if (startButton != oldval){
+  if (startButton != startButton_oldval){
     // normale Bearbeitung: losgelassen / gedrückt etc...
-    oldval = startButton;
+    startButton_oldval = startButton;
    delay(10);              // 10 millisekunden warten, eine Änderung danach wird wieder eine echte sein.
   }
 
@@ -231,17 +270,19 @@ void loop() {
     previousMillis = millis();
   }
   
-  //valPitch = analogRead(freqPotPin);
+  // lesen des Pitch-Wertes vom Poti incl. Mittelwert
   pitchAverage();
   //debug(String(valPitch));
 
   int lfoFreqValue = analogRead(lfoFreqPotPin);
   int lfoAmpValue = analogRead(lfoAmpPotPin);
 
-  lfoFrequency = map(lfoFreqValue, 5, 1023, 1, 50);   // LFO-Frequenzbereich von 1 Hz bis 50 Hz
+  lfoFrequency = mapFloat(lfoFreqValue, 5, 1023, 0.5, 50);   // LFO-Frequenzbereich von 1 Hz bis 50 Hz
   //lfoFrequency = map(lfoFreqValue, 5, 1023, 1, 100);
 
-  lfoAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von 0 bis 100
+  //lfoAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von -100 bis 100, 0 in der Mitte
+  lfoAmplitude = map(lfoAmpValue, 5, 1023, 0, 100);   // LFO-Amplitudenbereich von 0 bis 100, 0 am Anschlag
+  
   //debugStr(String(lfoFrequency)+';'+String(linearToLogarithmic(lfoFrequency)));
 
   if (( digitalRead(waveFormPin_0) == 0 )&&( digitalRead(waveFormPin_1) == 1 )){
@@ -254,13 +295,16 @@ void loop() {
     lfoWaveform = SQUARE;
   }
 
-  // debug("Waveform:"+String(lfoWaveform));
+  bool waveFormFunction = digitalRead(waveFormFunctionPin);
+
+  // debugStr("Waveform:"+String(lfoWaveform)+" Funktion:"+String(waveFormFunction));
 
   // debug("LFO1: "+ String(lfoFreqValue)+" LFO1 Amp: "+ String(lfoAmpValue));
   // int baseFrequency = map(valPitch, 0, 1023, 50, 4000); // direkte Ausgabe der Frequenz
   
   // Serial.println(mapFloat(valPitch, 0, 1023, 0, 100));
   //int baseFrequency =  mapFloat(valPitch, 0, 1023, 0, 100) ;
+  
   int baseFrequency =  mapFloat(valPitch, 4, 1022, minVal, maxVal);
   //baseFrequency = linearToLogarithmic(baseFrequency);
   
@@ -268,9 +312,11 @@ void loop() {
   // float modulatedFreq = (calculateLFO(baseFrequency, lfoFrequency, lfoAmpValue));
   
   // Modulierte Frequenz berechnen
-   float newModulatedFrequency = baseFrequency * calculateLFOWave(lfoFrequency, lfoAmplitude);
-  //debugFloat(newModulatedFrequency);
-  
+   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, waveFormFunction);
+   float newModulatedFrequency = baseFrequency * lfoValueActual;
+   //debugFloat(lfoValue);
+
+  /*
   // Berechne den PWM-Wert für die modulierte Frequenz
 
 
@@ -283,16 +329,16 @@ void loop() {
   // Serial.println(pwm_val);
 
   
-  uint slice_num = pwm_gpio_to_slice_num(PIN);
+  uint slice_num = pwm_gpio_to_slice_num(wave_output);
 
-  
   pwm_set_wrap(slice_num, pwm_val);
   if (!startButton) {
     
-    pwm_set_chan_level(slice_num, pwm_gpio_to_channel(PIN), 0);
+    pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), 0);
   }else{
-    pwm_set_chan_level(slice_num, pwm_gpio_to_channel(PIN), pwm_val / 2);
+    pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), pwm_val / 2);
   }
-
-  //delay(1);  // Kurze Pause, um den Ton glatter zu machen
+  */
+  // Create Tone
+  soundCreate(newModulatedFrequency);
 }
