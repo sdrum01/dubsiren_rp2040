@@ -1,9 +1,13 @@
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 #include "math.h"
+#include "LittleFS.h"
+//#include "ArduinoJson.h"
+
         
 
 const int LOGLEVEL = 1;
+const String CONFIGFILE = "/config.txt";
 
 const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
@@ -21,32 +25,34 @@ const int firePin2 = 19;  // Steuerpin für die Tonaktivierung
 const int firePin3 = 20;  // Steuerpin für die Tonaktivierung
 const int firePin4 = 21;  // Steuerpin für die Tonaktivierung
 
+const int LED1 = 16;
+const int LED2 = 17;
+
 
 
 
 
 // Konstanten für den minimalen und maximalen Wert der blanken Frequenz ohne Modulation
-const float minVal = 20;
-const float maxVal = 4000;
+const float minVal = 35;
+const float maxVal = 8000;
 // minimaler und maximaler Wert der Frequenz nach der LFO-Modulation
-const float minValMod = 5;
-const float maxValMod = 14000;
+const float minValMod = 35;
+const float maxValMod = 10000;
 
+// Parameter:
 float lfoFrequency = 1;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float lfoAmplitude = 0;
-bool startButton = 1;
-
-bool startButton_oldval;
 
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
 LfoWaveform lfoWaveform = TRIANGLE;  // Gewünschte LFO-Wellenform: SQUARE, TRIANGLE, SAWTOOTH
 
-// Variablen für den LFO
+// globale Variablen für den LFO
 
 volatile float lfoValue = 0;
 volatile int lfoDirection = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
 volatile unsigned long previousMillis = 0;
 // float modulatedFrequency = baseFrequency;
+// volatile float pwm_val_bak = 0;
 
 
 // Messwerte runden
@@ -56,9 +62,21 @@ int pitchReadIndex = 0;
 int pitchTotal = 0;
 int valPitch = 0;
 
+// Wenn Ton abgefeuert werden soll:
+bool runSound = 1;
+bool runSound_oldval;
+
+// LED1
+uint slice_num_led = 0;
+int pwm_led = 1000;
+
 ///////////////////////////////////
 
+
+
 void setup() {
+  
+  
   // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
   gpio_set_function(wave_output, GPIO_FUNC_PWM);
   uint slice_num = pwm_gpio_to_slice_num(wave_output);
@@ -69,8 +87,32 @@ void setup() {
   // Starte den PWM-Output
   pwm_set_enabled(slice_num, true); 
 
+  // LED
+  pinMode(LED1, OUTPUT);
+  
+  gpio_set_function(LED1, GPIO_FUNC_PWM);
+  slice_num_led = pwm_gpio_to_slice_num(LED1);
+  //pwm_set_clkdiv(slice_num_led, 64.f);
+  pwm_set_enabled(slice_num_led, true);
+  pwm_set_wrap(slice_num_led, pwm_led);
+  pwm_set_chan_level(slice_num_led, pwm_gpio_to_channel(LED1), pwm_led);
+  
+
+  // PWM-Kanal konfigurieren
+  /*
+  pinMode(LED1, OUTPUT);
+  int slice_num_led = pwm_gpio_to_slice_num(LED1);
+  pwm_set_wrap(slice_num_led, 255); // Setzt den PWM-Wert für 8-Bit-Auflösung
+  
+  pwm_set_clkdiv(slice_num_led, 125.0); // Setzt die Frequenz auf 5 kHz
+  pwm_set_chan_level(slice_num_led, pwm_gpio_to_channel(LED1), 128); // 50% Duty Cycle
+  pwm_set_enabled(slice_num_led, true); // PWM aktivieren
+*/
+
   // Normale IO's
   pinMode(LED_BUILTIN, OUTPUT);
+  //pinMode(LED1, OUTPUT);
+  
   pinMode(controlPin, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
   
   pinMode(firePin1, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
@@ -86,12 +128,22 @@ void setup() {
   for (int i = 0; i < numReadings; i++) {
     pitchReadings[i] = 0;
   }
+
+
   if(LOGLEVEL > 0){
-    Serial.begin(115200);
-    //debug("Setup abgeschlossen.");
+    Serial.begin(57600);
+    debugStr("Setup abgeschlossen.");
   }
+
+  if (!LittleFS.begin()) {
+      debugStr("LittleFS mount failed");
+      return;
+   }
+
+
   // Lampe an, nur zur Kontrolle, dass die SW läuft
   digitalWrite(LED_BUILTIN, HIGH);
+  
 }
 
 ///////////// allgem. Funktionen
@@ -111,6 +163,32 @@ void debugFloat(float f){
     Serial.println(myString);
   }
 }
+
+void readSettings(){
+    // Daten lesen
+    File file = LittleFS.open(CONFIGFILE, "r");
+    if (file) {
+        int value = file.read();  // Lese die gespeicherte Zahl
+        Serial.print("Gelesener Wert: ");
+        Serial.println(value);
+        file.close();
+    } else {
+        Serial.println("Fehler beim Lesen der Datei");
+    }
+}
+
+void writeSettings(){
+  // Daten schreiben
+    File file = LittleFS.open(CONFIGFILE, "w");
+    if (file) {
+        file.write(42);  // Schreibe eine Zahl
+        file.close();
+        Serial.println("Daten geschrieben");
+    } else {
+        Serial.println("Fehler beim Öffnen der Datei");
+    }
+}
+
 
 // Funktion zur Umwandlung einer linearen Eingangsgröße in eine logarithmische Ausgabe
 float linearToLogarithmic(float freq) {
@@ -134,7 +212,7 @@ float linearToLogarithmic(float freq) {
   
   // Rückkonvertieren in den linearen Raum
   float outputValue = pow(10, logValue);
-  // debugStr(String(freq)+';'+String(percentage)+';'+String(outputValue));
+  //debugStr(String(freq)+';'+String(percentage)+';'+String(outputValue));
   return outputValue;
 }
 
@@ -146,19 +224,26 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
 
   const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
   //debugFloat(schrittweite);
-  static float triggeredLfoValue = 0;
+  //static float triggeredLfoValue = 0;
   static float lfovalue_final = 0;
 
   if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
     previousMillis += lfoPeriod / 100.0;
     switch (lfoWaveform) {
       case SQUARE:
+        // Dreieck ausrechnen 
         lfoValue += schrittweite * lfoDirection;  // 
         if (lfoValue >= 1.0 || lfoValue <= 0.0) {
           lfoDirection = -lfoDirection;  // Richtung umkehren
         }
-        triggeredLfoValue = (lfoValue >= 0.5) ? 1 : 0;
-        lfovalue_final = triggeredLfoValue;
+        if(waveFormFunction == 0){
+          lfovalue_final = (lfoValue >= 0.5) ? 1 : 0;
+          
+          //lfovalue_final = triggeredLfoValue;
+        }else{
+          lfovalue_final = (lfoValue <= 0.5) ? 0.5 : -100; // -100 = muting
+        }
+        
         break;
         
       case TRIANGLE:
@@ -191,9 +276,22 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
   // Skalierung des LFO-Wertes mit der LFO-Amplitude 
   // verschieben des Nullpunktes auf 1: damit kann der Wert als Multiplikator genutzt werden
 
-  float lfovalue_final1 = (lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0;
+  float lfovalue_final1 = 0;
+  if(lfovalue_final == -100){
+    lfovalue_final1 = lfovalue_final; // negativ für Sonderfunktionen wie Muting (-99)
+    pwm_set_chan_level(slice_num_led, pwm_gpio_to_channel(LED1), 1000);
+  }else{
+    lfovalue_final1 = (lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0;
+    // LED in der Helligkeit der Auslenkung
+    pwm_set_chan_level(slice_num_led, pwm_gpio_to_channel(LED1), lfovalue_final * 1000);
+  }
+
   
-  // debugFloat(lfovalue_final1);
+/*
+  if(lfovalue_final < 0.5 ){digitalWrite(LED1, HIGH);}else{digitalWrite(LED1, LOW);}
+  
+   debugFloat(lfovalue_final1);
+   */
   return(lfovalue_final1);
 }
 
@@ -236,43 +334,49 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
 }
 
 void soundCreate(float freqVal){
-  // float pwm_val = setFrequency(baseFrequency); // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
+ // float pwm_val = setFrequency(baseFrequency); // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
   float pwm_val = setFrequency(linearToLogarithmic(freqVal));
-  
-  
+  // float pwm_val = setFrequency(freqVal);
+
   // Setze die PWM-Periode
   uint slice_num = pwm_gpio_to_slice_num(wave_output);
 
   pwm_set_wrap(slice_num, pwm_val);
-  if (!startButton) {
-    
+  
+  if ((!runSound)||(freqVal == -100)) {
     pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), 0);
   }else{
     pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), pwm_val / 2);
   }
-  //return(true);
+  
+ 
 }
 
 void loop() {
-  startButton = !digitalRead(firePin1);
+  runSound = !digitalRead(firePin1);
+
+  if (runSound != runSound_oldval){
+    if (runSound) {
+        lfoValue = 0;
+        lfoDirection = 1;
+        previousMillis = millis();
+    } 
+   //delay(1);  // x millisekunden warten, eine Änderung danach wird wieder eine echte sein.
+  }
+  runSound_oldval = runSound;
 
   //taster_val = digitalRead(inputPin);           // Wert auslesen
-  if (startButton != startButton_oldval){
-    // normale Bearbeitung: losgelassen / gedrückt etc...
-    startButton_oldval = startButton;
-   delay(10);              // 10 millisekunden warten, eine Änderung danach wird wieder eine echte sein.
+  
+
+  if(!digitalRead(controlPin)){
+    readSettings();
   }
 
-  // Reset LFO values if the start button is false
-  if (!startButton) {
-    lfoValue = 0;
-    lfoDirection = 1;
-    previousMillis = millis();
-  }
+  
   
   // lesen des Pitch-Wertes vom Poti incl. Mittelwert
   pitchAverage();
-  //debug(String(valPitch));
+  
 
   int lfoFreqValue = analogRead(lfoFreqPotPin);
   int lfoAmpValue = analogRead(lfoAmpPotPin);
@@ -297,7 +401,7 @@ void loop() {
 
   bool waveFormFunction = digitalRead(waveFormFunctionPin);
 
-  // debugStr("Waveform:"+String(lfoWaveform)+" Funktion:"+String(waveFormFunction));
+   //debugStr("Waveform:"+String(lfoWaveform)+" Funktion:"+String(waveFormFunction));
 
   // debug("LFO1: "+ String(lfoFreqValue)+" LFO1 Amp: "+ String(lfoAmpValue));
   // int baseFrequency = map(valPitch, 0, 1023, 50, 4000); // direkte Ausgabe der Frequenz
@@ -306,15 +410,23 @@ void loop() {
   //int baseFrequency =  mapFloat(valPitch, 0, 1023, 0, 100) ;
   
   int baseFrequency =  mapFloat(valPitch, 4, 1022, minVal, maxVal);
-  //baseFrequency = linearToLogarithmic(baseFrequency);
+  // debugFloat(baseFrequency);
+  // baseFrequency = linearToLogarithmic(baseFrequency);
   
   // Berechne die modulierte Frequenz
   // float modulatedFreq = (calculateLFO(baseFrequency, lfoFrequency, lfoAmpValue));
   
   // Modulierte Frequenz berechnen
    float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, waveFormFunction);
-   float newModulatedFrequency = baseFrequency * lfoValueActual;
-   //debugFloat(lfoValue);
+   float newModulatedFrequency = 0;
+   if(lfoValueActual == -100){
+    newModulatedFrequency = lfoValueActual;
+   }else{
+    newModulatedFrequency = baseFrequency * lfoValueActual;
+   }
+   // Reset LFO values if the start button is false
+  
+   
 
   /*
   // Berechne den PWM-Wert für die modulierte Frequenz
@@ -332,7 +444,7 @@ void loop() {
   uint slice_num = pwm_gpio_to_slice_num(wave_output);
 
   pwm_set_wrap(slice_num, pwm_val);
-  if (!startButton) {
+  if (!runSound) {
     
     pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), 0);
   }else{
