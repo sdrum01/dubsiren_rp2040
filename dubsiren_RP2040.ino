@@ -25,8 +25,8 @@ const int firePin2 = 19;  // Steuerpin für die Tonaktivierung
 const int firePin3 = 20;  // Steuerpin für die Tonaktivierung
 const int firePin4 = 21;  // Steuerpin für die Tonaktivierung
 
-const int LED1 = 16;
-const int LED2 = 17;
+const int LED1_red = 16;
+const int LED1_green = 17;
 
 
 
@@ -36,7 +36,7 @@ const int LED2 = 17;
 const float minVal = 35;
 const float maxVal = 8000;
 // minimaler und maximaler Wert der Frequenz nach der LFO-Modulation
-const float minValMod = 35;
+const float minValMod = 20;
 const float maxValMod = 10000;
 
 // Parameter:
@@ -49,10 +49,9 @@ LfoWaveform lfoWaveform = TRIANGLE;  // Gewünschte LFO-Wellenform: SQUARE, TRIA
 // globale Variablen für den LFO
 
 volatile float lfoValue = 0;
+volatile float lfoValueSlow = 0;
 volatile int lfoDirection = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
 volatile unsigned long previousMillis = 0;
-// float modulatedFrequency = baseFrequency;
-// volatile float pwm_val_bak = 0;
 
 
 // Messwerte runden
@@ -67,7 +66,8 @@ bool runSound = 1;
 bool runSound_oldval;
 
 // LED1
-uint slice_num_led = 0;
+uint slice_num_led_red = 0;
+uint slice_num_led_green = 0;
 int pwm_led = 1000;
 
 ///////////////////////////////////
@@ -88,30 +88,30 @@ void setup() {
   pwm_set_enabled(slice_num, true); 
 
   // LED
-  pinMode(LED1, OUTPUT);
+  pinMode(LED1_red, OUTPUT);
+  pinMode(LED1_green, OUTPUT);
   
-  gpio_set_function(LED1, GPIO_FUNC_PWM);
-  slice_num_led = pwm_gpio_to_slice_num(LED1);
+  gpio_set_function(LED1_green, GPIO_FUNC_PWM);
+  gpio_set_function(LED1_red, GPIO_FUNC_PWM);
+  
+  slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
+  slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
+   
   //pwm_set_clkdiv(slice_num_led, 64.f);
-  pwm_set_enabled(slice_num_led, true);
-  pwm_set_wrap(slice_num_led, pwm_led);
-  pwm_set_chan_level(slice_num_led, pwm_gpio_to_channel(LED1), pwm_led);
+  pwm_set_enabled(slice_num_led_green, true);
+  pwm_set_enabled(slice_num_led_red, true);
+  
+  pwm_set_wrap(slice_num_led_green, pwm_led);
+  pwm_set_wrap(slice_num_led_red, pwm_led);
+  
+  pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+  pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
   
 
-  // PWM-Kanal konfigurieren
-  /*
-  pinMode(LED1, OUTPUT);
-  int slice_num_led = pwm_gpio_to_slice_num(LED1);
-  pwm_set_wrap(slice_num_led, 255); // Setzt den PWM-Wert für 8-Bit-Auflösung
-  
-  pwm_set_clkdiv(slice_num_led, 125.0); // Setzt die Frequenz auf 5 kHz
-  pwm_set_chan_level(slice_num_led, pwm_gpio_to_channel(LED1), 128); // 50% Duty Cycle
-  pwm_set_enabled(slice_num_led, true); // PWM aktivieren
-*/
 
   // Normale IO's
   pinMode(LED_BUILTIN, OUTPUT);
-  //pinMode(LED1, OUTPUT);
+
   
   pinMode(controlPin, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
   
@@ -229,6 +229,7 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
 
   if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
     previousMillis += lfoPeriod / 100.0;
+    
     switch (lfoWaveform) {
       case SQUARE:
         // Dreieck ausrechnen 
@@ -279,11 +280,14 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
   float lfovalue_final1 = 0;
   if(lfovalue_final == -100){
     lfovalue_final1 = lfovalue_final; // negativ für Sonderfunktionen wie Muting (-99)
-    pwm_set_chan_level(slice_num_led, pwm_gpio_to_channel(LED1), 1000);
+    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+    //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
   }else{
     lfovalue_final1 = (lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0;
+    
     // LED in der Helligkeit der Auslenkung
-    pwm_set_chan_level(slice_num_led, pwm_gpio_to_channel(LED1), lfovalue_final * 1000);
+    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_final * pwm_led);
+    //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), (1.0 - lfovalue_final) * 500);
   }
 
   
@@ -369,7 +373,7 @@ void loop() {
   
 
   if(!digitalRead(controlPin)){
-    readSettings();
+    //readSettings();
   }
 
   
