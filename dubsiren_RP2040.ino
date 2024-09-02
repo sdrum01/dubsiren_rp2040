@@ -18,12 +18,11 @@ const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
 const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
 
 const int wave_output = 5; // Pin, an dem der Rechteckton ausgegeben wird
-const int controlPin = 2;  // Steuerpin für die Tonaktivierung
-
-const int firePin1 = 18;  // Steuerpin für die Tonaktivierung
-const int firePin2 = 19;  // Steuerpin für die Tonaktivierung
-const int firePin3 = 20;  // Steuerpin für die Tonaktivierung
-const int firePin4 = 21;  // Steuerpin für die Tonaktivierung
+const int controlPin = 2;  // Shift-Taste
+const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
+const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
+const int firePin3 = 20;  // Steuerpin für die Tonaktivierung3
+const int firePin4 = 21;  // Steuerpin für die Tonaktivierung4
 
 const int LED1_red = 16;
 const int LED1_green = 17;
@@ -39,19 +38,30 @@ const float maxVal = 8000;
 const float minValMod = 20;
 const float maxValMod = 10000;
 
-// Parameter:
+// Parameter Pitch/Tune
+int baseFrequency = 1000;
+
+// Parameter LFO:
 float lfoFrequency = 1;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float lfoAmplitude = 0;
+
+// Parameter ENVELOPE-Generator:
+float envelopeDuration = 1;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
+float envelopeAmplitude = 0;
+float envelopePitch = 0;
 
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
 LfoWaveform lfoWaveform = TRIANGLE;  // Gewünschte LFO-Wellenform: SQUARE, TRIANGLE, SAWTOOTH
 
-// globale Variablen für den LFO
+
+
+// globale Variablen, die der LFO und envelope zurückgibt
 
 volatile float lfoValue = 0;
-volatile float lfoValueSlow = 0;
+volatile float envelopeValue = 1;
 volatile int lfoDirection = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
 volatile unsigned long previousMillis = 0;
+volatile unsigned long previousMillisEnv = 0;
 
 
 // Messwerte runden
@@ -63,7 +73,12 @@ int valPitch = 0;
 
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
-bool runSound_oldval;
+bool runSound_oldval = 1;
+
+// shift-taste
+bool shiftState = false;
+// entprellen der shift-taste
+bool shift_bak = 1;
 
 // LED1
 uint slice_num_led_red = 0;
@@ -142,7 +157,7 @@ void setup() {
 
 
   // Lampe an, nur zur Kontrolle, dass die SW läuft
-  digitalWrite(LED_BUILTIN, HIGH);
+  // digitalWrite(LED_BUILTIN, HIGH);
   
 }
 
@@ -219,14 +234,30 @@ float linearToLogarithmic(float freq) {
 // LFO-Variante mit Dreieck, abgeleiteten Rechteck und Sägezahn
 float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunction) {
 
-  float schrittweite = lfoFrequency / 1000;
+  float schrittweite = lfoFrequency / 1000 ;
+  //float schrittweite = lfoFrequency / 1000 * ((envelopeAmplitude / 100) + 1.0);
+  //float schrittweite_envelope = 0.001;
+  float schrittweite_envelope = envelopeDuration / 10000;
   unsigned long currentMillis = millis();
 
   const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
-  //debugFloat(schrittweite);
-  //static float triggeredLfoValue = 0;
+  const int envelopePeriod = 100;
+  
+  
+
   static float lfovalue_final = 0;
 
+  // Envelope-Generator
+  if (currentMillis - previousMillisEnv >= envelopePeriod / 100.0) {
+    previousMillisEnv += envelopePeriod / 100.0;
+    envelopeValue -= schrittweite_envelope;  // 
+        if (envelopeValue <= 0.0) {
+          envelopeValue = 0.0;  // Unten begrenzen
+     }
+
+  }
+  debugFloat(envelopeValue);
+  
   if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
     previousMillis += lfoPeriod / 100.0;
     
@@ -283,8 +314,10 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
     //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
   }else{
-    lfovalue_final1 = (lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0;
     
+    // lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) ;
+     lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) * ((envelopeValue -0.5) * (envelopeAmplitude / 100) + 1.0) ;
+    // * (envelopeValue) 
     // LED in der Helligkeit der Auslenkung
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_final * pwm_led);
     //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), (1.0 - lfovalue_final) * 500);
@@ -296,6 +329,7 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
   
    debugFloat(lfovalue_final1);
    */
+  //debugFloat(envelopeValue);
   return(lfovalue_final1);
 }
 
@@ -320,7 +354,7 @@ float setFrequency(float freq){
   return(2070 / (freq/1000));
 }
 
-void pitchAverage(){
+int pitchAverage(){
   pitchTotal = pitchTotal - pitchReadings[pitchReadIndex];
   pitchReadings[pitchReadIndex] = analogRead(freqPotPin);
   pitchTotal = pitchTotal + pitchReadings[pitchReadIndex];
@@ -330,7 +364,7 @@ void pitchAverage(){
     pitchReadIndex = 0;
   }
 
-  valPitch = pitchTotal / numReadings;
+  return(pitchTotal / numReadings);
 }
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
@@ -362,6 +396,7 @@ void loop() {
   if (runSound != runSound_oldval){
     if (runSound) {
         lfoValue = 0;
+        envelopeValue = 1;
         lfoDirection = 1;
         previousMillis = millis();
     } 
@@ -371,25 +406,37 @@ void loop() {
 
   //taster_val = digitalRead(inputPin);           // Wert auslesen
   
-
-  if(!digitalRead(controlPin)){
-    //readSettings();
+  bool shift = digitalRead(controlPin);
+  if(!shift){
+    if(shift != shift_bak){
+      shiftState = !(shiftState);
+      delay(100);
+    }
+    
   }
-
+  shift_bak = shift;
   
   
-  // lesen des Pitch-Wertes vom Poti incl. Mittelwert
-  pitchAverage();
+  digitalWrite(LED_BUILTIN, shiftState);
   
-
+  
+  
   int lfoFreqValue = analogRead(lfoFreqPotPin);
   int lfoAmpValue = analogRead(lfoAmpPotPin);
 
-  lfoFrequency = mapFloat(lfoFreqValue, 5, 1023, 0.5, 50);   // LFO-Frequenzbereich von 1 Hz bis 50 Hz
-  //lfoFrequency = map(lfoFreqValue, 5, 1023, 1, 100);
+  
 
+  if(shiftState){
+    envelopeDuration = mapFloat(lfoFreqValue, 5, 1023, 1, 100);
+    envelopeAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);
+  }else{
+    // lesen des Pitch-Wertes vom Poti incl. Mittelwert
+    valPitch = pitchAverage();
+    lfoFrequency = mapFloat(lfoFreqValue, 5, 1023, 0.5, 50);   // LFO-Frequenzbereich von 0.5 Hz bis 50 Hz
+    lfoAmplitude = map(lfoAmpValue, 5, 1023, 0, 100);   // LFO-Amplitudenbereich von 0 bis 100, 0 am Anschlag
+  }
   //lfoAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von -100 bis 100, 0 in der Mitte
-  lfoAmplitude = map(lfoAmpValue, 5, 1023, 0, 100);   // LFO-Amplitudenbereich von 0 bis 100, 0 am Anschlag
+  
   
   //debugStr(String(lfoFrequency)+';'+String(linearToLogarithmic(lfoFrequency)));
 
@@ -411,15 +458,12 @@ void loop() {
   // int baseFrequency = map(valPitch, 0, 1023, 50, 4000); // direkte Ausgabe der Frequenz
   
   // Serial.println(mapFloat(valPitch, 0, 1023, 0, 100));
-  //int baseFrequency =  mapFloat(valPitch, 0, 1023, 0, 100) ;
-  
-  int baseFrequency =  mapFloat(valPitch, 4, 1022, minVal, maxVal);
+  // int baseFrequency =  mapFloat(valPitch, 0, 1023, 0, 100) ;
+
+  // Holen der Basisfrequenz
+  baseFrequency =  mapFloat(valPitch, 4, 1022, minVal, maxVal);
   // debugFloat(baseFrequency);
-  // baseFrequency = linearToLogarithmic(baseFrequency);
-  
-  // Berechne die modulierte Frequenz
-  // float modulatedFreq = (calculateLFO(baseFrequency, lfoFrequency, lfoAmpValue));
-  
+
   // Modulierte Frequenz berechnen
    float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, waveFormFunction);
    float newModulatedFrequency = 0;
