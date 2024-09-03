@@ -256,7 +256,7 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
      }
 
   }
-  debugFloat(envelopeValue);
+  
   
   if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
     previousMillis += lfoPeriod / 100.0;
@@ -316,7 +316,10 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
   }else{
     
     // lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) ;
-     lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) * ((envelopeValue -0.5) * (envelopeAmplitude / 100) + 1.0) ;
+    float envelope = envelopeValue * (envelopeAmplitude / 100) + 1.0;
+     lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) * envelope ;
+     debugFloat(envelope);
+    
     // * (envelopeValue) 
     // LED in der Helligkeit der Auslenkung
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_final * pwm_led);
