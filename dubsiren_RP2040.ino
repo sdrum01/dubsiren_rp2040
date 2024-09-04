@@ -28,9 +28,6 @@ const int LED1_red = 16;
 const int LED1_green = 17;
 
 
-// TEST
-// Test im dev
-// kann alles raus
 
 
 // Konstanten für den minimalen und maximalen Wert der blanken Frequenz ohne Modulation
