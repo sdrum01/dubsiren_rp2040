@@ -18,7 +18,7 @@ const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
 const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
 
 const int wave_output = 5; // Pin, an dem der Rechteckton ausgegeben wird
-const int controlPin = 2;  // Shift-Taste
+const int shiftPin = 2;  // Shift-Taste
 const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
 const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
 const int firePin3 = 20;  // Steuerpin für die Tonaktivierung3
@@ -127,7 +127,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
   
-  pinMode(controlPin, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  pinMode(shiftPin, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
   
   pinMode(firePin1, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
   pinMode(firePin2, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
@@ -262,11 +262,13 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
     
     switch (lfoWaveform) {
       case SQUARE:
+        //lfoAmplitude = lfoAmplitude / 2;
         // Dreieck ausrechnen 
         lfoValue += schrittweite * lfoDirection;  // 
         if (lfoValue >= 1.0 || lfoValue <= 0.0) {
           lfoDirection = -lfoDirection;  // Richtung umkehren
         }
+        /*
         if(waveFormFunction == 0){
           lfovalue_final = (lfoValue >= 0.5) ? 1 : 0;
           
@@ -274,7 +276,13 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
         }else{
           lfovalue_final = (lfoValue <= 0.5) ? 0.5 : -100; // -100 = muting
         }
+        */
         
+        if(lfoAmplitude < 0){
+          lfovalue_final = (lfoValue <= 0.5) ? 0.5 : -100; // -100 = muting;
+        } else {
+          lfovalue_final = (lfoValue >= 0.5) ? 1 : 0;
+        }
         break;
         
       case TRIANGLE:
@@ -287,6 +295,7 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
         break;
         
       case SAWTOOTH:
+      /*
         if(waveFormFunction == 0){
           lfoValue += schrittweite / 2;  // Schrittweite für den LFO (kann angepasst werden)
           if (lfoValue >= 1.0) {
@@ -297,6 +306,11 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
           if (lfoValue <= 0) {
             lfoValue = 1;  // Zurücksetzen
           }
+        }
+        */
+        lfoValue += schrittweite / 2;  // Schrittweite für den LFO 
+        if (lfoValue >= 1.0) {
+          lfoValue = 0;  // Zurücksetzen
         }
         lfovalue_final = lfoValue;
         break;
@@ -314,14 +328,12 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
     //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
   }else{
     
-    // lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) ;
-    float envelope = envelopeValue * (envelopeAmplitude / 100) + 1.0;
-     lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) * envelope ;
-     debugFloat(envelope);
-    
-    // * (envelopeValue) 
-    // LED in der Helligkeit der Auslenkung
+    // LED grün LFO
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_final * pwm_led);
+    float envelope = envelopeValue * (envelopeAmplitude / 100) + 1.0;
+    lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) * envelope ;
+     //debugFloat(envelope);
+    
     //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), (1.0 - lfovalue_final) * 500);
   }
 
@@ -383,12 +395,18 @@ void soundCreate(float freqVal){
 
   pwm_set_wrap(slice_num, pwm_val);
   
-  if ((!runSound)||(freqVal == -100)) {
-    pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), 0);
-  }else{
-    pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), pwm_val / 2);
-  }
+  if (runSound){
   
+    if(freqVal == -100) {
+      pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), 0);
+      //pwm_val = setFrequency(1);
+      //pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), pwm_val / 2);
+    }else{
+      pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), pwm_val / 2);
+    }
+  }else{
+    pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), 0);
+  }
  
 }
 
@@ -407,8 +425,9 @@ void loop() {
   runSound_oldval = runSound;
 
   //taster_val = digitalRead(inputPin);           // Wert auslesen
+  bool waveFormFunction = digitalRead(waveFormFunctionPin);
   
-  bool shift = digitalRead(controlPin);
+  bool shift = digitalRead(shiftPin);
   if(!shift){
     if(shift != shift_bak){
       shiftState = !(shiftState);
@@ -427,15 +446,16 @@ void loop() {
   int lfoAmpValue = analogRead(lfoAmpPotPin);
 
   
-
-  if(shiftState){
+  //if(shiftState){
+  if(waveFormFunction){
     envelopeDuration = mapFloat(lfoFreqValue, 5, 1023, 1, 100);
     envelopeAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);
   }else{
     // lesen des Pitch-Wertes vom Poti incl. Mittelwert
     valPitch = pitchAverage();
     lfoFrequency = mapFloat(lfoFreqValue, 5, 1023, 0.5, 50);   // LFO-Frequenzbereich von 0.5 Hz bis 50 Hz
-    lfoAmplitude = map(lfoAmpValue, 5, 1023, 0, 100);   // LFO-Amplitudenbereich von 0 bis 100, 0 am Anschlag
+    lfoAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von 0 bis 100, 0 am Anschlag
+    //lfoAmplitude = lfoAmplitude *10;
   }
   //lfoAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von -100 bis 100, 0 in der Mitte
   
@@ -452,7 +472,7 @@ void loop() {
     lfoWaveform = SQUARE;
   }
 
-  bool waveFormFunction = digitalRead(waveFormFunctionPin);
+  
 
    //debugStr("Waveform:"+String(lfoWaveform)+" Funktion:"+String(waveFormFunction));
 
