@@ -68,7 +68,7 @@ const int numReadings = 10;
 int pitchReadings[numReadings];
 int pitchReadIndex = 0;
 int pitchTotal = 0;
-int valPitch = 0;
+// int valPitch = 0;
 
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
@@ -79,9 +79,8 @@ bool shiftState = false;
 // entprellen der shift-taste
 bool shift_bak = 1;
 
-// LED1
-uint slice_num_led_red = 0;
-uint slice_num_led_green = 0;
+// LED1+2
+
 int pwm_led = 1000;
 
 ///////////////////////////////////
@@ -93,25 +92,29 @@ void setup() {
   
   // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
   gpio_set_function(wave_output, GPIO_FUNC_PWM);
-  uint slice_num = pwm_gpio_to_slice_num(wave_output);
-
+  uint slice_num_wave = pwm_gpio_to_slice_num(wave_output);
+  
   // Setze den PWM-Teilungsverhältnis
-  pwm_set_clkdiv(slice_num, 64.f);
+  pwm_set_clkdiv(slice_num_wave, 64.f);
 
   // Starte den PWM-Output
-  pwm_set_enabled(slice_num, true); 
+  pwm_set_enabled(slice_num_wave, true); 
 
   // LED
-  pinMode(LED1_red, OUTPUT);
-  pinMode(LED1_green, OUTPUT);
+  // pinMode(LED1_red, OUTPUT);
+  // pinMode(LED1_green, OUTPUT);
+
+  uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
+  uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
   
   gpio_set_function(LED1_green, GPIO_FUNC_PWM);
   gpio_set_function(LED1_red, GPIO_FUNC_PWM);
   
-  slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
-  slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
+
    
-  //pwm_set_clkdiv(slice_num_led, 64.f);
+  pwm_set_clkdiv(slice_num_led_green, 128.f);
+  pwm_set_clkdiv(slice_num_led_red, 128.f);
+  
   pwm_set_enabled(slice_num_led_green, true);
   pwm_set_enabled(slice_num_led_red, true);
   
@@ -232,7 +235,10 @@ float linearToLogarithmic(float freq) {
 
 // LFO-Variante mit Dreieck, abgeleiteten Rechteck und Sägezahn
 float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunction) {
-
+  
+  uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
+  uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
+  
   float schrittweite = lfoFrequency / 1000 ;
   //float schrittweite = lfoFrequency / 1000 * ((envelopeAmplitude / 100) + 1.0);
   //float schrittweite_envelope = 0.001;
@@ -308,9 +314,9 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
           }
         }
         */
-        lfoValue += schrittweite / 2;  // Schrittweite für den LFO 
-        if (lfoValue >= 1.0) {
-          lfoValue = 0;  // Zurücksetzen
+        lfoValue -= schrittweite / 2;  // Schrittweite für den LFO 
+        if (lfoValue <= 0) {
+          lfoValue = 1;  // Zurücksetzen
         }
         lfovalue_final = lfoValue;
         break;
@@ -330,11 +336,16 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
     
     // LED grün LFO
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_final * pwm_led);
+    pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),envelopeValue * pwm_led);
+    
     float envelope = envelopeValue * (envelopeAmplitude / 100) + 1.0;
-    lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) * envelope ;
+    //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),envelopeValue * pwm_led);
+    
+    lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0);
+    //lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) * envelope ;
      //debugFloat(envelope);
     
-    //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), (1.0 - lfovalue_final) * 500);
+    
   }
 
   
@@ -387,25 +398,25 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
 
 void soundCreate(float freqVal){
  // float pwm_val = setFrequency(baseFrequency); // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
-  float pwm_val = setFrequency(linearToLogarithmic(freqVal));
-  // float pwm_val = setFrequency(freqVal);
+  //float pwm_val = setFrequency(linearToLogarithmic(freqVal));
+  float pwm_val = setFrequency(freqVal);
 
   // Setze die PWM-Periode
-  uint slice_num = pwm_gpio_to_slice_num(wave_output);
+  uint slice_num_wave = pwm_gpio_to_slice_num(wave_output);
 
-  pwm_set_wrap(slice_num, pwm_val);
+  pwm_set_wrap(slice_num_wave, pwm_val);
   
   if (runSound){
   
     if(freqVal == -100) {
-      pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), 0);
+      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_output), 0);
       //pwm_val = setFrequency(1);
       //pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), pwm_val / 2);
     }else{
-      pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), pwm_val / 2);
+      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_output), pwm_val / 2);
     }
   }else{
-    pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_output), 0);
+    pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_output), 0);
   }
  
 }
@@ -441,10 +452,14 @@ void loop() {
   digitalWrite(LED_BUILTIN, shiftState);
   
   
-  
+  // int valPitch = pitchAverage();
+  int valPitch = analogRead(freqPotPin);
   int lfoFreqValue = analogRead(lfoFreqPotPin);
   int lfoAmpValue = analogRead(lfoAmpPotPin);
 
+  // Holen der Basisfrequenz
+  baseFrequency =  linearToLogarithmic(mapFloat(valPitch, 4, 1023, minVal, maxVal));
+  
   
   //if(shiftState){
   if(waveFormFunction){
@@ -452,10 +467,9 @@ void loop() {
     envelopeAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);
   }else{
     // lesen des Pitch-Wertes vom Poti incl. Mittelwert
-    valPitch = pitchAverage();
+    
     lfoFrequency = mapFloat(lfoFreqValue, 5, 1023, 0.5, 50);   // LFO-Frequenzbereich von 0.5 Hz bis 50 Hz
     lfoAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von 0 bis 100, 0 am Anschlag
-    //lfoAmplitude = lfoAmplitude *10;
   }
   //lfoAmplitude = map(lfoAmpValue, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von -100 bis 100, 0 in der Mitte
   
@@ -482,8 +496,7 @@ void loop() {
   // Serial.println(mapFloat(valPitch, 0, 1023, 0, 100));
   // int baseFrequency =  mapFloat(valPitch, 0, 1023, 0, 100) ;
 
-  // Holen der Basisfrequenz
-  baseFrequency =  mapFloat(valPitch, 4, 1022, minVal, maxVal);
+  
   // debugFloat(baseFrequency);
 
   // Modulierte Frequenz berechnen
