@@ -498,6 +498,8 @@ void loop() {
     setChangeState(1,0,0);
     //readSettings();
     debugStr("State CHanged");
+    
+    writeSettings("Wert1;Wert2;Wert3");
     debugStr(readSettings());
   }
   waveFormFunctionBak = waveFormFunction;
