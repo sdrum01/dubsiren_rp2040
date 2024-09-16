@@ -2,6 +2,7 @@
 #include "hardware/pwm.h"
 #include "math.h"
 #include "LittleFS.h"
+#include "Bounce2.h"
 //#include "ArduinoJson.h"
 
 int zaehler = 0;        
@@ -103,9 +104,79 @@ bool potiAmpLFOChanged = 1;
 const int potiTolerance = 10;
 ///////////////////////////////////
 
+// Bounce Objekt erstellen
+Bounce taster;
 
 
+///////////////////////////////////
+void setup() {
+  
+  if(LOGLEVEL > 0){
+    Serial.begin(38400);
+  }
+  
+  // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
+  gpio_set_function(wave_outputPin, GPIO_FUNC_PWM);
+  uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
+  
+  // Setze den PWM-Teilungsverhältnis
+  pwm_set_clkdiv(slice_num_wave, 64.f);
 
+  // Starte den PWM-Output
+  pwm_set_enabled(slice_num_wave, true); 
+
+  // LED
+
+  uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
+  uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
+  
+  gpio_set_function(LED1_green, GPIO_FUNC_PWM);
+  gpio_set_function(LED1_red, GPIO_FUNC_PWM);
+  
+  pwm_set_clkdiv(slice_num_led_green, 128.f);
+  pwm_set_clkdiv(slice_num_led_red, 128.f);
+  
+  pwm_set_enabled(slice_num_led_green, true);
+  pwm_set_enabled(slice_num_led_red, true);
+  
+  pwm_set_wrap(slice_num_led_green, pwm_led);
+  pwm_set_wrap(slice_num_led_red, pwm_led);
+  
+  pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+  pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
+  
+
+
+  // Normale IO's
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  
+  pinMode(shiftPin, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  
+  pinMode(firePin1, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  pinMode(firePin2, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  pinMode(firePin3, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  pinMode(firePin4, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+
+  // Bounce-Objekt initialisieren
+  taster.attach(firePin2);
+  taster.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+  
+  pinMode(waveFormPin_0, INPUT_PULLUP);
+  pinMode(waveFormPin_1, INPUT_PULLUP);
+  pinMode(waveFormFunctionPin, INPUT_PULLUP);
+  
+  // Initialisieren des Arrays für die Mittelwertbildung des Pitch
+  for (int i = 0; i < numReadings; i++) {
+    pitchReadings[i] = 0;
+  }
+  if (!LittleFS.begin()) {
+      debugStr("LittleFS mount failed");
+      return;
+   }
+  // Lampe an, nur zur Kontrolle, dass die SW läuft
+  debugStr("Setup abgeschlossen.");
+}
 
 ///////////// allgem. Funktionen
 
@@ -393,74 +464,24 @@ bool chkLoop(int endCount){
 
 ////////////////////////////////////////////////////////////
 
-void setup() {
-  
-  if(LOGLEVEL > 0){
-    Serial.begin(38400);
-  }
-  
-  // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
-  gpio_set_function(wave_outputPin, GPIO_FUNC_PWM);
-  uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
-  
-  // Setze den PWM-Teilungsverhältnis
-  pwm_set_clkdiv(slice_num_wave, 64.f);
 
-  // Starte den PWM-Output
-  pwm_set_enabled(slice_num_wave, true); 
-
-  // LED
-  // pinMode(LED1_red, OUTPUT);
-  // pinMode(LED1_green, OUTPUT);
-
-  uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
-  uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
-  
-  gpio_set_function(LED1_green, GPIO_FUNC_PWM);
-  gpio_set_function(LED1_red, GPIO_FUNC_PWM);
-  
-  pwm_set_clkdiv(slice_num_led_green, 128.f);
-  pwm_set_clkdiv(slice_num_led_red, 128.f);
-  
-  pwm_set_enabled(slice_num_led_green, true);
-  pwm_set_enabled(slice_num_led_red, true);
-  
-  pwm_set_wrap(slice_num_led_green, pwm_led);
-  pwm_set_wrap(slice_num_led_red, pwm_led);
-  
-  pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
-  pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
-  
-
-
-  // Normale IO's
-  pinMode(LED_BUILTIN, OUTPUT);
-
-  
-  pinMode(shiftPin, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
-  
-  pinMode(firePin1, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
-  pinMode(firePin2, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
-  pinMode(firePin3, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
-  pinMode(firePin4, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
-  
-  pinMode(waveFormPin_0, INPUT_PULLUP);
-  pinMode(waveFormPin_1, INPUT_PULLUP);
-  pinMode(waveFormFunctionPin, INPUT_PULLUP);
-  
-  // Initialisieren des Arrays für die Mittelwertbildung des Pitch
-  for (int i = 0; i < numReadings; i++) {
-    pitchReadings[i] = 0;
-  }
-  if (!LittleFS.begin()) {
-      debugStr("LittleFS mount failed");
-      return;
-   }
-  // Lampe an, nur zur Kontrolle, dass die SW läuft
-  debugStr("Setup abgeschlossen.");
-}
 
 void loop() {
+  
+  taster.update();
+
+  // Prüfe auf steigende Flanke (Taster wurde gedrückt)
+  if (taster.fell()) {
+    Serial.println("Taster gedrückt (steigende Flanke erkannt)");
+  }
+
+  // Prüfe auf fallende Flanke (Taster wurde losgelassen)
+  if (taster.rose()) {
+    Serial.println("Taster losgelassen (fallende Flanke erkannt)");
+  }
+
+
+  
   runSound = !digitalRead(firePin1);
 
   if (runSound != runSound_oldval){
@@ -497,10 +518,10 @@ void loop() {
     // Flags zurücksetzen, dass die Potis gewackelt haben
     setChangeState(1,0,0);
     //readSettings();
-    debugStr("State CHanged");
+    debugStr("State Changed");
     
-    writeSettings("Wert1;Wert2;Wert3");
-    debugStr(readSettings());
+    //writeSettings("Wert1;Wert2;Wert3");
+    readSettings();
   }
   waveFormFunctionBak = waveFormFunction;
   
