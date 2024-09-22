@@ -20,7 +20,12 @@ const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
 
 const int waveFormPin_0 = 3; // WaveForm Kippschalter PIN 1
 const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
-const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
+//const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
+
+// Schalter für WaveForm
+byte valLfoWaveformSwitch = 0;
+// temporäre Sicherung des Wertes des Waveformschalters
+byte valLfoWaveformSwitchBak = 0;
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
@@ -65,15 +70,14 @@ float lfoAmplitude = 0;
 float envelopeDuration = 20;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float envelopeAmplitude = 0;
 
+byte duty = 50;
+float dutyCycle = 0;
+
 // die finale LFO WaveForm Variable, die durch Schalter oder Speicher gesetzt wird
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
 LfoWaveform lfoWaveform = TRIANGLE;  // Gewünschte LFO-Wellenform: SQUARE, TRIANGLE, SAWTOOTH
 
-// Schalter für WaveForm
-byte valLfoWaveformSwitch = 0;
 
-// temporäre Sicherung des Wertes des Waveformschalters
-byte valLfoWaveformSwitchBak = 0;
 
 bool dataSaved = false;
 
@@ -118,8 +122,8 @@ int valPotiAmpLFOBak = 0;
 
 
 // Funktionsschalter
-bool waveFormFunction = 0;
-bool waveFormFunctionBak = 0;
+// bool waveFormFunction = 0;
+// bool waveFormFunctionBak = 0;
 
 
 //  Flags, wenn es an den Potis gewackelt hat
@@ -206,7 +210,7 @@ void setup() {
   
   pinMode(waveFormPin_0, INPUT_PULLUP);
   pinMode(waveFormPin_1, INPUT_PULLUP);
-  pinMode(waveFormFunctionPin, INPUT_PULLUP);
+  // pinMode(waveFormFunctionPin, INPUT_PULLUP);
   
   // Initialisieren des Arrays für die Mittelwertbildung des Pitch
   /*
@@ -294,10 +298,10 @@ String readSettings(String configFile){
     if (file) {
         //String value = file.read();  // Lese die gespeicherte Zahl
         value = file.readStringUntil('\n');
-        Serial.println("Gelesener Wert: "+value);
+        Serial.println("read file "+configFile+": "+value);
         file.close();
     } else {
-        Serial.println("Fehler beim Lesen der Datei "+configFile);
+        Serial.println("Error during reading of file "+configFile);
         String _json = values2JSON();
         writeSettings(_json,configFile);
     }
@@ -315,9 +319,9 @@ bool writeSettings(String s, String configFile){
 
       file.close();
       return(true);
-      Serial.println("Daten geschrieben: "+s);
+      Serial.println("write file "+configFile+": "+s);
   } else {
-    Serial.println("Fehler beim Schreiben der Datei "+configFile);
+    Serial.println("Error during writing of file "+configFile);
     return(false);
   }
 }
@@ -514,9 +518,9 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+// Tonerzeugung
 void soundCreate(float freqVal){
- // float pwm_val = setFrequency(baseFrequency); // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
-  //float pwm_val = setFrequency(linearToLogarithmic(freqVal));
+  // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
   float pwm_val = setFrequency(freqVal);
 
   // Setze die PWM-Periode
@@ -528,10 +532,10 @@ void soundCreate(float freqVal){
   
     if(freqVal == -100) {
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
-      //pwm_val = setFrequency(1);
-      //pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_outputPin), pwm_val / 2);
     }else{
-      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val / 2);
+      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * 0.5);
+      //dutyCycle = duty / 100;
+      //pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * dutyCycle);
     }
   }else{
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
@@ -581,6 +585,7 @@ byte combineBoolsToByte(bool b0, bool b1) {
 void loadOrSave(byte fireButton){
   String fileName = "fire"+String(fireButton)+".json";
   resetLFOParams();
+  // keine Flankenauswertung, sondern ist der Shift-Taster gedrückt gehalten?
   if(shift.read() == LOW){
     // Save values
     String _json = values2JSON();
@@ -591,7 +596,7 @@ void loadOrSave(byte fireButton){
       // load Values
       String _json = readSettings(fileName);
       JSON2values(_json);
-      setChangeState(1,0,0,0);
+      setChangeState(0,0,0,0);
     }
   }
   return;
@@ -605,6 +610,7 @@ void updateKeys(){
   fire4.update();
 
   if (dataSaved == 0){
+    // fallende Flanke (Taster losgelassen)
     if (shift.rose()) {
       shiftState = !(shiftState);
     }
@@ -612,7 +618,7 @@ void updateKeys(){
 
   if(shiftStateBak != shiftState){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
-    setChangeState(1,0,0,0);
+    setChangeState(0,0,0,0);
   }
   shiftStateBak = shiftState;
   
@@ -649,25 +655,11 @@ void updateKeys(){
     }
   }
   
-  
+  // steigende Flanke (Taster gedrückt)
   if (fire1.fell()){
     actualFireButton = 1;
     loadOrSave(actualFireButton);
-    // String fileName = "fire"+String(actualFireButton)+".json";
-    // resetLFOParams();
-    // if(shift.read() == LOW){
-    //   String _json = values2JSON();
-    //   writeSettings(_json,fileName);
-    //   shiftState = 1;
-    // } else {
-    //   if(actualFireButton != actualFireButtonBak){
-    //     String _json = readSettings(fileName);
-    //     JSON2values(_json);
-    //     setChangeState(1,0,0,0);
-    //   }
-    // }
   }
-
   if (fire2.fell()){
     actualFireButton = 2;
     loadOrSave(actualFireButton);
@@ -708,8 +700,8 @@ void updatePotis(){
   }
 }
 
-////////////////////////////////////////////////////////////
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 void loop() {
@@ -733,15 +725,16 @@ void loop() {
 */
 
   
-  // Holen der Basisfrequenz
-  if(potiPitchChanged == 1){
-    int freqLin = map(valPotiPitch, 4, 1023, minVal, maxVal );
-    baseFrequency =  linearToLogarithmic(freqLin );
-    valPotiPitchBak = valPotiPitch;
-  }
+  
 
   // if(waveFormFunction){
   if(shiftState){
+    // Duty-Cycle Tonausgabe
+    if(potiPitchChanged == 1){
+      duty = map(valPotiPitch, 4, 1023, 10, 50 );
+      valPotiPitchBak = valPotiPitch;
+    }
+
     // wenn Shift, dann Envelopegenerator
     if(potiFreqLFOChanged == 1){
       envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 100);
@@ -753,6 +746,12 @@ void loop() {
     }
   }else{
     // lesen des Pitch-Wertes vom Poti incl. Mittelwert
+    // Holen der Basisfrequenz
+    if(potiPitchChanged == 1){
+      int freqLin = map(valPotiPitch, 4, 1023, minVal, maxVal );
+      baseFrequency =  linearToLogarithmic(freqLin );
+      valPotiPitchBak = valPotiPitch;
+    }
     if(potiFreqLFOChanged == 1){
       lfoFrequency = mapFloat(valPotiFreqLFO, 5, 1023, 0.5, 50);   // LFO-Frequenzbereich von 0.5 Hz bis 50 Hz
       valPotiFreqLFOBak = valPotiFreqLFO;
@@ -767,7 +766,7 @@ void loop() {
 
 
    if(chkLoop(10000)){
-     debugFloat(lfoWaveformChanged);
+     debugFloat(duty);
    }
    
 
