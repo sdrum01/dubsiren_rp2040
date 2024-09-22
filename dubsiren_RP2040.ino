@@ -37,6 +37,9 @@ Bounce fire3;
 Bounce fire4;
 Bounce shift;
 
+byte actualFireButton = 0;
+byte actualFireButtonBak = 0;
+
 const int LED1_red = 16;
 const int LED1_green = 17;
 
@@ -92,7 +95,6 @@ int pitchTotal = 0;
 
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
-bool runSound_oldval = 1;
 
 // shift-taste
 bool shiftState = false;
@@ -131,72 +133,10 @@ const int potiTolerance = 10;
 
 // Flag, wenn es am Waveformschalter gewackelt hat
 bool lfoWaveformChanged = 0;
-///////////////////////////////////
-
-// Werte von den Potis und Schaltern in eine JSON datei speicher
-bool values2JSON(String fireButton){
-  // Erstelle einen JSON-Dokument Puffer mit genügend Speicher
-  StaticJsonDocument<200> doc;
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  JsonObject actualDataset = doc.createNestedObject(fireButton);
-  actualDataset["pitch"]     = baseFrequency;
-  actualDataset["lfoFreq"]   = lfoFrequency;
-  actualDataset["lfoAmount"] = lfoAmplitude;
-  actualDataset["envTime"]   = envelopeDuration;
-  actualDataset["envAmount"] = envelopeAmplitude;
-  actualDataset["waveform"] = lfoWaveform;
-
-  // Erstelle einen JSON-String
-  String jsonString;
-  serializeJson(doc, jsonString);
-
-  String fileName = fireButton+".json";
-  // JSON-String ausgeben
-  return(writeSettings(fileName, jsonString));
-}
-
-void JSON2values(String jsonString) {
-  // Erstelle ein JSON-Dokument für das Parsen
-  StaticJsonDocument<200> doc;
-
-  // Deserialisiere den JSON-String
-  DeserializationError error = deserializeJson(doc, jsonString);
-
-  // Überprüfen, ob die Deserialisierung erfolgreich war
-  if (error) {
-    Serial.print("Fehler beim Parsen: ");
-    Serial.println(error.f_str());
-    return;
-  }
-
-  // Jetzt können wir die Werte aus dem JSON-Dokument extrahieren
-  JsonObject actualDataset = doc["fire1"];
-
-  // Variablen aus dem JSON extrahieren und den globalen Variablen zuweisen
-  baseFrequency = actualDataset["pitch"];
-  lfoFrequency = actualDataset["lfoFreq"];
-  lfoAmplitude = actualDataset["lfoAmount"];
-  envelopeDuration = actualDataset["envTime"];
-  envelopeAmplitude = actualDataset["envAmount"];
-  lfoWaveform = actualDataset["waveform"];
-
-/*
-  // Debug-Ausgabe
-  Serial.print("Pitch: ");
-  Serial.println(baseFrequency);
-  Serial.print("LFO Frequency: ");
-  Serial.println(lfoFrequency);
-  Serial.print("LFO Amplitude: ");
-  Serial.println(lfoAmplitude);
-  Serial.print("Envelope Time: ");
-  Serial.println(envelopeDuration);
-  Serial.print("Envelope Amplitude: ");
-  Serial.println(envelopeAmplitude);
-  Serial.print("Waveform: ");
-  Serial.println(lfoWaveform);
-  */
-}
 
 
 ///////////////////////////////////
@@ -282,7 +222,105 @@ void setup() {
   debugStr("Setup abgeschlossen.");
 }
 
-///////////// allgem. Funktionen
+// Werte von den Potis und Schaltern in eine JSON datei speicher
+String values2JSON(){
+  // Erstelle einen JSON-Dokument Puffer mit genügend Speicher
+  StaticJsonDocument<200> dataSet;
+/*
+  JsonObject actualDataset = doc.createNestedObject(fireButton);
+
+  actualDataset["pitch"]     = baseFrequency;
+  actualDataset["lfoFreq"]   = lfoFrequency;
+  actualDataset["lfoAmount"] = lfoAmplitude;
+  actualDataset["envTime"]   = envelopeDuration;
+  actualDataset["envAmount"] = envelopeAmplitude;
+  actualDataset["waveform"] = lfoWaveform;
+*/
+  dataSet["pitch"]     = baseFrequency;
+  dataSet["lfoFreq"]   = lfoFrequency;
+  dataSet["lfoAmount"] = lfoAmplitude;
+  dataSet["envTime"]   = envelopeDuration;
+  dataSet["envAmount"] = envelopeAmplitude;
+  dataSet["waveform"]  = lfoWaveform;
+
+  // Erstelle einen JSON-String
+  String jsonString;
+  serializeJson(dataSet, jsonString);
+
+  // String fileName = fireButton+".json";
+  // JSON-String ausgeben
+  // return(writeSettings(fileName, jsonString));
+  return jsonString;
+}
+
+void JSON2values(String jsonString) {
+  // Erstelle ein JSON-Dokument für das Parsen
+  StaticJsonDocument<200> dataSet;
+
+  // Deserialisiere den JSON-String
+  DeserializationError error = deserializeJson(dataSet, jsonString);
+
+  // Überprüfen, ob die Deserialisierung erfolgreich war
+  if (error) {
+    Serial.print("Fehler beim Parsen: ");
+    Serial.println(error.f_str());
+    return;
+  }
+
+  /*
+  // Jetzt können wir die Werte aus dem JSON-Dokument extrahieren
+  JsonObject actualDataset = doc["fire1"];
+
+  // Variablen aus dem JSON extrahieren und den globalen Variablen zuweisen
+  baseFrequency = actualDataset["pitch"];
+  lfoFrequency = actualDataset["lfoFreq"];
+  lfoAmplitude = actualDataset["lfoAmount"];
+  envelopeDuration = actualDataset["envTime"];
+  envelopeAmplitude = actualDataset["envAmount"];
+  lfoWaveform = actualDataset["waveform"];
+  */
+  baseFrequency = dataSet["pitch"];
+  lfoFrequency = dataSet["lfoFreq"];
+  lfoAmplitude = dataSet["lfoAmount"];
+  envelopeDuration = dataSet["envTime"];
+  envelopeAmplitude = dataSet["envAmount"];
+  lfoWaveform = dataSet["waveform"];
+}
+
+String readSettings(String configFile){
+    // Daten lesen
+    String value;
+    File file = LittleFS.open(configFile, "r");
+    if (file) {
+        //String value = file.read();  // Lese die gespeicherte Zahl
+        value = file.readStringUntil('\n');
+        Serial.println("Gelesener Wert: "+value);
+        file.close();
+    } else {
+        Serial.println("Fehler beim Lesen der Datei "+configFile);
+        String _json = values2JSON();
+        writeSettings(_json,configFile);
+    }
+  return(value);
+}
+
+bool writeSettings(String s, String configFile){
+  // Daten schreiben
+  File file = LittleFS.open(configFile, "w");
+  if (file) {
+      //file.write(s);  // Schreibe eine Zahl
+      // String in die Datei schreiben
+      
+      file.println(s);  // Schreibt den String und fügt einen Zeilenumbruch hinzu
+
+      file.close();
+      return(true);
+      Serial.println("Daten geschrieben: "+s);
+  } else {
+    Serial.println("Fehler beim Schreiben der Datei "+configFile);
+    return(false);
+  }
+}
 
 void debugStr(String s){
   if (LOGLEVEL > 0){
@@ -300,40 +338,7 @@ void debugFloat(float f){
   }
 }
 
-String readSettings(String configFile){
-    // Daten lesen
-    String value;
-    File file = LittleFS.open(configFile, "r");
-    if (file) {
-        //String value = file.read();  // Lese die gespeicherte Zahl
-        value = file.readStringUntil('\n');
-        Serial.println("Gelesener Wert: "+value);
-        file.close();
-    } else {
-        Serial.println("Fehler beim Lesen der Datei");
-        //writeSettings("Wert1;Wert2;Wert3");
-    }
-  return(value);
-}
 
-
-bool writeSettings(String configFile, String s){
-  // Daten schreiben
-  File file = LittleFS.open(configFile, "w");
-  if (file) {
-      //file.write(s);  // Schreibe eine Zahl
-      // String in die Datei schreiben
-      
-      file.println(s);  // Schreibt den String und fügt einen Zeilenumbruch hinzu
-
-      file.close();
-      return(true);
-      Serial.println("Daten geschrieben: "+s);
-  } else {
-    Serial.println("Fehler beim Schreiben der Datei");
-    return(false);
-  }
-}
 
 
 // Funktion zur Umwandlung einer linearen Eingangsgröße in eine logarithmische Ausgabe
@@ -573,6 +578,25 @@ byte combineBoolsToByte(bool b0, bool b1) {
   return result;
 }
 
+void loadOrSave(byte fireButton){
+  String fileName = "fire"+String(fireButton)+".json";
+  resetLFOParams();
+  if(shift.read() == LOW){
+    // Save values
+    String _json = values2JSON();
+    writeSettings(_json,fileName);
+    shiftState = 1;
+  } else {
+    if(fireButton != actualFireButtonBak){
+      // load Values
+      String _json = readSettings(fileName);
+      JSON2values(_json);
+      setChangeState(1,0,0,0);
+    }
+  }
+  return;
+}
+
 void updateKeys(){
   shift.update();
   fire1.update();
@@ -580,18 +604,12 @@ void updateKeys(){
   fire3.update();
   fire4.update();
 
-  // globale Variable rundsound = wenn high, wird ein Ton abgespielt
-  // runSound = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shift.read() == HIGH));
-  runSound = ((fire1.read() == LOW)&&(shift.read() == HIGH));
-
   if (dataSaved == 0){
     if (shift.rose()) {
       shiftState = !(shiftState);
     }
   }
   
-  
- 
   // Abfrage Schalter, welche Funktion die Potis haben sollen
   waveFormFunction = digitalRead(waveFormFunctionPin);
 
@@ -599,11 +617,6 @@ void updateKeys(){
   if(waveFormFunctionBak != waveFormFunction){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
     setChangeState(1,0,0,0);
-    //readSettings();
-    //debugStr("State Changed");
-    
-    //writeSettings("Wert1;Wert2;Wert3");
-    //readSettings();
   }
   waveFormFunctionBak = waveFormFunction;
 
@@ -612,6 +625,7 @@ void updateKeys(){
   if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
     lfoWaveformChanged = 1;
   }
+  valLfoWaveformSwitchBak = valLfoWaveformSwitch;
 
   if(lfoWaveformChanged){
     switch (valLfoWaveformSwitch) {
@@ -637,47 +651,41 @@ void updateKeys(){
   //   lfoWaveform = SQUARE;
   // }
   
-  
-  
-
-    
-
-
-  
   if (fire1.fell()){
-    resetLFOParams();
-    if(shift.read() == LOW){
-      values2JSON("fire1");
-      
-      shiftState = 1;
-    } else {
-      String _json = readSettings("fire1.json");
-      
-      JSON2values(_json);
-      setChangeState(1,0,0,0);
-    }
+    actualFireButton = 1;
+    loadOrSave(actualFireButton);
+    // String fileName = "fire"+String(actualFireButton)+".json";
+    // resetLFOParams();
+    // if(shift.read() == LOW){
+    //   String _json = values2JSON();
+    //   writeSettings(_json,fileName);
+    //   shiftState = 1;
+    // } else {
+    //   if(actualFireButton != actualFireButtonBak){
+    //     String _json = readSettings(fileName);
+    //     JSON2values(_json);
+    //     setChangeState(1,0,0,0);
+    //   }
+    // }
   }
+
   if (fire2.fell()){
-    resetLFOParams();
-    if(shift.read() == LOW){
-      values2JSON("fire2");
-      
-    } 
+    actualFireButton = 2;
+    loadOrSave(actualFireButton);
   }
   if (fire3.fell()){
-    resetLFOParams();
-    if(shift.read() == LOW){
-      values2JSON("fire3");
-      
-    } 
+    actualFireButton = 3;
+    loadOrSave(actualFireButton);
   }
   if (fire4.fell()){
-    resetLFOParams();
-    if(shift.read() == LOW){
-      values2JSON("fire4");
-      
-    } 
+    actualFireButton = 4;
+    loadOrSave(actualFireButton);
   }
+  actualFireButtonBak = actualFireButton;
+
+  // globale Variable rundsound = wenn high, wird ein Ton abgespielt
+  // runSound = ((fire1.read() == LOW)&&(shift.read() == HIGH));
+  runSound = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shift.read() == HIGH));
   
 }
 
@@ -726,20 +734,6 @@ void loop() {
 */
 
   
-  /*
-  if (runSound != runSound_oldval){
-    if (runSound) {
-        lfoValue = 0;
-        envelopeValue = 1;
-        lfoDirection = 1;
-        previousMillis = millis();
-    } 
-   //delay(1);  // x millisekunden warten, eine Änderung danach wird wieder eine echte sein.
-  }
-  runSound_oldval = runSound;
-  */
-  
-
   // Holen der Basisfrequenz
   if(potiPitchChanged == 1){
     int freqLin = map(valPotiPitch, 4, 1023, minVal, maxVal );
@@ -772,7 +766,7 @@ void loop() {
 
 
    if(chkLoop(10000)){
-     debugFloat(valLfoWaveformSwitch);
+     debugFloat(lfoWaveformChanged);
    }
    
 
