@@ -62,8 +62,15 @@ float lfoAmplitude = 0;
 float envelopeDuration = 20;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float envelopeAmplitude = 0;
 
+// die finale LFO WaveForm Variable, die durch Schalter oder Speicher gesetzt wird
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
 LfoWaveform lfoWaveform = TRIANGLE;  // Gewünschte LFO-Wellenform: SQUARE, TRIANGLE, SAWTOOTH
+
+// Schalter für WaveForm
+byte valLfoWaveformSwitch = 0;
+
+// temporäre Sicherung des Wertes des Waveformschalters
+byte valLfoWaveformSwitchBak = 0;
 
 bool dataSaved = false;
 
@@ -106,12 +113,14 @@ int valPotiPitchBak = 0;
 int valPotiFreqLFOBak = 0;
 int valPotiAmpLFOBak = 0;
 
+
+
 // Funktionsschalter
 bool waveFormFunction = 0;
 bool waveFormFunctionBak = 0;
 
 
-//  Variable, wenn es an den Potis oder dem Waveformschalter gewackelt hat
+//  Flags, wenn es an den Potis gewackelt hat
 // byte potisChanged = 0b0000000;  // binär 00000000
 
 bool potiPitchChanged = 1;
@@ -120,7 +129,8 @@ bool potiAmpLFOChanged = 1;
 
 const int potiTolerance = 10;
 
-bool waveFormStateChanged = 0;
+// Flag, wenn es am Waveformschalter gewackelt hat
+bool lfoWaveformChanged = 0;
 ///////////////////////////////////
 
 // Werte von den Potis und Schaltern in eine JSON datei speicher
@@ -528,6 +538,7 @@ void setChangeState(bool p1, bool p2, bool p3, bool s1){
   potiPitchChanged = p1;
   potiFreqLFOChanged = p2;
   potiAmpLFOChanged = p3;
+  lfoWaveformChanged = s1;
 }
 
 bool chkLoop(int endCount){
@@ -545,6 +556,21 @@ void resetLFOParams(){
   lfoDirection = 1;
   // mit dem aktualisieren der millisekunden wird die Hüllkurve und LFO neu gestartet
   previousMillis = millis();
+}
+
+byte combineBoolsToByte(bool b0, bool b1) {
+  byte result = 0;
+  
+  result |= (b0 << 0);  // Bit 0
+  result |= (b1 << 1);  // Bit 1
+  result |= (0 << 2);  // Bit 2
+  result |= (0 << 3);  // Bit 3
+  result |= (0 << 4);  // Bit 4
+  result |= (0 << 5);  // Bit 5
+  result |= (0 << 6);  // Bit 6
+  result |= (0 << 7);  // Bit 7
+  
+  return result;
 }
 
 void updateKeys(){
@@ -571,8 +597,8 @@ void updateKeys(){
 
   // Wenn der Funktionsschalter sich geändert hat
   if(waveFormFunctionBak != waveFormFunction){
-    // Flags zurücksetzen, dass die Potis gewackelt haben
-    setChangeState(1,0,0);
+    // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
+    setChangeState(1,0,0,0);
     //readSettings();
     //debugStr("State Changed");
     
@@ -581,15 +607,40 @@ void updateKeys(){
   }
   waveFormFunctionBak = waveFormFunction;
 
-  if (( digitalRead(waveFormPin_0) == 0 )&&( digitalRead(waveFormPin_1) == 1 )){
-    lfoWaveform = TRIANGLE;
-  } 
-  if(( digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 1 )){
-    lfoWaveform = SAWTOOTH;
+  // Aus dem Waveformschalter ein Byte machen
+  valLfoWaveformSwitch = combineBoolsToByte(digitalRead(waveFormPin_0),digitalRead(waveFormPin_1));
+  if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
+    lfoWaveformChanged = 1;
   }
-  if ((digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 0)){
-    lfoWaveform = SQUARE;
+
+  if(lfoWaveformChanged){
+    switch (valLfoWaveformSwitch) {
+      case 1:
+        lfoWaveform = SQUARE;
+        break;
+      case 2:
+        lfoWaveform = SAWTOOTH;
+        break;
+      case 3:
+        lfoWaveform = TRIANGLE;
+        break;
+    }
   }
+  
+  // if (( digitalRead(waveFormPin_0) == 0 )&&( digitalRead(waveFormPin_1) == 1 )){
+  //   lfoWaveform = TRIANGLE;
+  // } 
+  // if(( digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 1 )){
+  //   lfoWaveform = SAWTOOTH;
+  // }
+  // if ((digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 0)){
+  //   lfoWaveform = SQUARE;
+  // }
+  
+  
+  
+
+    
 
 
   
@@ -603,7 +654,7 @@ void updateKeys(){
       String _json = readSettings("fire1.json");
       
       JSON2values(_json);
-      setChangeState(1,0,0);
+      setChangeState(1,0,0,0);
     }
   }
   if (fire2.fell()){
@@ -721,7 +772,7 @@ void loop() {
 
 
    if(chkLoop(10000)){
-     debugFloat(baseFrequency);
+     debugFloat(valLfoWaveformSwitch);
    }
    
 
