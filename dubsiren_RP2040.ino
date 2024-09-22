@@ -97,9 +97,9 @@ int pitchTotal = 0;
 bool runSound = 1;
 
 // shift-taste
-bool shiftState = false;
+bool shiftState = 0;
 // entprellen der shift-taste
-// bool shift_bak = 1;
+bool shiftStateBak = 0;
 
 // LED1+2
 
@@ -609,9 +609,17 @@ void updateKeys(){
       shiftState = !(shiftState);
     }
   }
+
+  if(shiftStateBak != shiftState){
+    // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
+    setChangeState(1,0,0,0);
+  }
+  shiftStateBak = shiftState;
   
   // Abfrage Schalter, welche Funktion die Potis haben sollen
+  /*
   waveFormFunction = digitalRead(waveFormFunctionPin);
+
 
   // Wenn der Funktionsschalter sich geändert hat
   if(waveFormFunctionBak != waveFormFunction){
@@ -619,7 +627,7 @@ void updateKeys(){
     setChangeState(1,0,0,0);
   }
   waveFormFunctionBak = waveFormFunction;
-
+*/
   // Aus dem Waveformschalter ein Byte machen
   valLfoWaveformSwitch = combineBoolsToByte(digitalRead(waveFormPin_0),digitalRead(waveFormPin_1));
   if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
@@ -641,15 +649,6 @@ void updateKeys(){
     }
   }
   
-  // if (( digitalRead(waveFormPin_0) == 0 )&&( digitalRead(waveFormPin_1) == 1 )){
-  //   lfoWaveform = TRIANGLE;
-  // } 
-  // if(( digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 1 )){
-  //   lfoWaveform = SAWTOOTH;
-  // }
-  // if ((digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 0)){
-  //   lfoWaveform = SQUARE;
-  // }
   
   if (fire1.fell()){
     actualFireButton = 1;
@@ -741,7 +740,9 @@ void loop() {
     valPotiPitchBak = valPotiPitch;
   }
 
-  if(waveFormFunction){
+  // if(waveFormFunction){
+  if(shiftState){
+    // wenn Shift, dann Envelopegenerator
     if(potiFreqLFOChanged == 1){
       envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 100);
       valPotiFreqLFOBak = valPotiFreqLFO;
@@ -771,7 +772,8 @@ void loop() {
    
 
    // Modulierte Frequenz berechnen
-   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, waveFormFunction);
+   //float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, waveFormFunction);
+   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, shiftState);
    float newModulatedFrequency = 0;
    if(lfoValueActual == -100){
     newModulatedFrequency = lfoValueActual;
