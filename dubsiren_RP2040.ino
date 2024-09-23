@@ -5,14 +5,7 @@
 #include "Bounce2.h"
 #include "ArduinoJson.h"
 
-   
-
 const int LOGLEVEL = 1;
-
-//const String CONFIG1 = "/config1.txt";
-//const String CONFIG2 = "/config2.txt";
-//const String CONFIG3 = "/config3.txt";
-//const String CONFIG4 = "/config4.txt";
 
 const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
@@ -181,7 +174,6 @@ void setup() {
   pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
   
 
-
   // Normale IO's
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -231,8 +223,8 @@ String values2JSON(){
   // Erstelle einen JSON-Dokument Puffer mit genügend Speicher
   StaticJsonDocument<200> dataSet;
 /*
+  // Verschachtelt
   JsonObject actualDataset = doc.createNestedObject(fireButton);
-
   actualDataset["pitch"]     = baseFrequency;
   actualDataset["lfoFreq"]   = lfoFrequency;
   actualDataset["lfoAmount"] = lfoAmplitude;
