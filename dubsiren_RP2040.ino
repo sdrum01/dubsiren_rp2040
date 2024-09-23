@@ -5,10 +5,14 @@
 #include "Bounce2.h"
 #include "ArduinoJson.h"
 
-int zaehler = 0;        
+   
 
 const int LOGLEVEL = 1;
-const String CONFIGFILE = "/config.txt";
+
+//const String CONFIG1 = "/config1.txt";
+//const String CONFIG2 = "/config2.txt";
+//const String CONFIG3 = "/config3.txt";
+//const String CONFIG4 = "/config4.txt";
 
 const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
@@ -16,9 +20,15 @@ const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
 
 const int waveFormPin_0 = 3; // WaveForm Kippschalter PIN 1
 const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
-const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
+//const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
+
+// Schalter für WaveForm
+byte valLfoWaveformSwitch = 0;
+// temporäre Sicherung des Wertes des Waveformschalters
+byte valLfoWaveformSwitchBak = 0;
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
+
 const int shiftPin = 2;  // Shift-Taste
 const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
 const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
@@ -32,6 +42,9 @@ Bounce fire3;
 Bounce fire4;
 Bounce shift;
 
+byte actualFireButton = 0;
+byte actualFireButtonBak = 0;
+
 const int LED1_red = 16;
 const int LED1_green = 17;
 
@@ -42,6 +55,9 @@ const float maxVal = 8000;
 // minimaler und maximaler Wert der Frequenz nach der LFO-Modulation
 const float minValMod = 20;
 const float maxValMod = 10000;
+
+// Variablen
+int zaehler = 0;     
 
 // Parameter Pitch/Tune
 int baseFrequency = 1000;
@@ -54,9 +70,16 @@ float lfoAmplitude = 0;
 float envelopeDuration = 20;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float envelopeAmplitude = 0;
 
+byte duty = 50;
+float dutyCycle = 0;
+
+// die finale LFO WaveForm Variable, die durch Schalter oder Speicher gesetzt wird
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
 LfoWaveform lfoWaveform = TRIANGLE;  // Gewünschte LFO-Wellenform: SQUARE, TRIANGLE, SAWTOOTH
 
+
+
+bool dataSaved = false;
 
 // globale Variablen, die der LFO und envelope zurückgibt
 
@@ -76,12 +99,11 @@ int pitchTotal = 0;
 
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
-bool runSound_oldval = 1;
 
 // shift-taste
-bool shiftState = false;
+bool shiftState = 0;
 // entprellen der shift-taste
-// bool shift_bak = 1;
+bool shiftStateBak = 0;
 
 // LED1+2
 
@@ -97,11 +119,14 @@ int valPotiPitchBak = 0;
 int valPotiFreqLFOBak = 0;
 int valPotiAmpLFOBak = 0;
 
-// Funktionsschalter
-bool waveFormFunction = 0;
-bool waveFormFunctionBak = 0;
 
-//  Variable, wenn es an den Potis gewackelt hat
+
+// Funktionsschalter
+// bool waveFormFunction = 0;
+// bool waveFormFunctionBak = 0;
+
+
+//  Flags, wenn es an den Potis gewackelt hat
 // byte potisChanged = 0b0000000;  // binär 00000000
 
 bool potiPitchChanged = 1;
@@ -109,38 +134,13 @@ bool potiFreqLFOChanged = 1;
 bool potiAmpLFOChanged = 1;
 
 const int potiTolerance = 10;
-///////////////////////////////////
 
-void saveValues(String place){
-    // Beispiel-Array mit Werten (z.B. Integer-Werte)
-  //int myArray[] = {10, 20, 30, 40, 50};
+// Flag, wenn es am Waveformschalter gewackelt hat
+bool lfoWaveformChanged = 0;
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // Erstelle einen JSON-Dokument Puffer mit genügend Speicher
-  StaticJsonDocument<200> doc;
 
-  // Füge die Array-Werte zum JSON-Dokument hinzu
-  /*
-  JsonArray array = doc.to<JsonArray>();
-  for (int i = 0; i < 5; i++) {
-    array.add(myArray[i]);
-  }
-  */
-
-  JsonObject actualDataset = doc.createNestedObject(place);
-  actualDataset["pitch"]     = baseFrequency;
-  actualDataset["lfoFreq"]   = lfoFrequency;
-  actualDataset["lfoAmount"] = lfoAmplitude;
-  actualDataset["envTime"]   = envelopeDuration;
-  actualDataset["envAmount"] = envelopeAmplitude;
-  actualDataset["waveform"] = lfoWaveform;
-  
-  // Erstelle einen JSON-String
-  String jsonString;
-  serializeJson(doc, jsonString);
-
-  // JSON-String ausgeben
-  Serial.println(jsonString);
-}
 
 
 ///////////////////////////////////
@@ -210,7 +210,7 @@ void setup() {
   
   pinMode(waveFormPin_0, INPUT_PULLUP);
   pinMode(waveFormPin_1, INPUT_PULLUP);
-  pinMode(waveFormFunctionPin, INPUT_PULLUP);
+  // pinMode(waveFormFunctionPin, INPUT_PULLUP);
   
   // Initialisieren des Arrays für die Mittelwertbildung des Pitch
   /*
@@ -226,10 +226,105 @@ void setup() {
   debugStr("Setup abgeschlossen.");
 }
 
+// Werte von den Potis und Schaltern in eine JSON datei speicher
+String values2JSON(){
+  // Erstelle einen JSON-Dokument Puffer mit genügend Speicher
+  StaticJsonDocument<200> dataSet;
+/*
+  JsonObject actualDataset = doc.createNestedObject(fireButton);
 
+  actualDataset["pitch"]     = baseFrequency;
+  actualDataset["lfoFreq"]   = lfoFrequency;
+  actualDataset["lfoAmount"] = lfoAmplitude;
+  actualDataset["envTime"]   = envelopeDuration;
+  actualDataset["envAmount"] = envelopeAmplitude;
+  actualDataset["waveform"] = lfoWaveform;
+*/
+  dataSet["pitch"]     = baseFrequency;
+  dataSet["lfoFreq"]   = lfoFrequency;
+  dataSet["lfoAmount"] = lfoAmplitude;
+  dataSet["envTime"]   = envelopeDuration;
+  dataSet["envAmount"] = envelopeAmplitude;
+  dataSet["waveform"]  = lfoWaveform;
 
+  // Erstelle einen JSON-String
+  String jsonString;
+  serializeJson(dataSet, jsonString);
 
-///////////// allgem. Funktionen
+  // String fileName = fireButton+".json";
+  // JSON-String ausgeben
+  // return(writeSettings(fileName, jsonString));
+  return jsonString;
+}
+
+void JSON2values(String jsonString) {
+  // Erstelle ein JSON-Dokument für das Parsen
+  StaticJsonDocument<200> dataSet;
+
+  // Deserialisiere den JSON-String
+  DeserializationError error = deserializeJson(dataSet, jsonString);
+
+  // Überprüfen, ob die Deserialisierung erfolgreich war
+  if (error) {
+    Serial.print("Fehler beim Parsen: ");
+    Serial.println(error.f_str());
+    return;
+  }
+
+  /*
+  // Jetzt können wir die Werte aus dem JSON-Dokument extrahieren
+  JsonObject actualDataset = doc["fire1"];
+
+  // Variablen aus dem JSON extrahieren und den globalen Variablen zuweisen
+  baseFrequency = actualDataset["pitch"];
+  lfoFrequency = actualDataset["lfoFreq"];
+  lfoAmplitude = actualDataset["lfoAmount"];
+  envelopeDuration = actualDataset["envTime"];
+  envelopeAmplitude = actualDataset["envAmount"];
+  lfoWaveform = actualDataset["waveform"];
+  */
+  baseFrequency = dataSet["pitch"];
+  lfoFrequency = dataSet["lfoFreq"];
+  lfoAmplitude = dataSet["lfoAmount"];
+  envelopeDuration = dataSet["envTime"];
+  envelopeAmplitude = dataSet["envAmount"];
+  lfoWaveform = dataSet["waveform"];
+}
+
+String readSettings(String configFile){
+    // Daten lesen
+    String value;
+    File file = LittleFS.open(configFile, "r");
+    if (file) {
+        //String value = file.read();  // Lese die gespeicherte Zahl
+        value = file.readStringUntil('\n');
+        Serial.println("read file "+configFile+": "+value);
+        file.close();
+    } else {
+        Serial.println("Error during reading of file "+configFile);
+        String _json = values2JSON();
+        writeSettings(_json,configFile);
+    }
+  return(value);
+}
+
+bool writeSettings(String s, String configFile){
+  // Daten schreiben
+  File file = LittleFS.open(configFile, "w");
+  if (file) {
+      //file.write(s);  // Schreibe eine Zahl
+      // String in die Datei schreiben
+      
+      file.println(s);  // Schreibt den String und fügt einen Zeilenumbruch hinzu
+
+      file.close();
+      return(true);
+      Serial.println("write file "+configFile+": "+s);
+  } else {
+    Serial.println("Error during writing of file "+configFile);
+    return(false);
+  }
+}
 
 void debugStr(String s){
   if (LOGLEVEL > 0){
@@ -247,41 +342,7 @@ void debugFloat(float f){
   }
 }
 
-String readSettings(){
-    // Daten lesen
-    String value;
-    File file = LittleFS.open(CONFIGFILE, "r");
-    if (file) {
-        //String value = file.read();  // Lese die gespeicherte Zahl
-        value = file.readStringUntil('\n');
-        Serial.println("Gelesener Wert: "+value);
-        file.close();
-    } else {
-        Serial.println("Fehler beim Lesen der Datei");
-        writeSettings("Wert1;Wert2;Wert3");
-    }
-  return(value);
-}
 
-
-bool writeSettings(String s){
-  // Daten schreiben
-    File file = LittleFS.open(CONFIGFILE, "w");
-    if (file) {
-        //file.write(s);  // Schreibe eine Zahl
-        // String in die Datei schreiben
-        
-        file.println(s);  // Schreibt den String und fügt einen Zeilenumbruch hinzu
-  
-        file.close();
-        return(true);
-        Serial.println("Daten geschrieben: "+s);
-    } else {
-      Serial.println("Fehler beim Schreiben der Datei");
-      //return(false);
-    }
- return(true);
-}
 
 
 // Funktion zur Umwandlung einer linearen Eingangsgröße in eine logarithmische Ausgabe
@@ -351,15 +412,7 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
         if (lfoValue >= 1.0 || lfoValue <= 0.0) {
           lfoDirection = -lfoDirection;  // Richtung umkehren
         }
-        /*
-        if(waveFormFunction == 0){
-          lfovalue_final = (lfoValue >= 0.5) ? 1 : 0;
-          
-          //lfovalue_final = triggeredLfoValue;
-        }else{
-          lfovalue_final = (lfoValue <= 0.5) ? 0.5 : -100; // -100 = muting
-        }
-        */
+
         
         if(lfoAmplitude < 0){
           lfovalue_final = (lfoValue <= 0.5) ? 0.5 : -100; // -100 = muting;
@@ -421,16 +474,8 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
     //lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0);
     lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) * envelope ;
      //debugFloat(envelope);
-    
-    
   }
 
-  
-/*
-  if(lfovalue_final < 0.5 ){digitalWrite(LED1, HIGH);}else{digitalWrite(LED1, LOW);}
-  
-   debugFloat(lfovalue_final1);
-   */
   //debugFloat(envelopeValue);
   return(lfovalue_final1);
 }
@@ -473,9 +518,9 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+// Tonerzeugung
 void soundCreate(float freqVal){
- // float pwm_val = setFrequency(baseFrequency); // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
-  //float pwm_val = setFrequency(linearToLogarithmic(freqVal));
+  // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
   float pwm_val = setFrequency(freqVal);
 
   // Setze die PWM-Periode
@@ -487,10 +532,10 @@ void soundCreate(float freqVal){
   
     if(freqVal == -100) {
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
-      //pwm_val = setFrequency(1);
-      //pwm_set_chan_level(slice_num, pwm_gpio_to_channel(wave_outputPin), pwm_val / 2);
     }else{
-      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val / 2);
+      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * 0.5);
+      //dutyCycle = duty / 100;
+      //pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * dutyCycle);
     }
   }else{
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
@@ -498,10 +543,11 @@ void soundCreate(float freqVal){
  
 }
 
-void setChangeState(bool p1, bool p2, bool p3){
+void setChangeState(bool p1, bool p2, bool p3, bool s1){
   potiPitchChanged = p1;
   potiFreqLFOChanged = p2;
   potiAmpLFOChanged = p3;
+  lfoWaveformChanged = s1;
 }
 
 bool chkLoop(int endCount){
@@ -521,6 +567,41 @@ void resetLFOParams(){
   previousMillis = millis();
 }
 
+byte combineBoolsToByte(bool b0, bool b1) {
+  byte result = 0;
+  
+  result |= (b0 << 0);  // Bit 0
+  result |= (b1 << 1);  // Bit 1
+  result |= (0 << 2);  // Bit 2
+  result |= (0 << 3);  // Bit 3
+  result |= (0 << 4);  // Bit 4
+  result |= (0 << 5);  // Bit 5
+  result |= (0 << 6);  // Bit 6
+  result |= (0 << 7);  // Bit 7
+  
+  return result;
+}
+
+void loadOrSave(byte fireButton){
+  String fileName = "fire"+String(fireButton)+".json";
+  resetLFOParams();
+  // keine Flankenauswertung, sondern ist der Shift-Taster gedrückt gehalten?
+  if(shift.read() == LOW){
+    // Save values
+    String _json = values2JSON();
+    writeSettings(_json,fileName);
+    shiftState = 1;
+  } else {
+    if(fireButton != actualFireButtonBak){
+      // load Values
+      String _json = readSettings(fileName);
+      JSON2values(_json);
+      setChangeState(0,0,0,0);
+    }
+  }
+  return;
+}
+
 void updateKeys(){
   shift.update();
   fire1.update();
@@ -528,58 +609,75 @@ void updateKeys(){
   fire3.update();
   fire4.update();
 
-  
-  // if ( (fire1.fell()) || (fire2.fell()) || (fire3.fell()) || (fire4.fell()) ){
-  
-  if (fire1.fell()){
-    resetLFOParams();
+  if (dataSaved == 0){
+    // fallende Flanke (Taster losgelassen)
+    if (shift.rose()) {
+      shiftState = !(shiftState);
+    }
   }
-  if (fire2.fell()){
-    resetLFOParams();
-    saveValues("fire1");
-  }
-  if (fire3.fell()){
-    resetLFOParams();
-    saveValues("fire2");
-  }
-  if (fire4.fell()){
-    resetLFOParams();
-  }
-  
-  // globale Variable rundsound = wenn high, wird ein Ton abgespielt
-  // runSound = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shift.read() == HIGH));
-  runSound = ((fire1.read() == LOW)&&(shift.read() == HIGH));
 
-  if (shift.fell()) {
-    shiftState = !(shiftState);
-    digitalWrite(LED_BUILTIN, shiftState);
+  if(shiftStateBak != shiftState){
+    // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
+    setChangeState(0,0,0,0);
   }
+  shiftStateBak = shiftState;
   
- 
   // Abfrage Schalter, welche Funktion die Potis haben sollen
+  /*
   waveFormFunction = digitalRead(waveFormFunctionPin);
+
 
   // Wenn der Funktionsschalter sich geändert hat
   if(waveFormFunctionBak != waveFormFunction){
-    // Flags zurücksetzen, dass die Potis gewackelt haben
-    setChangeState(1,0,0);
-    //readSettings();
-    //debugStr("State Changed");
-    
-    //writeSettings("Wert1;Wert2;Wert3");
-    //readSettings();
+    // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
+    setChangeState(1,0,0,0);
   }
   waveFormFunctionBak = waveFormFunction;
+*/
+  // Aus dem Waveformschalter ein Byte machen
+  valLfoWaveformSwitch = combineBoolsToByte(digitalRead(waveFormPin_0),digitalRead(waveFormPin_1));
+  if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
+    lfoWaveformChanged = 1;
+  }
+  valLfoWaveformSwitchBak = valLfoWaveformSwitch;
 
-  if (( digitalRead(waveFormPin_0) == 0 )&&( digitalRead(waveFormPin_1) == 1 )){
-    lfoWaveform = TRIANGLE;
-  } 
-  if(( digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 1 )){
-    lfoWaveform = SAWTOOTH;
+  if(lfoWaveformChanged){
+    switch (valLfoWaveformSwitch) {
+      case 1:
+        lfoWaveform = SQUARE;
+        break;
+      case 2:
+        lfoWaveform = SAWTOOTH;
+        break;
+      case 3:
+        lfoWaveform = TRIANGLE;
+        break;
+    }
   }
-  if ((digitalRead(waveFormPin_0) == 1 )&&( digitalRead(waveFormPin_1) == 0)){
-    lfoWaveform = SQUARE;
+  
+  // steigende Flanke (Taster gedrückt)
+  if (fire1.fell()){
+    actualFireButton = 1;
+    loadOrSave(actualFireButton);
   }
+  if (fire2.fell()){
+    actualFireButton = 2;
+    loadOrSave(actualFireButton);
+  }
+  if (fire3.fell()){
+    actualFireButton = 3;
+    loadOrSave(actualFireButton);
+  }
+  if (fire4.fell()){
+    actualFireButton = 4;
+    loadOrSave(actualFireButton);
+  }
+  actualFireButtonBak = actualFireButton;
+
+  // globale Variable rundsound = wenn high, wird ein Ton abgespielt
+  // runSound = ((fire1.read() == LOW)&&(shift.read() == HIGH));
+  runSound = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shift.read() == HIGH));
+  
 }
 
 void updatePotis(){
@@ -602,8 +700,8 @@ void updatePotis(){
   }
 }
 
-////////////////////////////////////////////////////////////
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 void loop() {
@@ -627,28 +725,17 @@ void loop() {
 */
 
   
-  /*
-  if (runSound != runSound_oldval){
-    if (runSound) {
-        lfoValue = 0;
-        envelopeValue = 1;
-        lfoDirection = 1;
-        previousMillis = millis();
-    } 
-   //delay(1);  // x millisekunden warten, eine Änderung danach wird wieder eine echte sein.
-  }
-  runSound_oldval = runSound;
-  */
   
 
-  // Holen der Basisfrequenz
-  if(potiPitchChanged == 1){
-    int freqLin = map(valPotiPitch, 4, 1023, minVal, maxVal );
-    baseFrequency =  linearToLogarithmic(freqLin );
-    valPotiPitchBak = valPotiPitch;
-  }
+  // if(waveFormFunction){
+  if(shiftState){
+    // Duty-Cycle Tonausgabe
+    if(potiPitchChanged == 1){
+      duty = map(valPotiPitch, 4, 1023, 10, 50 );
+      valPotiPitchBak = valPotiPitch;
+    }
 
-  if(waveFormFunction){
+    // wenn Shift, dann Envelopegenerator
     if(potiFreqLFOChanged == 1){
       envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 100);
       valPotiFreqLFOBak = valPotiFreqLFO;
@@ -659,6 +746,12 @@ void loop() {
     }
   }else{
     // lesen des Pitch-Wertes vom Poti incl. Mittelwert
+    // Holen der Basisfrequenz
+    if(potiPitchChanged == 1){
+      int freqLin = map(valPotiPitch, 4, 1023, minVal, maxVal );
+      baseFrequency =  linearToLogarithmic(freqLin );
+      valPotiPitchBak = valPotiPitch;
+    }
     if(potiFreqLFOChanged == 1){
       lfoFrequency = mapFloat(valPotiFreqLFO, 5, 1023, 0.5, 50);   // LFO-Frequenzbereich von 0.5 Hz bis 50 Hz
       valPotiFreqLFOBak = valPotiFreqLFO;
@@ -673,12 +766,13 @@ void loop() {
 
 
    if(chkLoop(10000)){
-     debugFloat(baseFrequency);
+     debugFloat(duty);
    }
    
 
    // Modulierte Frequenz berechnen
-   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, waveFormFunction);
+   //float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, waveFormFunction);
+   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, shiftState);
    float newModulatedFrequency = 0;
    if(lfoValueActual == -100){
     newModulatedFrequency = lfoValueActual;
@@ -688,8 +782,9 @@ void loop() {
    // Reset LFO values if the start button is false
   
    
-
- 
+  // LEDs
+  digitalWrite(LED_BUILTIN, shiftState);
+  
   // Create Tone
   soundCreate(newModulatedFrequency);
 
