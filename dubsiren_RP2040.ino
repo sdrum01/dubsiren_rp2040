@@ -28,7 +28,7 @@ const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
 const int firePin3 = 20;  // Steuerpin für die Tonaktivierung3
 const int firePin4 = 21;  // Steuerpin für die Tonaktivierung4
 
-// Bounce Objekte erstellen
+// Bounce Objekte erstellen zur Tastenabfrage
 Bounce fire1;
 Bounce fire2;
 Bounce fire3;
@@ -68,7 +68,7 @@ float dutyCycle = 0;
 
 // die finale LFO WaveForm Variable, die durch Schalter oder Speicher gesetzt wird
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
-LfoWaveform lfoWaveform = TRIANGLE;  // Gewünschte LFO-Wellenform: SQUARE, TRIANGLE, SAWTOOTH
+LfoWaveform lfoWaveform = TRIANGLE;  // 
 
 
 
@@ -88,7 +88,6 @@ const int numReadings = 10;
 int pitchReadings[numReadings];
 int pitchReadIndex = 0;
 int pitchTotal = 0;
-// int valPotiPitch = 0;
 
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
@@ -134,9 +133,6 @@ bool lfoWaveformChanged = 0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-
-///////////////////////////////////
 void setup() {
   
   if(LOGLEVEL > 0){

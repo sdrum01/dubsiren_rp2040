@@ -368,7 +368,7 @@
   "net_settings": {
     "classes": [
       {
-        "bus_width": 12.0,
+        "bus_width": 12,
         "clearance": 0.2,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
@@ -382,11 +382,11 @@
         "track_width": 0.25,
         "via_diameter": 0.8,
         "via_drill": 0.4,
-        "wire_width": 6.0
+        "wire_width": 6
       }
     ],
     "meta": {
-      "version": 2
+      "version": 3
     },
     "net_colors": null,
     "netclass_assignments": null,
@@ -518,7 +518,7 @@
   "sheets": [
     [
       "0d855e99-162c-4989-8fe3-f98154ec6843",
-      "Root"
+      "Stammblatt"
     ]
   ],
   "text_variables": {}
