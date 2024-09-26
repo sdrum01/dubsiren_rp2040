@@ -63,8 +63,7 @@ float lfoAmplitude = 0;
 float envelopeDuration = 20;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float envelopeAmplitude = 0;
 
-byte duty = 50;
-float dutyCycle = 0;
+float duty = 50;
 
 // die finale LFO WaveForm Variable, die durch Schalter oder Speicher gesetzt wird
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
@@ -234,6 +233,7 @@ String values2JSON(){
   dataSet["envTime"]   = envelopeDuration;
   dataSet["envAmount"] = envelopeAmplitude;
   dataSet["waveform"]  = lfoWaveform;
+  dataSet["dutyCycle"]  = duty;
 
   // Erstelle einen JSON-String
   String jsonString;
@@ -277,6 +277,7 @@ void JSON2values(String jsonString) {
   envelopeDuration = dataSet["envTime"];
   envelopeAmplitude = dataSet["envAmount"];
   lfoWaveform = dataSet["waveform"];
+  duty = dataSet["dutyCycle"];
 }
 
 String readSettings(String configFile){
@@ -510,7 +511,7 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
 void soundCreate(float freqVal){
   // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
   float pwm_val = setFrequency(freqVal);
-
+  
   // Setze die PWM-Periode
   uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
 
@@ -521,9 +522,9 @@ void soundCreate(float freqVal){
     if(freqVal == -100) {
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
     }else{
-      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * 0.5);
+      //pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * 0.5);
       //dutyCycle = duty / 100;
-      //pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * dutyCycle);
+      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100));
     }
   }else{
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
@@ -719,7 +720,7 @@ void loop() {
   if(shiftState){
     // Duty-Cycle Tonausgabe
     if(potiPitchChanged == 1){
-      duty = map(valPotiPitch, 4, 1023, 10, 50 );
+      duty = map(valPotiPitch, 4, 1023, 5, 50 );
       valPotiPitchBak = valPotiPitch;
     }
 
