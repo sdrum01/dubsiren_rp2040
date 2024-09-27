@@ -4358,7 +4358,7 @@
 				)
 			)
 		)
-		(property "Value" "Barrel_Jack"
+		(property "Value" "Power Jack 5V"
 			(at 54.61 48.26 0)
 			(effects
 				(font
