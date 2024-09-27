@@ -7,6 +7,7 @@
 
 const int LOGLEVEL = 1;
 
+// Definition der IO's
 const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
 const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
@@ -15,17 +16,15 @@ const int waveFormPin_0 = 3; // WaveForm Kippschalter PIN 1
 const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
 //const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
 
-// Schalter für WaveForm
-byte valLfoWaveformSwitch = 0;
-// temporäre Sicherung des Wertes des Waveformschalters
-byte valLfoWaveformSwitchBak = 0;
-
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
-const int shiftPin = 2;  // Shift-Taste
+const int shiftPin1 = 2;  // shift1-Taste1
+const int shiftPin2 = 1;  // shift1-Taste2
+const int shiftPin3 = 0;  // shift1-Taste3
+
 const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
 const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
-const int firePin3 = 20;  // Steuerpin für die Tonaktivierung3
+const int firePin3 = 20;  // Steuerpin für die Tonaktivierung3g
 const int firePin4 = 21;  // Steuerpin für die Tonaktivierung4
 
 // Bounce Objekte erstellen zur Tastenabfrage
@@ -33,10 +32,18 @@ Bounce fire1;
 Bounce fire2;
 Bounce fire3;
 Bounce fire4;
-Bounce shift;
+Bounce shift1;
+Bounce shift2;
+Bounce shift3;
+
 
 byte actualFireButton = 0;
 byte actualFireButtonBak = 0;
+
+// globale V. für Schalter für WaveForm
+byte valLfoWaveformSwitch = 0;
+// temporäre Sicherung des Wertes des Waveformschalters
+byte valLfoWaveformSwitchBak = 0;
 
 const int LED1_red = 16;
 const int LED1_green = 17;
@@ -91,9 +98,9 @@ int pitchTotal = 0;
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
 
-// shift-taste
+// shift1-taste
 bool shiftState = 0;
-// entprellen der shift-taste
+// entprellen der shift1-taste
 bool shiftStateBak = 0;
 
 // LED1+2
@@ -173,15 +180,15 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
   
-  pinMode(shiftPin, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  pinMode(shiftPin1, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
   pinMode(firePin1, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
   pinMode(firePin2, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
   pinMode(firePin3, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
   pinMode(firePin4, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
 
   // Bounce-Objekt initialisieren
-  shift.attach(shiftPin);
-  shift.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+  shift1.attach(shiftPin1);
+  shift1.interval(50);  // Entprellintervall in Millisekunden (50 ms)
 
   fire1.attach(firePin1);
   fire1.interval(10);  
@@ -574,8 +581,8 @@ byte combineBoolsToByte(bool b0, bool b1) {
 void loadOrSave(byte fireButton){
   String fileName = "fire"+String(fireButton)+".json";
   resetLFOParams();
-  // keine Flankenauswertung, sondern ist der Shift-Taster gedrückt gehalten?
-  if(shift.read() == LOW){
+  // keine Flankenauswertung, sondern ist der shift1-Taster gedrückt gehalten?
+  if(shift1.read() == LOW){
     // Save values
     String _json = values2JSON();
     writeSettings(_json,fileName);
@@ -592,7 +599,7 @@ void loadOrSave(byte fireButton){
 }
 
 void updateKeys(){
-  shift.update();
+  shift1.update();
   fire1.update();
   fire2.update();
   fire3.update();
@@ -600,7 +607,7 @@ void updateKeys(){
 
   if (dataSaved == 0){
     // fallende Flanke (Taster losgelassen)
-    if (shift.rose()) {
+    if (shift1.rose()) {
       shiftState = !(shiftState);
     }
   }
@@ -664,8 +671,8 @@ void updateKeys(){
   actualFireButtonBak = actualFireButton;
 
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
-  // runSound = ((fire1.read() == LOW)&&(shift.read() == HIGH));
-  runSound = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shift.read() == HIGH));
+  // runSound = ((fire1.read() == LOW)&&(shift1.read() == HIGH));
+  runSound = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shift1.read() == HIGH));
   
 }
 
@@ -724,7 +731,7 @@ void loop() {
       valPotiPitchBak = valPotiPitch;
     }
 
-    // wenn Shift, dann Envelopegenerator
+    // wenn shift1, dann Envelopegenerator
     if(potiFreqLFOChanged == 1){
       envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 100);
       valPotiFreqLFOBak = valPotiFreqLFO;
