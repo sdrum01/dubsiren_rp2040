@@ -18,9 +18,9 @@ const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
-const int shiftPin1 = 2;  // shift1-Taste1
-const int shiftPin2 = 1;  // shift1-Taste2
-const int shiftPin3 = 0;  // shift1-Taste3
+const int shiftPin1 = 2;  // shift-Taste1
+const int shiftPin2 = 6;  // shift-Taste2
+const int shiftPin3 = 7;  // shift-Taste3
 
 const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
 const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
@@ -103,6 +103,9 @@ bool shiftState = 0;
 // entprellen der shift1-taste
 bool shiftStateBak = 0;
 
+bool shiftState1 = 0;
+bool shiftState2 = 0;
+
 // LED1+2
 
 int pwm_led = 1000;
@@ -135,6 +138,8 @@ const int potiTolerance = 10;
 
 // Flag, wenn es am Waveformschalter gewackelt hat
 bool lfoWaveformChanged = 0;
+
+String debug ="";
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -180,15 +185,23 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
   
-  pinMode(shiftPin1, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
-  pinMode(firePin1, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
-  pinMode(firePin2, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
-  pinMode(firePin3, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
-  pinMode(firePin4, INPUT_PULLUP);  // Steuerpin als Eingang mit Pull-up-Widerstand
+  pinMode(shiftPin1, INPUT_PULLUP);  
+  pinMode(shiftPin2, INPUT_PULLUP);  
+  pinMode(shiftPin3, INPUT_PULLUP);
+  pinMode(firePin1, INPUT_PULLUP); 
+  pinMode(firePin2, INPUT_PULLUP); 
+  pinMode(firePin3, INPUT_PULLUP); 
+  pinMode(firePin4, INPUT_PULLUP); 
 
   // Bounce-Objekt initialisieren
   shift1.attach(shiftPin1);
   shift1.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+
+  shift2.attach(shiftPin2);
+  shift2.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+
+  shift3.attach(shiftPin3);
+  shift3.interval(50);  // Entprellintervall in Millisekunden (50 ms)
 
   fire1.attach(firePin1);
   fire1.interval(10);  
@@ -600,6 +613,9 @@ void loadOrSave(byte fireButton){
 
 void updateKeys(){
   shift1.update();
+  shift2.update();
+  shift3.update();
+
   fire1.update();
   fire2.update();
   fire3.update();
@@ -612,12 +628,22 @@ void updateKeys(){
     }
   }
 
+/*
   if(shiftStateBak != shiftState){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
     setChangeState(0,0,0,0);
   }
   shiftStateBak = shiftState;
-  
+*/  
+
+  shiftState1 = !(shift2.read());
+
+  if(shiftStateBak != shiftState1){
+    // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
+    setChangeState(0,0,0,0);
+  }
+  shiftStateBak = shiftState1;
+
   // Abfrage Schalter, welche Funktion die Potis haben sollen
   /*
   waveFormFunction = digitalRead(waveFormFunctionPin);
@@ -670,6 +696,9 @@ void updateKeys(){
   }
   actualFireButtonBak = actualFireButton;
 
+  
+  
+
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
   // runSound = ((fire1.read() == LOW)&&(shift1.read() == HIGH));
   runSound = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shift1.read() == HIGH));
@@ -704,27 +733,10 @@ void loop() {
   
   updateKeys();
   updatePotis();
-/*
-  // Prüfe auf steigende Flanke (Taster wurde gedrückt)
-  if (taster.fell()) {
-    Serial.println("Taster gedrückt (steigende Flanke erkannt)");
-  }
 
-  // Prüfe auf fallende Flanke (Taster wurde losgelassen)
-  if (taster.rose()) {
-    Serial.println("Taster losgelassen (fallende Flanke erkannt)");
-  }
-
-  if (taster.read() == LOW) {
-    Serial.println("Taste ist gedrückt!");
-  }
-*/
-
-  
-  
 
   // if(waveFormFunction){
-  if(shiftState){
+  if(shiftState1){
     // Duty-Cycle Tonausgabe
     if(potiPitchChanged == 1){
       duty = map(valPotiPitch, 4, 1023, 5, 50 );
@@ -762,7 +774,8 @@ void loop() {
 
 
    if(chkLoop(10000)){
-     debugFloat(duty);
+     //debugFloat(duty);
+     debugStr(debug);
    }
    
 
@@ -779,7 +792,7 @@ void loop() {
   
    
   // LEDs
-  digitalWrite(LED_BUILTIN, shiftState);
+  digitalWrite(LED_BUILTIN, shiftState1);
   
   // Create Tone
   soundCreate(newModulatedFrequency);
