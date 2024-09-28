@@ -18,9 +18,9 @@ const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
-const int shiftPin1 = 2;  // shift-Taste1
-const int shiftPin2 = 6;  // shift-Taste2
-const int shiftPin3 = 7;  // shift-Taste3
+const int shiftTogglePin = 2;  // shift-Taste1
+const int shiftPin1 = 6;  // shift-Taste2
+const int shiftPin2 = 7;  // shift-Taste3
 
 const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
 const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
@@ -32,9 +32,9 @@ Bounce fire1;
 Bounce fire2;
 Bounce fire3;
 Bounce fire4;
+Bounce shiftToggle;
 Bounce shift1;
 Bounce shift2;
-Bounce shift3;
 
 
 byte actualFireButton = 0;
@@ -98,13 +98,18 @@ int pitchTotal = 0;
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
 
-// shift1-taste
-bool shiftState = 0;
-// entprellen der shift1-taste
-bool shiftStateBak = 0;
+// shiftToggle-taste
+bool shiftToggleState = 0;
+bool shiftToggleStateBak = 0;
 
 bool shiftState1 = 0;
 bool shiftState2 = 0;
+
+bool shiftState1Bak = 0;
+bool shiftState2Bak = 0;
+
+byte shiftState = 0;
+byte shiftStateBak = 0;
 
 // LED1+2
 
@@ -186,22 +191,22 @@ void setup() {
 
   
   pinMode(shiftPin1, INPUT_PULLUP);  
-  pinMode(shiftPin2, INPUT_PULLUP);  
-  pinMode(shiftPin3, INPUT_PULLUP);
+  pinMode(shiftPin1, INPUT_PULLUP);  
+  pinMode(shiftPin2, INPUT_PULLUP);
   pinMode(firePin1, INPUT_PULLUP); 
   pinMode(firePin2, INPUT_PULLUP); 
   pinMode(firePin3, INPUT_PULLUP); 
   pinMode(firePin4, INPUT_PULLUP); 
 
   // Bounce-Objekt initialisieren
+  shiftToggle.attach(shiftPin1);
+  shiftToggle.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+
   shift1.attach(shiftPin1);
   shift1.interval(50);  // Entprellintervall in Millisekunden (50 ms)
 
   shift2.attach(shiftPin2);
   shift2.interval(50);  // Entprellintervall in Millisekunden (50 ms)
-
-  shift3.attach(shiftPin3);
-  shift3.interval(50);  // Entprellintervall in Millisekunden (50 ms)
 
   fire1.attach(firePin1);
   fire1.interval(10);  
@@ -557,6 +562,7 @@ void setChangeState(bool p1, bool p2, bool p3, bool s1){
   potiFreqLFOChanged = p2;
   potiAmpLFOChanged = p3;
   lfoWaveformChanged = s1;
+  debugStr("State Reset");
 }
 
 bool chkLoop(int endCount){
@@ -594,12 +600,13 @@ byte combineBoolsToByte(bool b0, bool b1) {
 void loadOrSave(byte fireButton){
   String fileName = "fire"+String(fireButton)+".json";
   resetLFOParams();
-  // keine Flankenauswertung, sondern ist der shift1-Taster gedrückt gehalten?
-  if(shift1.read() == LOW){
+  // keine Flankenauswertung, sondern ist der shiftToggle-Taster gedrückt gehalten?
+  if(shiftState == 2){ // Shifttaste 2 gedrückt
     // Save values
     String _json = values2JSON();
+    debugStr("Write");
     writeSettings(_json,fileName);
-    shiftState = 1;
+    //shiftToggleState = 1;
   } else {
     if(fireButton != actualFireButtonBak){
       // load Values
@@ -612,9 +619,9 @@ void loadOrSave(byte fireButton){
 }
 
 void updateKeys(){
+  shiftToggle.update();
   shift1.update();
   shift2.update();
-  shift3.update();
 
   fire1.update();
   fire2.update();
@@ -623,26 +630,29 @@ void updateKeys(){
 
   if (dataSaved == 0){
     // fallende Flanke (Taster losgelassen)
-    if (shift1.rose()) {
-      shiftState = !(shiftState);
+    if (shiftToggle.rose()) {
+      shiftToggleState = !(shiftToggleState);
     }
   }
 
 /*
+  if(shiftToggleStateBak != shiftToggleState){
+    // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
+    setChangeState(0,0,0,0);
+  }
+  shiftToggleStateBak = shiftToggleState;
+*/  
+
+  
+  shiftState = combineBoolsToByte(!shift1.read(),!shift2.read());
+
   if(shiftStateBak != shiftState){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
     setChangeState(0,0,0,0);
   }
   shiftStateBak = shiftState;
-*/  
 
-  shiftState1 = !(shift2.read());
 
-  if(shiftStateBak != shiftState1){
-    // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
-    setChangeState(0,0,0,0);
-  }
-  shiftStateBak = shiftState1;
 
   // Abfrage Schalter, welche Funktion die Potis haben sollen
   /*
@@ -696,12 +706,8 @@ void updateKeys(){
   }
   actualFireButtonBak = actualFireButton;
 
-  
-  
-
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
-  // runSound = ((fire1.read() == LOW)&&(shift1.read() == HIGH));
-  runSound = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shift1.read() == HIGH));
+  runSound = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shiftState != 2));
   
 }
 
@@ -735,24 +741,8 @@ void loop() {
   updatePotis();
 
 
-  // if(waveFormFunction){
-  if(shiftState1){
-    // Duty-Cycle Tonausgabe
-    if(potiPitchChanged == 1){
-      duty = map(valPotiPitch, 4, 1023, 5, 50 );
-      valPotiPitchBak = valPotiPitch;
-    }
 
-    // wenn shift1, dann Envelopegenerator
-    if(potiFreqLFOChanged == 1){
-      envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 100);
-      valPotiFreqLFOBak = valPotiFreqLFO;
-    }
-    if(potiAmpLFOChanged == 1){
-      envelopeAmplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);
-      valPotiAmpLFOBak = valPotiAmpLFO;
-    }
-  }else{
+  if(shiftState == 0){
     // lesen des Pitch-Wertes vom Poti incl. Mittelwert
     // Holen der Basisfrequenz
     if(potiPitchChanged == 1){
@@ -768,20 +758,35 @@ void loop() {
       lfoAmplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von 0 bis 100, 50 Mitte
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
+  } else if(shiftState == 1){
+    // Duty-Cycle Tonausgabe
+    if(potiPitchChanged == 1){
+      duty = map(valPotiPitch, 4, 1023, 5, 50 );
+      valPotiPitchBak = valPotiPitch;
+    }
+
+    // wenn shiftToggle, dann Envelopegenerator
+    if(potiFreqLFOChanged == 1){
+      envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 100);
+      valPotiFreqLFOBak = valPotiFreqLFO;
+    }
+    if(potiAmpLFOChanged == 1){
+      envelopeAmplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);
+      valPotiAmpLFOBak = valPotiAmpLFO;
+    }
+  } else if(shiftState == 3){
+    envelopeAmplitude = 0;
   }
-  
-
-
 
    if(chkLoop(10000)){
-     //debugFloat(duty);
-     debugStr(debug);
+     debugFloat(shiftState);
+     
    }
    
 
    // Modulierte Frequenz berechnen
    //float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, waveFormFunction);
-   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, shiftState);
+   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, shiftToggleState);
    float newModulatedFrequency = 0;
    if(lfoValueActual == -100){
     newModulatedFrequency = lfoValueActual;
@@ -792,7 +797,7 @@ void loop() {
   
    
   // LEDs
-  digitalWrite(LED_BUILTIN, shiftState1);
+  digitalWrite(LED_BUILTIN, shiftToggleState);
   
   // Create Tone
   soundCreate(newModulatedFrequency);
