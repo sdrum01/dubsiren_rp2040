@@ -5,6 +5,7 @@
 #include "Bounce2.h"
 #include "ArduinoJson.h"
 
+#define LONG_PRESS_DURATION 3000
 const int LOGLEVEL = 1;
 
 // Definition der IO's
@@ -36,9 +37,12 @@ Bounce shiftToggle;
 Bounce shift1;
 Bounce shift2;
 
-
 byte actualFireButton = 0;
 byte actualFireButtonBak = 0;
+
+// Zeitmessung, ob die Firebutton lange gedrückt sind
+unsigned long firePressedTime = 0;
+bool longPressDetected = false;
 
 // globale V. für Schalter für WaveForm
 byte valLfoWaveformSwitch = 0;
@@ -690,24 +694,59 @@ void updateKeys(){
   // steigende Flanke (Taster gedrückt)
   if (fire1.fell()){
     actualFireButton = 1;
+    firePressedTime = millis();  // Zeit des Tastendrucks speichern
+    longPressDetected = false;     // Reset des Langdruck-Flags
     loadOrSave(actualFireButton);
   }
   if (fire2.fell()){
     actualFireButton = 2;
+    firePressedTime = millis();  
+    longPressDetected = false;
     loadOrSave(actualFireButton);
   }
   if (fire3.fell()){
     actualFireButton = 3;
+    firePressedTime = millis();  
+    longPressDetected = false;
     loadOrSave(actualFireButton);
   }
   if (fire4.fell()){
     actualFireButton = 4;
+    firePressedTime = millis();  
+    longPressDetected = false;
     loadOrSave(actualFireButton);
   }
+
+  if (fire1.rose()){
+    firePressedTime = 0;  
+    longPressDetected = false;
+  }
+  if (fire2.rose()){
+    firePressedTime = 0;  
+    longPressDetected = false;
+  }
+  if (fire3.rose()){
+    firePressedTime = 0;  
+    longPressDetected = false;
+  }
+  if (fire4.rose()){
+    firePressedTime = 0;  
+    longPressDetected = false;
+  }
+
+  bool anyFireButtonPressed = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shiftState != 2));
+  
+  if (anyFireButtonPressed && !longPressDetected) {
+    if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
+      longPressDetected = true;  // Markiere, dass der lange Druck erkannt wurde
+      Serial.println("Taster 3 Sekunden lang gedrückt!");
+    }
+  }
+  
   actualFireButtonBak = actualFireButton;
 
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
-  runSound = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shiftState != 2));
+  runSound = anyFireButtonPressed;
   
 }
 
