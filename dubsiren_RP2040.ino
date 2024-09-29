@@ -412,12 +412,10 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
   if (currentMillis - previousMillisEnv >= envelopePeriod / 100.0) {
     previousMillisEnv += envelopePeriod / 100.0;
     envelopeValue -= schrittweite_envelope;  // 
-        if (envelopeValue <= 0.0) {
-          envelopeValue = 0.0;  // Unten begrenzen
-     }
-
+    if (envelopeValue <= 0.0){
+      envelopeValue = 0.0;  // Unten begrenzen
+    }
   }
-  
   
   if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
     previousMillis += lfoPeriod / 100.0;
@@ -430,7 +428,6 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
         if (lfoValue >= 1.0 || lfoValue <= 0.0) {
           lfoDirection = -lfoDirection;  // Richtung umkehren
         }
-
         
         if(lfoAmplitude < 0){
           lfovalue_final = (lfoValue <= 0.5) ? 0.5 : -100; // -100 = muting;
@@ -486,7 +483,7 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
     pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),envelopeValue * pwm_led);
     
     float envelope = envelopeValue * (envelopeAmplitude / 100) + 1.0;
-    lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) * envelope ;
+    lfovalue_final1 = ( ((lfovalue_final -0.5)*1.5) * (lfoAmplitude/100) + 1.0) * envelope ;
      //debugFloat(envelope);
   }
 
@@ -781,7 +778,7 @@ void loop() {
     // Holen der Basisfrequenz
     if(potiPitchChanged == 1){
       int freqLin = map(valPotiPitch, 4, 1023, minVal, maxVal );
-      baseFrequency =  linearToLogarithmic(freqLin );
+      baseFrequency =  linearToLogarithmic(freqLin);
       valPotiPitchBak = valPotiPitch;
     }
     if(potiFreqLFOChanged == 1){
@@ -799,7 +796,7 @@ void loop() {
       valPotiPitchBak = valPotiPitch;
     }
 
-    // wenn shiftToggle, dann Envelopegenerator
+    // Envelopegenerator
     if(potiFreqLFOChanged == 1){
       envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 100);
       valPotiFreqLFOBak = valPotiFreqLFO;
@@ -812,10 +809,7 @@ void loop() {
     envelopeAmplitude = 0;
   }
 
-   if(chkLoop(10000)){
-     debugFloat(shiftState);
-     
-   }
+   
    
 
    // Modulierte Frequenz berechnen
@@ -833,5 +827,10 @@ void loop() {
   
   // Create Tone
   soundCreate(newModulatedFrequency);
+
+  // Überwachung und Debugprints
+  if(chkLoop(50)){
+     debugFloat(lfoValueActual);
+  }
 
 }
