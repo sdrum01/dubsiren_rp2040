@@ -5,7 +5,7 @@
 #include "Bounce2.h"
 #include "ArduinoJson.h"
 
-#define LONG_PRESS_DURATION 3000
+#define LONG_PRESS_DURATION 2000
 const int LOGLEVEL = 1;
 
 // Definition der IO's
@@ -479,7 +479,6 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
   if(lfovalue_final == -100){
     lfovalue_final1 = lfovalue_final; // negativ für Sonderfunktionen wie Muting (-99)
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
-    //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
   }else{
     
     // LED grün LFO
@@ -487,9 +486,6 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
     pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),envelopeValue * pwm_led);
     
     float envelope = envelopeValue * (envelopeAmplitude / 100) + 1.0;
-    //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),envelopeValue * pwm_led);
-    
-    //lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0);
     lfovalue_final1 = ((lfovalue_final -0.5) * (lfoAmplitude/100) + 1.0) * envelope ;
      //debugFloat(envelope);
   }
@@ -558,7 +554,6 @@ void soundCreate(float freqVal){
   }else{
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
   }
- 
 }
 
 void setChangeState(bool p1, bool p2, bool p3, bool s1){
@@ -719,19 +714,19 @@ void updateKeys(){
 
   if (fire1.rose()){
     firePressedTime = 0;  
-    longPressDetected = false;
+    //longPressDetected = false;
   }
   if (fire2.rose()){
     firePressedTime = 0;  
-    longPressDetected = false;
+    //longPressDetected = false;
   }
   if (fire3.rose()){
     firePressedTime = 0;  
-    longPressDetected = false;
+    //longPressDetected = false;
   }
   if (fire4.rose()){
     firePressedTime = 0;  
-    longPressDetected = false;
+    //longPressDetected = false;
   }
 
   bool anyFireButtonPressed = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shiftState != 2));
@@ -739,14 +734,14 @@ void updateKeys(){
   if (anyFireButtonPressed && !longPressDetected) {
     if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
       longPressDetected = true;  // Markiere, dass der lange Druck erkannt wurde
-      Serial.println("Taster 3 Sekunden lang gedrückt!");
+      Serial.println("LongPress detected!");
     }
   }
   
   actualFireButtonBak = actualFireButton;
 
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
-  runSound = anyFireButtonPressed;
+  runSound = (anyFireButtonPressed || longPressDetected);
   
 }
 
@@ -824,7 +819,6 @@ void loop() {
    
 
    // Modulierte Frequenz berechnen
-   //float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, waveFormFunction);
    float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, shiftToggleState);
    float newModulatedFrequency = 0;
    if(lfoValueActual == -100){
@@ -834,7 +828,6 @@ void loop() {
    }
    // Reset LFO values if the start button is false
   
-   
   // LEDs
   digitalWrite(LED_BUILTIN, shiftToggleState);
   
