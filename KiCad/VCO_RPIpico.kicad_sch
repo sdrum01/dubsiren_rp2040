@@ -643,6 +643,142 @@
 				)
 			)
 		)
+		(symbol "Device:C"
+			(pin_numbers hide)
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C"
+				(at 0.635 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "C"
+				(at 0.635 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" ""
+				(at 0.9652 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Unpolarized capacitor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "cap capacitor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "C_*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "C_0_1"
+				(polyline
+					(pts
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.032 0.762) (xy 2.032 0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "C_1_1"
+				(pin passive line
+					(at 0 3.81 270)
+					(length 2.794)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 2.794)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+		)
 		(symbol "Device:C_Polarized"
 			(pin_numbers hide)
 			(pin_names
@@ -3268,6 +3404,18 @@
 		(uuid "0c1850f0-385c-4170-9663-422a0a4c4382")
 	)
 	(junction
+		(at 228.6 102.87)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "0f80e18e-457a-4763-a955-735e4b4761db")
+	)
+	(junction
+		(at 196.85 97.79)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "252be8be-910f-4248-be2d-e2266e1f4b16")
+	)
+	(junction
 		(at 208.28 118.11)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3284,6 +3432,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "3eb091be-895f-4d03-8467-9c8e9bb9b660")
+	)
+	(junction
+		(at 213.36 100.33)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "3f47534f-aec1-4ecf-9b5d-6fc4792382ef")
 	)
 	(junction
 		(at 105.41 113.03)
@@ -3627,7 +3781,7 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 102.87) (xy 234.95 102.87)
+			(xy 173.99 102.87) (xy 228.6 102.87)
 		)
 		(stroke
 			(width 0)
@@ -3797,7 +3951,7 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 100.33) (xy 220.98 100.33)
+			(xy 173.99 100.33) (xy 213.36 100.33)
 		)
 		(stroke
 			(width 0)
@@ -3957,6 +4111,16 @@
 	)
 	(wire
 		(pts
+			(xy 213.36 100.33) (xy 220.98 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "746cb19d-bb8b-4456-8ecd-d65a7e3767ef")
+	)
+	(wire
+		(pts
 			(xy 158.75 76.2) (xy 158.75 77.47)
 		)
 		(stroke
@@ -4027,7 +4191,7 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 97.79) (xy 207.01 97.79)
+			(xy 173.99 97.79) (xy 196.85 97.79)
 		)
 		(stroke
 			(width 0)
@@ -4064,6 +4228,16 @@
 			(type default)
 		)
 		(uuid "8e04e858-2467-4369-a39e-eb503c15eefc")
+	)
+	(wire
+		(pts
+			(xy 196.85 97.79) (xy 207.01 97.79)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8e551129-e756-48d7-ba59-006f18e70f7e")
 	)
 	(wire
 		(pts
@@ -4144,6 +4318,16 @@
 			(type default)
 		)
 		(uuid "a3ba7301-e3b0-4417-af06-1f96b3b7c4b3")
+	)
+	(wire
+		(pts
+			(xy 228.6 102.87) (xy 234.95 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a6bc524b-7320-4708-89e2-09cce1ebea5d")
 	)
 	(wire
 		(pts
@@ -4555,6 +4739,36 @@
 		)
 		(uuid "fd875164-b71d-4eef-ba12-3924359cedf3")
 	)
+	(text "Freq"
+		(exclude_from_sim no)
+		(at 220.98 74.93 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "612741be-3c43-4d55-8003-fc4d820a1444")
+	)
+	(text "Tune"
+		(exclude_from_sim no)
+		(at 234.95 74.93 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "7e9d56c6-a690-4cb5-925b-57835b90875b")
+	)
+	(text "Amount"
+		(exclude_from_sim no)
+		(at 207.01 74.93 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "dc2c09de-d05f-4f63-818f-2933c23fe5d4")
+	)
 	(symbol
 		(lib_id "Device:R")
 		(at 118.11 128.27 90)
@@ -4756,6 +4970,136 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GNDA")
+		(at 213.36 92.71 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1605e82d-47ee-44dd-99c4-b563318e1a46")
+		(property "Reference" "#PWR08"
+			(at 213.36 86.36 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GNDA"
+			(at 209.804 90.424 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 213.36 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 213.36 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GNDA\" , analog ground"
+			(at 213.36 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4c8a827e-9271-452a-ac61-38b777893264")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "#PWR08")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GNDA")
+		(at 228.6 95.25 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1753cf4e-89d5-4505-84d9-9eb6961307d0")
+		(property "Reference" "#PWR015"
+			(at 228.6 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GNDA"
+			(at 225.044 92.964 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 228.6 95.25 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 228.6 95.25 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GNDA\" , analog ground"
+			(at 228.6 95.25 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "25183ff0-98a1-4a2b-9836-cac33e9026c5")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "#PWR015")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R")
 		(at 118.11 120.65 90)
 		(unit 1)
@@ -4914,7 +5258,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LED_THT:LED_D3.0mm"
+		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
 			(at 109.22 124.46 0)
 			(effects
 				(font
@@ -5242,7 +5586,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 216.916 76.2 0)
+			(at 211.836 78.232 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5313,7 +5657,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LED_THT:LED_D3.0mm"
+		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
 			(at 109.22 120.65 0)
 			(effects
 				(font
@@ -5453,7 +5797,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "RPI:Raspberry_Pi_Pico_SMT_THT"
+		(property "Footprint" "RPI:Raspberry_Pi_Pico_SMT_THT_noDebugPort"
 			(at 156.21 102.87 0)
 			(effects
 				(font
@@ -5637,7 +5981,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 231.14 76.2 0)
+			(at 226.06 78.232 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5693,8 +6037,8 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "54d5493c-eda9-4222-85b4-67f0ceb9f630")
-		(property "Reference" "RV3"
-			(at 233.68 78.74 90)
+		(property "Reference" "R15"
+			(at 232.41 77.47 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5750,7 +6094,7 @@
 		(instances
 			(project ""
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "RV3")
+					(reference "R15")
 					(unit 1)
 				)
 			)
@@ -5818,6 +6162,76 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "SW6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 196.85 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "58dde1fc-8578-48d5-a4e3-0d0a25682ad6")
+		(property "Reference" "C2"
+			(at 200.66 92.7099 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 200.66 95.2499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric"
+			(at 197.8152 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 196.85 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 196.85 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e2e917cd-0890-421a-8f72-b2ae6999cdbc")
+		)
+		(pin "2"
+			(uuid "45123855-73e6-4d23-a997-b10afb81a1c9")
+		)
+		(instances
+			(project ""
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "C2")
 					(unit 1)
 				)
 			)
@@ -5950,6 +6364,145 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "SW5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 228.6 99.06 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5be38e64-bea6-4dba-b031-12a45e7a939d")
+		(property "Reference" "C4"
+			(at 232.41 97.7899 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 232.41 100.3299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric"
+			(at 229.5652 102.87 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 228.6 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 228.6 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d925c393-d0b3-4213-8ad0-bd11f35d9010")
+		)
+		(pin "2"
+			(uuid "23d3dc39-aaa9-4387-8e32-57b89883e202")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "C4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 213.36 96.52 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5cc1cc81-8c94-4a0f-9d86-ac629ca2b1cb")
+		(property "Reference" "C3"
+			(at 217.17 95.2499 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 215.9 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric"
+			(at 214.3252 100.33 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 213.36 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 213.36 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2d7c4f59-1f17-4c23-8acc-7df09a02bfc5")
+		)
+		(pin "2"
+			(uuid "a41e65b8-8502-4af0-a1e4-fd796d6f0a69")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "C3")
 					(unit 1)
 				)
 			)
@@ -6349,6 +6902,71 @@
 			(project ""
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "D2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GNDA")
+		(at 196.85 90.17 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6ecf3da5-69ed-44b7-8155-60b91840e1a7")
+		(property "Reference" "#PWR02"
+			(at 196.85 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GNDA"
+			(at 193.294 87.884 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 196.85 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 196.85 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GNDA\" , analog ground"
+			(at 196.85 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "01b3e9db-1300-4193-ac8d-cbb7bbbda318")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "#PWR02")
 					(unit 1)
 				)
 			)
@@ -7040,8 +7658,8 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "8ce9ffa3-3f56-4a2c-b34c-14ff58f765b3")
-		(property "Reference" "RV2"
-			(at 219.71 78.74 90)
+		(property "Reference" "R14"
+			(at 218.44 77.47 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7097,7 +7715,7 @@
 		(instances
 			(project ""
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "RV2")
+					(reference "R14")
 					(unit 1)
 				)
 			)
@@ -7800,7 +8418,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LED_THT:LED_D3.0mm"
+		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
 			(at 109.22 132.08 0)
 			(effects
 				(font
@@ -8136,7 +8754,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LED_THT:LED_D3.0mm"
+		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
 			(at 109.22 128.27 0)
 			(effects
 				(font
@@ -8255,7 +8873,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e5bbcec1-dac7-44f0-b91a-0ad0cced250d")
-		(property "Reference" "100µ1"
+		(property "Reference" "C1"
 			(at 148.59 54.9909 0)
 			(effects
 				(font
@@ -8264,7 +8882,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "C_Polarized"
+		(property "Value" "100µ"
 			(at 148.59 57.5309 0)
 			(effects
 				(font
@@ -8273,7 +8891,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm"
+		(property "Footprint" "Capacitor_SMD:CP_Elec_8x10.5"
 			(at 145.7452 60.96 0)
 			(effects
 				(font
@@ -8309,7 +8927,7 @@
 		(instances
 			(project ""
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "100µ1")
+					(reference "C1")
 					(unit 1)
 				)
 			)
@@ -8407,7 +9025,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 201.168 76.454 0)
+			(at 196.088 78.486 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8463,8 +9081,8 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "ec73e956-7cf2-40c2-9f49-08904a64772e")
-		(property "Reference" "RV1"
-			(at 205.74 78.74 90)
+		(property "Reference" "R13"
+			(at 204.47 77.47 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8520,7 +9138,7 @@
 		(instances
 			(project ""
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "RV1")
+					(reference "R13")
 					(unit 1)
 				)
 			)
