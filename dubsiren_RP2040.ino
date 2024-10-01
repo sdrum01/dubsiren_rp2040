@@ -5,7 +5,7 @@
 #include "Bounce2.h"
 #include "ArduinoJson.h"
 
-#define LONG_PRESS_DURATION 2000
+#define LONG_PRESS_DURATION 3000
 const int LOGLEVEL = 1;
 
 // Definition der IO's
@@ -19,9 +19,9 @@ const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
-const int shiftTogglePin = 2;  // shift-Taste1
-const int shiftPin1 = 6;  // shift-Taste2
-const int shiftPin2 = 7;  // shift-Taste3
+//const int shiftTogglePin = 2;  // shift-Taste alt
+const int shiftPin1 = 6;  // shift-Taste1
+const int shiftPin2 = 7;  // shift-Taste2
 
 const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
 const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
@@ -33,7 +33,7 @@ Bounce fire1;
 Bounce fire2;
 Bounce fire3;
 Bounce fire4;
-Bounce shiftToggle;
+//Bounce shiftToggle;
 Bounce shift1;
 Bounce shift2;
 
@@ -51,6 +51,8 @@ byte valLfoWaveformSwitchBak = 0;
 
 const int LED1_red = 16;
 const int LED1_green = 17;
+const int LEDShift1 = 8;
+const int LEDShift2 = 9;
 
 
 // Konstanten für den minimalen und maximalen Wert der blanken Frequenz ohne Modulation
@@ -103,7 +105,8 @@ int pitchTotal = 0;
 bool runSound = 1;
 
 // shiftToggle-taste
-bool shiftToggleState = 0;
+bool shiftToggleState1 = 0;
+bool shiftToggleState2 = 0;
 bool shiftToggleStateBak = 0;
 
 bool shiftState1 = 0;
@@ -193,8 +196,10 @@ void setup() {
   // Normale IO's
   pinMode(LED_BUILTIN, OUTPUT);
 
-  
-  pinMode(shiftPin1, INPUT_PULLUP);  
+  pinMode(LEDShift1, OUTPUT);
+  pinMode(LEDShift2, OUTPUT);
+
+   
   pinMode(shiftPin1, INPUT_PULLUP);  
   pinMode(shiftPin2, INPUT_PULLUP);
   pinMode(firePin1, INPUT_PULLUP); 
@@ -203,8 +208,8 @@ void setup() {
   pinMode(firePin4, INPUT_PULLUP); 
 
   // Bounce-Objekt initialisieren
-  shiftToggle.attach(shiftPin1);
-  shiftToggle.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+  //shiftToggle.attach(shiftPin1);
+  //shiftToggle.interval(50);  // Entprellintervall in Millisekunden (50 ms)
 
   shift1.attach(shiftPin1);
   shift1.interval(50);  // Entprellintervall in Millisekunden (50 ms)
@@ -256,6 +261,7 @@ String values2JSON(){
   actualDataset["envAmount"] = envelopeAmplitude;
   actualDataset["waveform"] = lfoWaveform;
 */
+  // Plain
   dataSet["pitch"]     = baseFrequency;
   dataSet["lfoFreq"]   = lfoFrequency;
   dataSet["lfoAmount"] = lfoAmplitude;
@@ -596,7 +602,7 @@ byte combineBoolsToByte(bool b0, bool b1) {
 void loadOrSave(byte fireButton){
   String fileName = "fire"+String(fireButton)+".json";
   resetLFOParams();
-  // keine Flankenauswertung, sondern ist der shiftToggle-Taster gedrückt gehalten?
+  // keine Flankenauswertung, sondern ist der shift-Taster gedrückt gehalten?
   if(shiftState == 2){ // Shifttaste 2 gedrückt
     // Save values
     String _json = values2JSON();
@@ -615,7 +621,7 @@ void loadOrSave(byte fireButton){
 }
 
 void updateKeys(){
-  shiftToggle.update();
+  //shiftToggle.update();
   shift1.update();
   shift2.update();
 
@@ -626,8 +632,13 @@ void updateKeys(){
 
   if (dataSaved == 0){
     // fallende Flanke (Taster losgelassen)
-    if (shiftToggle.rose()) {
-      shiftToggleState = !(shiftToggleState);
+    if (shift1.rose()) {
+      shiftToggleState1 = !(shiftToggleState1);
+      if(shiftToggleState1){shiftToggleState2 = 0;}
+    }
+    if (shift2.rose()) {
+      shiftToggleState2 = !(shiftToggleState2);
+      if(shiftToggleState2){shiftToggleState1 = 0;}
     }
   }
 
@@ -640,7 +651,8 @@ void updateKeys(){
 */  
 
   
-  shiftState = combineBoolsToByte(!shift1.read(),!shift2.read());
+  //shiftState = combineBoolsToByte(!shift1.read(),!shift2.read());
+  shiftState = combineBoolsToByte(shiftToggleState1,shiftToggleState2);
 
   if(shiftStateBak != shiftState){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
@@ -762,6 +774,12 @@ void updatePotis(){
   }
 }
 
+void ledControl(){
+  // LEDs
+  digitalWrite(LEDShift1, shiftToggleState1);
+  digitalWrite(LEDShift2, shiftToggleState2);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -813,7 +831,7 @@ void loop() {
    
 
    // Modulierte Frequenz berechnen
-   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, shiftToggleState);
+   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, shiftToggleState1);
    float newModulatedFrequency = 0;
    if(lfoValueActual == -100){
     newModulatedFrequency = lfoValueActual;
@@ -822,15 +840,14 @@ void loop() {
    }
    // Reset LFO values if the start button is false
   
-  // LEDs
-  digitalWrite(LED_BUILTIN, shiftToggleState);
+  ledControl();
   
   // Create Tone
   soundCreate(newModulatedFrequency);
 
   // Überwachung und Debugprints
-  if(chkLoop(50)){
-     debugFloat(lfoValueActual);
+  if(chkLoop(5000)){
+     debugFloat(shiftState);
   }
 
 }
