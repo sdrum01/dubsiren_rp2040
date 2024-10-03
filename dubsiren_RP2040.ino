@@ -60,7 +60,7 @@ const float minVal = 35;
 const float maxVal = 8000;
 // minimaler und maximaler Wert der Frequenz nach der LFO-Modulation
 const float minValMod = 20;
-const float maxValMod = 10000;
+const float maxValMod = 16000;
 
 // Variablen
 int zaehler = 0;     
@@ -116,6 +116,7 @@ bool shiftState1Bak = 0;
 bool shiftState2Bak = 0;
 
 byte shiftState = 0;
+byte shiftStateRose = 0;
 byte shiftStateBak = 0;
 
 // LED1+2
@@ -327,7 +328,7 @@ String readSettings(String configFile){
     } else {
         Serial.println("Error during reading of file "+configFile);
         String _json = values2JSON();
-        writeSettings(_json,configFile);
+        dataSaved = writeSettings(_json,configFile);
     }
   return(value);
 }
@@ -343,9 +344,9 @@ bool writeSettings(String s, String configFile){
 
       file.close();
       return(true);
-      Serial.println("write file "+configFile+": "+s);
+      //Serial.println("write file "+configFile+": "+s);
   } else {
-    Serial.println("Error during writing of file "+configFile);
+    //Serial.println("Error during writing of file "+configFile);
     return(false);
   }
 }
@@ -396,7 +397,7 @@ float linearToLogarithmic(float freq) {
 }
 
 // LFO-Variante mit Dreieck, abgeleiteten Rechteck und Sägezahn
-float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunction) {
+float calculateLFOWave(float lfoFrequency, float lfoAmplitude) {
   
   uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
   uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
@@ -409,8 +410,6 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
 
   const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
   const int envelopePeriod = 100;
-  
-  
 
   static float lfovalue_final = 0;
 
@@ -488,7 +487,7 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude, bool waveFormFunc
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_final * pwm_led);
     pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),envelopeValue * pwm_led);
     
-    float envelope = envelopeValue * (envelopeAmplitude / 100) + 1.0;
+    float envelope = (envelopeValue * 3) * (envelopeAmplitude / 100) + 1.0;
     lfovalue_final1 = ( ((lfovalue_final -0.5)*1.5) * (lfoAmplitude/100) + 1.0) * envelope ;
      //debugFloat(envelope);
   }
@@ -536,7 +535,7 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
 }
 
 // Tonerzeugung
-void soundCreate(float freqVal){
+void playSound(float freqVal){
   // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
   float pwm_val = setFrequency(freqVal);
   
@@ -546,7 +545,7 @@ void soundCreate(float freqVal){
   pwm_set_wrap(slice_num_wave, pwm_val);
   
   if (runSound){
-  
+    dataSaved = false;
     if(freqVal == -100) {
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
     }else{
@@ -602,15 +601,16 @@ byte combineBoolsToByte(bool b0, bool b1) {
 void loadOrSave(byte fireButton){
   String fileName = "fire"+String(fireButton)+".json";
   resetLFOParams();
-  // keine Flankenauswertung, sondern ist der shift-Taster gedrückt gehalten?
+  // 
   if(shiftState == 2){ // Shifttaste 2 gedrückt
     // Save values
     String _json = values2JSON();
     debugStr("Write");
-    writeSettings(_json,fileName);
+    dataSaved = writeSettings(_json,fileName);
     //shiftToggleState = 1;
   } else {
-    if(fireButton != actualFireButtonBak){
+    // longPressDetected: wenn Ton gerade gehalten wird, wird sonst der Sound des anderen zuvor gedrückten gespielt
+    if((fireButton != actualFireButtonBak) || longPressDetected){ 
       // load Values
       String _json = readSettings(fileName);
       JSON2values(_json);
@@ -629,6 +629,13 @@ void updateKeys(){
   fire2.update();
   fire3.update();
   fire4.update();
+
+    if (shift1.fell()) {
+      dataSaved = false;
+    }
+    if (shift2.fell()) {
+      dataSaved = false;
+    }
 
   if (dataSaved == 0){
     // fallende Flanke (Taster losgelassen)
@@ -651,8 +658,8 @@ void updateKeys(){
 */  
 
   
-  //shiftState = combineBoolsToByte(!shift1.read(),!shift2.read());
-  shiftState = combineBoolsToByte(shiftToggleState1,shiftToggleState2);
+  shiftState = combineBoolsToByte(!shift1.read(),!shift2.read());
+  shiftStateRose = combineBoolsToByte(shiftToggleState1,shiftToggleState2);
 
   if(shiftStateBak != shiftState){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
@@ -698,27 +705,48 @@ void updateKeys(){
   // steigende Flanke (Taster gedrückt)
   if (fire1.fell()){
     actualFireButton = 1;
-    firePressedTime = millis();  // Zeit des Tastendrucks speichern
-    longPressDetected = false;     // Reset des Langdruck-Flags
-    loadOrSave(actualFireButton);
+    //firePressedTime = millis();  // Zeit des Tastendrucks speichern
+    if(!fire2.read() || !fire3.read() ||!fire4.read()){
+      longPressDetected = true;
+    }else{
+      loadOrSave(actualFireButton);
+      longPressDetected = false;     // Reset des Langdruck-Flags
+    }
+    
+    
   }
   if (fire2.fell()){
     actualFireButton = 2;
-    firePressedTime = millis();  
-    longPressDetected = false;
-    loadOrSave(actualFireButton);
+    //firePressedTime = millis();  
+    //longPressDetected = false;
+    if(!fire1.read() || !fire3.read() ||!fire4.read()){
+      longPressDetected = true;
+    }else{
+      loadOrSave(actualFireButton);
+      longPressDetected = false;     // Reset des Langdruck-Flags
+    }
   }
   if (fire3.fell()){
     actualFireButton = 3;
-    firePressedTime = millis();  
-    longPressDetected = false;
-    loadOrSave(actualFireButton);
+    //firePressedTime = millis();  
+    //longPressDetected = false;
+    if(!fire1.read() || !fire2.read() ||!fire4.read()){
+      longPressDetected = true;
+    }else{
+      loadOrSave(actualFireButton);
+      longPressDetected = false;     // Reset des Langdruck-Flags
+    }
   }
   if (fire4.fell()){
     actualFireButton = 4;
-    firePressedTime = millis();  
-    longPressDetected = false;
-    loadOrSave(actualFireButton);
+    //firePressedTime = millis();  
+    //longPressDetected = false;
+    if(!fire1.read() || !fire2.read() ||!fire3.read()){
+      longPressDetected = true;
+    }else{
+      loadOrSave(actualFireButton);
+      longPressDetected = false;     // Reset des Langdruck-Flags
+    }
   }
 
   if (fire1.rose()){
@@ -742,8 +770,8 @@ void updateKeys(){
   
   if (anyFireButtonPressed && !longPressDetected) {
     if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
-      longPressDetected = true;  // Markiere, dass der lange Druck erkannt wurde
-      Serial.println("LongPress detected!");
+      // longPressDetected = true;  // Markiere, dass der lange Druck erkannt wurde
+      // Serial.println("LongPress detected!");
     }
   }
   
@@ -791,7 +819,7 @@ void loop() {
 
 
 
-  if(shiftState == 0){
+  if(shiftStateRose == 0){
     // lesen des Pitch-Wertes vom Poti incl. Mittelwert
     // Holen der Basisfrequenz
     if(potiPitchChanged == 1){
@@ -807,7 +835,7 @@ void loop() {
       lfoAmplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von 0 bis 100, 50 Mitte
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
-  } else if(shiftState == 1){
+  } else if(shiftStateRose == 1){
     // Duty-Cycle Tonausgabe
     if(potiPitchChanged == 1){
       duty = map(valPotiPitch, 4, 1023, 5, 50 );
@@ -823,15 +851,18 @@ void loop() {
       envelopeAmplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
-  } else if(shiftState == 3){
+  }  
+  // beide Shift-Tasten zugleich gedrückt
+  if(shiftState == 3){
     envelopeAmplitude = 0;
+    dataSaved = true;
   }
 
    
    
 
    // Modulierte Frequenz berechnen
-   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude, shiftToggleState1);
+   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude);
    float newModulatedFrequency = 0;
    if(lfoValueActual == -100){
     newModulatedFrequency = lfoValueActual;
@@ -843,11 +874,13 @@ void loop() {
   ledControl();
   
   // Create Tone
-  soundCreate(newModulatedFrequency);
+  playSound(newModulatedFrequency);
 
   // Überwachung und Debugprints
   if(chkLoop(5000)){
-     debugFloat(shiftState);
+     //debugFloat(shiftStateRose);
+     //debugFloat(shiftState);
+     debugFloat(longPressDetected);
   }
 
 }
