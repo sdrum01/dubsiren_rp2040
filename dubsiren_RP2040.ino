@@ -69,11 +69,15 @@ int zaehler = 0;
 int baseFrequency = 1000;
 
 // Parameter LFO:
-float lfoFrequency = 1;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
+float lfoFrequency = 1;  // LFO1-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float lfoAmplitude = 0;
 
+// Parameter LFO2:
+float lfo2Frequency = 1;  // LFO2-Frequenz in Hz 
+float lfo2Amplitude = 0;
+
 // Parameter ENVELOPE-Generator:
-float envelopeDuration = 20;  // LFO-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
+float envelopeDuration = 20;  
 float envelopeAmplitude = 0;
 
 float duty = 50;
@@ -89,9 +93,12 @@ bool dataSaved = false;
 // globale Variablen, die der LFO und envelope zurückgibt
 
 volatile float lfoValue = 0;
+volatile float lfo2Value = 0;
 volatile float envelopeValue = 1;
 volatile int lfoDirection = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
+volatile int lfo2Direction = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
 volatile unsigned long previousMillis = 0;
+volatile unsigned long previousMillisLFO2 = 0;
 volatile unsigned long previousMillisEnv = 0;
 
 
@@ -266,8 +273,10 @@ String values2JSON(){
   dataSet["pitch"]     = baseFrequency;
   dataSet["lfoFreq"]   = lfoFrequency;
   dataSet["lfoAmount"] = lfoAmplitude;
-  dataSet["envTime"]   = envelopeDuration;
-  dataSet["envAmount"] = envelopeAmplitude;
+  dataSet["lfo2Freq"]   = lfo2Frequency;
+  dataSet["lfo2Amount"] = lfo2Amplitude;
+  //dataSet["envTime"]   = envelopeDuration;
+  //dataSet["envAmount"] = envelopeAmplitude;
   dataSet["waveform"]  = lfoWaveform;
   dataSet["dutyCycle"]  = duty;
 
@@ -310,8 +319,10 @@ void JSON2values(String jsonString) {
   baseFrequency = dataSet["pitch"];
   lfoFrequency = dataSet["lfoFreq"];
   lfoAmplitude = dataSet["lfoAmount"];
-  envelopeDuration = dataSet["envTime"];
-  envelopeAmplitude = dataSet["envAmount"];
+  lfo2Frequency = dataSet["lfo2Freq"];
+  lfo2Amplitude = dataSet["lfo2Amount"];
+  //envelopeDuration = dataSet["envTime"];
+  //envelopeAmplitude = dataSet["envAmount"];
   lfoWaveform = dataSet["waveform"];
   duty = dataSet["dutyCycle"];
 }
@@ -367,9 +378,6 @@ void debugFloat(float f){
   }
 }
 
-
-
-
 // Funktion zur Umwandlung einer linearen Eingangsgröße in eine logarithmische Ausgabe
 float linearToLogarithmic(float freq) {
   
@@ -397,22 +405,22 @@ float linearToLogarithmic(float freq) {
 }
 
 // LFO-Variante mit Dreieck, abgeleiteten Rechteck und Sägezahn
-float calculateLFOWave(float lfoFrequency, float lfoAmplitude) {
+float calculateLFOWave(float lfo1Frequency, float lfo1Amplitude) {
   
   uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
   uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
   
-  float schrittweite = lfoFrequency / 1000 ;
+  float schrittweite = lfo1Frequency / 1000 ;
   //float schrittweite = lfoFrequency / 1000 * ((envelopeAmplitude / 100) + 1.0);
   //float schrittweite_envelope = 0.001;
-  float schrittweite_envelope = envelopeDuration / 5000;
+  //float schrittweite_envelope = envelopeDuration / 5000;
   unsigned long currentMillis = millis();
 
   const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
-  const int envelopePeriod = 100;
+  //const int envelopePeriod = 100;
 
   static float lfovalue_final = 0;
-
+/*
   // Envelope-Generator
   if (currentMillis - previousMillisEnv >= envelopePeriod / 100.0) {
     previousMillisEnv += envelopePeriod / 100.0;
@@ -421,7 +429,7 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude) {
       envelopeValue = 0.0;  // Unten begrenzen
     }
   }
-  
+*/  
   if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
     previousMillis += lfoPeriod / 100.0;
     
@@ -485,14 +493,43 @@ float calculateLFOWave(float lfoFrequency, float lfoAmplitude) {
     
     // LED grün LFO
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_final * pwm_led);
-    pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),envelopeValue * pwm_led);
+    //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),envelopeValue * pwm_led);
     
-    float envelope = (envelopeValue * 3) * (envelopeAmplitude / 100) + 1.0;
-    lfovalue_final1 = ( ((lfovalue_final -0.5)*1.5) * (lfoAmplitude/100) + 1.0) * envelope ;
+    //float envelope = (envelopeValue * 1.5) * (envelopeAmplitude / 100) + 1.0;
+    float envelope = 1;
+
+    lfovalue_final1 = ( ((lfovalue_final -0.5)*1.5) * (lfo1Amplitude/100) + 1.0) * envelope ;
      //debugFloat(envelope);
   }
 
   //debugFloat(envelopeValue);
+  return(lfovalue_final1);
+}
+
+// LFO-Variante mit Dreieck, abgeleiteten Rechteck und Sägezahn
+float calculateLFOWave2(float frequency, float amplitude) {
+
+  float schrittweite = frequency / 1000 ;
+  unsigned long currentMillis = millis();
+
+  const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
+  const int envelopePeriod = 100;
+
+  static float lfovalue_finalLFO2 = 0;
+  
+  if (currentMillis - previousMillisLFO2 >= lfoPeriod / 100.0) {
+    previousMillisLFO2 += lfoPeriod / 100.0;
+
+    lfo2Value += schrittweite * lfo2Direction;  // 
+    if (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
+      lfo2Direction = -lfo2Direction;  // Richtung umkehren
+    }
+    //lfovalue_final = lfoValue;
+    lfovalue_finalLFO2 = lfo2Value;
+
+  }
+  float lfovalue_final1 = 0;
+  lfovalue_final1 = ( ((lfovalue_finalLFO2 -0.5)*1.5) * (amplitude/100) + 1.0);
   return(lfovalue_final1);
 }
 
@@ -639,6 +676,7 @@ void updateKeys(){
 
   if (dataSaved == 0){
     // fallende Flanke (Taster losgelassen)
+    
     if (shift1.rose()) {
       shiftToggleState1 = !(shiftToggleState1);
       if(shiftToggleState1){shiftToggleState2 = 0;}
@@ -842,19 +880,21 @@ void loop() {
       valPotiPitchBak = valPotiPitch;
     }
 
-    // Envelopegenerator
+    // LFO2
     if(potiFreqLFOChanged == 1){
-      envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 100);
+      //lfo2Frequency = mapFloat(valPotiFreqLFO, 5, 1023, 1, 100);
+      lfo2Frequency = mapFloat(valPotiFreqLFO, 5, 1023, 0.1, 20);
       valPotiFreqLFOBak = valPotiFreqLFO;
     }
     if(potiAmpLFOChanged == 1){
-      envelopeAmplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);
+      lfo2Amplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
   }  
   // beide Shift-Tasten zugleich gedrückt
   if(shiftState == 3){
-    envelopeAmplitude = 0;
+    //envelopeAmplitude = 0;
+    lfo2Amplitude = 0;
     dataSaved = true;
   }
 
@@ -863,11 +903,12 @@ void loop() {
 
    // Modulierte Frequenz berechnen
    float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude);
+   float lfo2ValueActual = calculateLFOWave2(lfo2Frequency, lfo2Amplitude);
    float newModulatedFrequency = 0;
    if(lfoValueActual == -100){
     newModulatedFrequency = lfoValueActual;
    }else{
-    newModulatedFrequency = baseFrequency * lfoValueActual;
+    newModulatedFrequency = baseFrequency * lfoValueActual * lfo2ValueActual;
    }
    // Reset LFO values if the start button is false
   
@@ -879,8 +920,8 @@ void loop() {
   // Überwachung und Debugprints
   if(chkLoop(5000)){
      //debugFloat(shiftStateRose);
-     //debugFloat(shiftState);
-     debugFloat(longPressDetected);
+     debugFloat(newModulatedFrequency);
+    //  debugFloat(longPressDetected);
   }
 
 }
