@@ -84,8 +84,8 @@ float duty = 50;
 
 // die finale LFO WaveForm Variable, die durch Schalter oder Speicher gesetzt wird
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
-LfoWaveform lfoWaveform = TRIANGLE;  // 
-
+LfoWaveform lfo1Waveform = TRIANGLE;  // 
+LfoWaveform lfo2Waveform = TRIANGLE;  //
 
 
 bool dataSaved = false;
@@ -100,6 +100,8 @@ volatile int lfo2Direction = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
 volatile unsigned long previousMillis = 0;
 volatile unsigned long previousMillisLFO2 = 0;
 volatile unsigned long previousMillisEnv = 0;
+volatile float lfovalue_finalLFO1 = 0;
+volatile float lfovalue_finalLFO2 = 0;
 
 
 // Messwerte runden
@@ -123,7 +125,7 @@ bool shiftState1Bak = 0;
 bool shiftState2Bak = 0;
 
 byte shiftState = 0;
-byte shiftStateRose = 0;
+byte shiftStateToggle = 0;
 byte shiftStateBak = 0;
 
 // LED1+2
@@ -157,10 +159,26 @@ bool potiAmpLFOChanged = 1;
 const int potiTolerance = 10;
 
 // Flag, wenn es am Waveformschalter gewackelt hat
-bool lfoWaveformChanged = 0;
+bool lfo1WaveformChanged = 0;
+bool lfo2WaveformChanged = 0;
 
 String debug ="";
+
+String receiveStr = ""; // Hier wird die empfangene Zeichenkette gespeichert
+bool receiveStrComplete = false;
 /////////////////////////////////////////////////////////////////////////////////////////////////////
+// Beispiel
+
+// 18:00:44.574 -> read file fire1.json: {"pitch":761,"lfoFreq":9.544205,"lfoAmount":97,"lfo2Freq":9.209431,"lfo2Amount":100,"waveform":2,"waveform2":1,"dutyCycle":50}
+
+// 18:00:44.574 -> read file fire2.json: {"pitch":786,"lfoFreq":25.25,"lfoAmount":49,"lfo2Freq":3.247249,"lfo2Amount":0,"waveform":0,"waveform2":0,"dutyCycle":50}
+
+// 18:00:44.574 -> read file fire3.json: {"pitch":968,"lfoFreq":18.19941,"lfoAmount":32,"lfo2Freq":0.197741,"lfo2Amount":100,"waveform":1,"waveform2":1,"dutyCycle":8}
+
+// 18:00:44.574 -> read file fire4.json: {"pitch":1124,"lfoFreq":7.647839,"lfoAmount":34,"lfo2Freq":4.8111,"lfo2Amount":4,"waveform":0,"waveform2":1,"dutyCycle":50}
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -277,7 +295,8 @@ String values2JSON(){
   dataSet["lfo2Amount"] = lfo2Amplitude;
   //dataSet["envTime"]   = envelopeDuration;
   //dataSet["envAmount"] = envelopeAmplitude;
-  dataSet["waveform"]  = lfoWaveform;
+  dataSet["waveform"]  = lfo1Waveform;
+  dataSet["waveform2"]  = lfo2Waveform;
   dataSet["dutyCycle"]  = duty;
 
   // Erstelle einen JSON-String
@@ -323,7 +342,8 @@ void JSON2values(String jsonString) {
   lfo2Amplitude = dataSet["lfo2Amount"];
   //envelopeDuration = dataSet["envTime"];
   //envelopeAmplitude = dataSet["envAmount"];
-  lfoWaveform = dataSet["waveform"];
+  lfo1Waveform = dataSet["waveform"];
+  lfo2Waveform = dataSet["waveform2"];
   duty = dataSet["dutyCycle"];
 }
 
@@ -406,10 +426,7 @@ float linearToLogarithmic(float freq) {
 
 // LFO-Variante mit Dreieck, abgeleiteten Rechteck und Sägezahn
 float calculateLFOWave(float lfo1Frequency, float lfo1Amplitude) {
-  
-  uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
-  uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
-  
+
   float schrittweite = lfo1Frequency / 1000 ;
   //float schrittweite = lfoFrequency / 1000 * ((envelopeAmplitude / 100) + 1.0);
   //float schrittweite_envelope = 0.001;
@@ -417,9 +434,8 @@ float calculateLFOWave(float lfo1Frequency, float lfo1Amplitude) {
   unsigned long currentMillis = millis();
 
   const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
-  //const int envelopePeriod = 100;
 
-  static float lfovalue_final = 0;
+  
 /*
   // Envelope-Generator
   if (currentMillis - previousMillisEnv >= envelopePeriod / 100.0) {
@@ -433,7 +449,7 @@ float calculateLFOWave(float lfo1Frequency, float lfo1Amplitude) {
   if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
     previousMillis += lfoPeriod / 100.0;
     
-    switch (lfoWaveform) {
+    switch (lfo1Waveform) {
       case SQUARE:
         //lfoAmplitude = lfoAmplitude / 2;
         // Dreieck ausrechnen 
@@ -443,9 +459,9 @@ float calculateLFOWave(float lfo1Frequency, float lfo1Amplitude) {
         }
         
         if(lfoAmplitude < 0){
-          lfovalue_final = (lfoValue <= 0.5) ? 0.5 : -100; // -100 = muting;
+          lfovalue_finalLFO1 = (lfoValue <= 0.5) ? 0.5 : -100; // -100 = muting;
         } else {
-          lfovalue_final = (lfoValue >= 0.5) ? 1 : 0;
+          lfovalue_finalLFO1 = (lfoValue >= 0.5) ? 1 : 0;
         }
         break;
         
@@ -454,51 +470,38 @@ float calculateLFOWave(float lfo1Frequency, float lfo1Amplitude) {
         if (lfoValue >= 1.0 || lfoValue <= 0.0) {
           lfoDirection = -lfoDirection;  // Richtung umkehren
         }
-        //lfovalue_final = lfoValue;
-        lfovalue_final = lfoValue;
+        //lfovalue_finalLFO1 = lfoValue;
+        lfovalue_finalLFO1 = lfoValue;
         break;
         
       case SAWTOOTH:
-      /*
-        if(waveFormFunction == 0){
-          lfoValue += schrittweite / 2;  // Schrittweite für den LFO (kann angepasst werden)
-          if (lfoValue >= 1.0) {
-            lfoValue = 0;  // Zurücksetzen
-          }
-        }else{
-          lfoValue -= schrittweite / 2;  // Schrittweite für den LFO (kann angepasst werden)
-          if (lfoValue <= 0) {
-            lfoValue = 1;  // Zurücksetzen
-          }
-        }
-        */
         lfoValue -= schrittweite / 2;  // Schrittweite für den LFO 
         if (lfoValue <= 0) {
           lfoValue = 1;  // Zurücksetzen
         }
-        lfovalue_final = lfoValue;
+        lfovalue_finalLFO1 = lfoValue;
         break;
     }
   }
 
-  // lfovalue_final liegt zwischen 0..1: verschieben der Mitte auf den NullPunkt
+  // lfovalue_finalLFO1 liegt zwischen 0..1: verschieben der Mitte auf den NullPunkt
   // Skalierung des LFO-Wertes mit der LFO-Amplitude 
   // verschieben des Nullpunktes auf 1: damit kann der Wert als Multiplikator genutzt werden
 
   float lfovalue_final1 = 0;
-  if(lfovalue_final == -100){
-    lfovalue_final1 = lfovalue_final; // negativ für Sonderfunktionen wie Muting (-99)
-    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+  if(lfovalue_finalLFO1 == -100){
+    lfovalue_final1 = lfovalue_finalLFO1; // negativ für Sonderfunktionen wie Muting (-99)
+    //pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
   }else{
     
     // LED grün LFO
-    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_final * pwm_led);
-    //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),envelopeValue * pwm_led);
+    //pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_finalLFO1 * pwm_led);
+
     
     //float envelope = (envelopeValue * 1.5) * (envelopeAmplitude / 100) + 1.0;
     float envelope = 1;
 
-    lfovalue_final1 = ( ((lfovalue_final -0.5)*1.5) * (lfo1Amplitude/100) + 1.0) * envelope ;
+    lfovalue_final1 = ( ((lfovalue_finalLFO1 -0.5)*1.5) * (lfo1Amplitude/100) + 1.0) * envelope ;
      //debugFloat(envelope);
   }
 
@@ -508,32 +511,70 @@ float calculateLFOWave(float lfo1Frequency, float lfo1Amplitude) {
 
 // LFO-Variante mit Dreieck, abgeleiteten Rechteck und Sägezahn
 float calculateLFOWave2(float frequency, float amplitude) {
-
+  //uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_red);
   float schrittweite = frequency / 1000 ;
   unsigned long currentMillis = millis();
 
   const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
   const int envelopePeriod = 100;
 
-  static float lfovalue_finalLFO2 = 0;
+  
   
   if (currentMillis - previousMillisLFO2 >= lfoPeriod / 100.0) {
     previousMillisLFO2 += lfoPeriod / 100.0;
-
+/*
     lfo2Value += schrittweite * lfo2Direction;  // 
     if (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
       lfo2Direction = -lfo2Direction;  // Richtung umkehren
     }
-    //lfovalue_final = lfoValue;
     lfovalue_finalLFO2 = lfo2Value;
+*/
+  
+  switch (lfo2Waveform) {
+      case SQUARE:
+        // Dreieck ausrechnen 
+        lfo2Value += schrittweite * lfo2Direction;  // 
+        if (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
+          lfo2Direction = -lfo2Direction;  // Richtung umkehren
+        }
+        /*
+        if(lfoAmplitude < 0){
+          lfovalue_finalLFO2 = (lfo2Value <= 0.5) ? 0.5 : -100; // -100 = muting;
+        } else {
+          lfovalue_finalLFO2 = (lfo2Value >= 0.5) ? 1 : 0;
+        }
+        */
+        lfovalue_finalLFO2 = (lfo2Value >= 0.5) ? 1 : 0;
+        break;
+        
+      case TRIANGLE:
+        lfo2Value += schrittweite * lfo2Direction;  // 
+        if (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
+          lfo2Direction = -lfo2Direction;  // Richtung umkehren
+        }
+        lfovalue_finalLFO2 = lfo2Value;
+        break;
+        
+      case SAWTOOTH:
+        lfo2Value -= schrittweite / 2;  // Schrittweite für den LFO 
+        if (lfo2Value <= 0) {
+          lfo2Value = 1;  // Zurücksetzen
+        }
+        lfovalue_finalLFO2 = lfo2Value;
+        break;
+    }
 
   }
+  // LED red LFO2
+  //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),lfovalue_finalLFO2 * pwm_led);
+
   float lfovalue_final1 = 0;
   lfovalue_final1 = ( ((lfovalue_finalLFO2 -0.5)*1.5) * (amplitude/100) + 1.0);
   return(lfovalue_final1);
 }
 
 // LFO-Variante Sinus 
+/*
 float calculateLFOSin(float baseFreq, float lfoFreq, float lfoDepth) {
   // Berechne die aktuelle Zeit in Sekunden
   float time = millis() / 1000.0;
@@ -546,7 +587,7 @@ float calculateLFOSin(float baseFreq, float lfoFreq, float lfoDepth) {
   // Berechne die modulierte Frequenz
   return baseFreq + lfoDepth * sin(lfoPhase);
 }
-
+*/
 float setFrequency(float freq){
   //debugFloat(freq);
   if(freq < minValMod){freq = minValMod;}
@@ -554,6 +595,7 @@ float setFrequency(float freq){
   return(2070 / (freq/1000));
 }
 
+/*
 int pitchAverage(){
   pitchTotal = pitchTotal - pitchReadings[pitchReadIndex];
   pitchReadings[pitchReadIndex] = analogRead(freqPotPin);
@@ -566,6 +608,7 @@ int pitchAverage(){
 
   return(pitchTotal / numReadings);
 }
+*/
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -599,7 +642,7 @@ void setChangeState(bool p1, bool p2, bool p3, bool s1){
   potiPitchChanged = p1;
   potiFreqLFOChanged = p2;
   potiAmpLFOChanged = p3;
-  lfoWaveformChanged = s1;
+  lfo1WaveformChanged = s1;
   debugStr("State Reset");
 }
 
@@ -697,7 +740,7 @@ void updateKeys(){
 
   
   shiftState = combineBoolsToByte(!shift1.read(),!shift2.read());
-  shiftStateRose = combineBoolsToByte(shiftToggleState1,shiftToggleState2);
+  shiftStateToggle = combineBoolsToByte(shiftToggleState1,shiftToggleState2);
 
   if(shiftStateBak != shiftState){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
@@ -722,23 +765,11 @@ void updateKeys(){
   // Aus dem Waveformschalter ein Byte machen
   valLfoWaveformSwitch = combineBoolsToByte(digitalRead(waveFormPin_0),digitalRead(waveFormPin_1));
   if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
-    lfoWaveformChanged = 1;
+    lfo1WaveformChanged = 1;
   }
   valLfoWaveformSwitchBak = valLfoWaveformSwitch;
 
-  if(lfoWaveformChanged){
-    switch (valLfoWaveformSwitch) {
-      case 1:
-        lfoWaveform = SQUARE;
-        break;
-      case 2:
-        lfoWaveform = SAWTOOTH;
-        break;
-      case 3:
-        lfoWaveform = TRIANGLE;
-        break;
-    }
-  }
+  
   
   // steigende Flanke (Taster gedrückt)
   if (fire1.fell()){
@@ -841,11 +872,59 @@ void updatePotis(){
 }
 
 void ledControl(){
+  uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
+  uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_red);
+
+  // LED Grün
+  if(shiftToggleState1 == 0){
+    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_red), 0);
+    if(lfovalue_finalLFO1 == -100){
+      pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+    }else{
+      pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_finalLFO1 * pwm_led);
+    }
+  }else{
+    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+    pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),lfovalue_finalLFO2 * pwm_led);
+  }
+  //
   // LEDs
-  digitalWrite(LEDShift1, shiftToggleState1);
+  // digitalWrite(LEDShift1, shiftToggleState1);
   digitalWrite(LEDShift2, shiftToggleState2);
 }
 
+void readSerial(){
+  while (Serial.available() > 0) {
+    char empfangenesZeichen = Serial.read(); // Ein einzelnes Zeichen lesen
+
+    // Wenn das empfangene Zeichen ein Zeilenende ('\n') ist, gilt die Zeichenkette als vollständig
+    if (empfangenesZeichen == '\n') {
+      receiveStrComplete = true;
+    } else {
+      receiveStr += empfangenesZeichen; // Zeichen an die Zeichenkette anhängen
+    }
+  }
+
+  // Wenn die Zeichenkette vollständig empfangen wurde, diese anzeigen
+  if (receiveStrComplete) {
+    //Serial.print("Empfangen: ");
+    //Serial.println(receiveStr);
+    if(receiveStr == "dump"){
+      String _json1 = readSettings("fire1.json");
+      String _json2 = readSettings("fire2.json");
+      String _json3 = readSettings("fire3.json");
+      String _json4 = readSettings("fire4.json");
+      Serial.println(_json1);
+      Serial.println(_json2);
+      Serial.println(_json3);
+      Serial.println(_json4);
+     
+    }
+    // Die Zeichenkette zurücksetzen, um eine neue zu empfangen
+    receiveStr = "";
+    receiveStrComplete = false;
+  }
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -855,9 +934,25 @@ void loop() {
   updateKeys();
   updatePotis();
 
+  readSerial();
 
 
-  if(shiftStateRose == 0){
+  if(shiftStateToggle == 0){
+    // WaveForm für LFO1
+    if(lfo1WaveformChanged){
+      switch (valLfoWaveformSwitch) {
+        case 1:
+          lfo1Waveform = SQUARE;
+          break;
+        case 2:
+          lfo1Waveform = SAWTOOTH;
+          break;
+        case 3:
+          lfo1Waveform = TRIANGLE;
+          break;
+      }
+    }
+    
     // lesen des Pitch-Wertes vom Poti incl. Mittelwert
     // Holen der Basisfrequenz
     if(potiPitchChanged == 1){
@@ -873,7 +968,22 @@ void loop() {
       lfoAmplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von 0 bis 100, 50 Mitte
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
-  } else if(shiftStateRose == 1){
+  } else if(shiftStateToggle == 1){
+    // WaveForm für LFO2
+    if(lfo1WaveformChanged){
+      switch (valLfoWaveformSwitch) {
+        case 1:
+          lfo2Waveform = SQUARE;
+          break;
+        case 2:
+          lfo2Waveform = SAWTOOTH;
+          break;
+        case 3:
+          lfo2Waveform = TRIANGLE;
+          break;
+      }
+    }
+
     // Duty-Cycle Tonausgabe
     if(potiPitchChanged == 1){
       duty = map(valPotiPitch, 4, 1023, 5, 50 );
@@ -896,6 +1006,8 @@ void loop() {
     //envelopeAmplitude = 0;
     lfo2Amplitude = 0;
     dataSaved = true;
+    shiftToggleState1 = 0;
+    shiftToggleState2 = 0;
   }
 
    
@@ -918,9 +1030,9 @@ void loop() {
   playSound(newModulatedFrequency);
 
   // Überwachung und Debugprints
-  if(chkLoop(5000)){
-     //debugFloat(shiftStateRose);
-     debugFloat(newModulatedFrequency);
+  if(chkLoop(10000)){
+     //debugFloat(shiftStateToggle);
+     debugFloat(lfo2Waveform);
     //  debugFloat(longPressDetected);
   }
 
