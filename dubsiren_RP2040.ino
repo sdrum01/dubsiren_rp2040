@@ -69,11 +69,11 @@ int zaehler = 0;
 int baseFrequency = 1000;
 
 // Parameter LFO:
-float lfoFrequency = 1;  // LFO1-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
+float lfoFrequency = 5;  // LFO1-Frequenz in Hz (0.5 Hz = 2 Sekunden Periode)
 float lfoAmplitude = 0;
 
 // Parameter LFO2:
-float lfo2Frequency = 1;  // LFO2-Frequenz in Hz 
+float lfo2Frequency = 5;  // LFO2-Frequenz in Hz 
 float lfo2Amplitude = 0;
 
 // Parameter ENVELOPE-Generator:
@@ -152,11 +152,13 @@ int valPotiAmpLFOBak = 0;
 //  Flags, wenn es an den Potis gewackelt hat
 // byte potisChanged = 0b0000000;  // binär 00000000
 
-bool potiPitchChanged = 1;
-bool potiFreqLFOChanged = 1;
-bool potiAmpLFOChanged = 1;
-
+// wie viel Prozent darf sich das Poti ändern, bis ein wert als Change gilt?
 const int potiTolerance = 10;
+
+bool potiPitchChanged = 0;
+bool potiFreqLFOChanged = 0;
+bool potiAmpLFOChanged = 0;
+
 
 // Flag, wenn es am Waveformschalter gewackelt hat
 bool lfo1WaveformChanged = 0;
@@ -180,98 +182,6 @@ bool receiveStrComplete = false;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-void setup() {
-  
-  if(LOGLEVEL > 0){
-    Serial.begin(38400);
-  }
-  
-  // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
-  gpio_set_function(wave_outputPin, GPIO_FUNC_PWM);
-  uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
-  
-  // Setze den PWM-Teilungsverhältnis
-  pwm_set_clkdiv(slice_num_wave, 64.f);
-
-  // Starte den PWM-Output
-  pwm_set_enabled(slice_num_wave, true); 
-
-  // LED
-
-  uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
-  uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
-  
-  gpio_set_function(LED1_green, GPIO_FUNC_PWM);
-  gpio_set_function(LED1_red, GPIO_FUNC_PWM);
-  
-  pwm_set_clkdiv(slice_num_led_green, 128.f);
-  pwm_set_clkdiv(slice_num_led_red, 128.f);
-  
-  pwm_set_enabled(slice_num_led_green, true);
-  pwm_set_enabled(slice_num_led_red, true);
-  
-  pwm_set_wrap(slice_num_led_green, pwm_led);
-  pwm_set_wrap(slice_num_led_red, pwm_led);
-  
-  pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
-  pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
-  
-
-  // Normale IO's
-  pinMode(LED_BUILTIN, OUTPUT);
-
-  pinMode(LEDShift1, OUTPUT);
-  pinMode(LEDShift2, OUTPUT);
-
-   
-  pinMode(shiftPin1, INPUT_PULLUP);  
-  pinMode(shiftPin2, INPUT_PULLUP);
-  pinMode(firePin1, INPUT_PULLUP); 
-  pinMode(firePin2, INPUT_PULLUP); 
-  pinMode(firePin3, INPUT_PULLUP); 
-  pinMode(firePin4, INPUT_PULLUP); 
-
-  // Bounce-Objekt initialisieren
-  //shiftToggle.attach(shiftPin1);
-  //shiftToggle.interval(50);  // Entprellintervall in Millisekunden (50 ms)
-
-  shift1.attach(shiftPin1);
-  shift1.interval(50);  // Entprellintervall in Millisekunden (50 ms)
-
-  shift2.attach(shiftPin2);
-  shift2.interval(50);  // Entprellintervall in Millisekunden (50 ms)
-
-  fire1.attach(firePin1);
-  fire1.interval(10);  
-
-  fire2.attach(firePin2);
-  fire2.interval(10);  
-
-  fire3.attach(firePin3);
-  fire3.interval(10);  
-
-  fire4.attach(firePin4);
-  fire4.interval(10);  
-  
-  pinMode(waveFormPin_0, INPUT_PULLUP);
-  pinMode(waveFormPin_1, INPUT_PULLUP);
-  // pinMode(waveFormFunctionPin, INPUT_PULLUP);
-  
-  // Initialisieren des Arrays für die Mittelwertbildung des Pitch
-  /*
-  for (int i = 0; i < numReadings; i++) {
-    pitchReadings[i] = 0;
-  }
- */ 
-  if (!LittleFS.begin()) {
-      debugStr("LittleFS mount failed");
-      return;
-   }
-  // Lampe an, nur zur Kontrolle, dass die SW läuft
-  debugStr("Setup abgeschlossen.");
-}
 
 // Werte von den Potis und Schaltern in eine JSON datei speicher
 String values2JSON(){
@@ -398,6 +308,8 @@ void debugFloat(float f){
   }
 }
 
+
+
 // Funktion zur Umwandlung einer linearen Eingangsgröße in eine logarithmische Ausgabe
 float linearToLogarithmic(float freq) {
   
@@ -424,19 +336,13 @@ float linearToLogarithmic(float freq) {
   return outputValue;
 }
 
-// LFO-Variante mit Dreieck, abgeleiteten Rechteck und Sägezahn
-float calculateLFOWave(float lfo1Frequency, float lfo1Amplitude) {
+// Envelope-Generator
+float calculateEnvelope(float envelopeDuration, float envelopeAmplitude) {
 
-  float schrittweite = lfo1Frequency / 1000 ;
-  //float schrittweite = lfoFrequency / 1000 * ((envelopeAmplitude / 100) + 1.0);
-  //float schrittweite_envelope = 0.001;
-  //float schrittweite_envelope = envelopeDuration / 5000;
+  float schrittweite_envelope = envelopeDuration / 5000;
   unsigned long currentMillis = millis();
-
-  const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
-
+  const int envelopePeriod = 100;
   
-/*
   // Envelope-Generator
   if (currentMillis - previousMillisEnv >= envelopePeriod / 100.0) {
     previousMillisEnv += envelopePeriod / 100.0;
@@ -445,7 +351,18 @@ float calculateLFOWave(float lfo1Frequency, float lfo1Amplitude) {
       envelopeValue = 0.0;  // Unten begrenzen
     }
   }
-*/  
+  float envelope = envelopeValue  * (envelopeAmplitude / 100) + 0.5;
+  return envelope;
+}
+
+// LFO-1 mit Dreieck, abgeleiteten Rechteck und Sägezahn
+float calculateLFOWave1(float lfo1Frequency, float lfo1Amplitude) {
+
+  float schrittweite = lfo1Frequency / 1000 ;
+  unsigned long currentMillis = millis();
+  const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
+  
+
   if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
     previousMillis += lfoPeriod / 100.0;
     
@@ -491,46 +408,24 @@ float calculateLFOWave(float lfo1Frequency, float lfo1Amplitude) {
   float lfovalue_final1 = 0;
   if(lfovalue_finalLFO1 == -100){
     lfovalue_final1 = lfovalue_finalLFO1; // negativ für Sonderfunktionen wie Muting (-99)
-    //pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+   
   }else{
-    
-    // LED grün LFO
-    //pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_finalLFO1 * pwm_led);
-
-    
-    //float envelope = (envelopeValue * 1.5) * (envelopeAmplitude / 100) + 1.0;
-    float envelope = 1;
-
-    lfovalue_final1 = ( ((lfovalue_finalLFO1 -0.5)*1.5) * (lfo1Amplitude/100) + 1.0) * envelope ;
-     //debugFloat(envelope);
+    lfovalue_final1 = ( ((lfovalue_finalLFO1 -0.5)*1.5) * (lfo1Amplitude/100) + 1.0);
   }
-
-  //debugFloat(envelopeValue);
   return(lfovalue_final1);
 }
 
-// LFO-Variante mit Dreieck, abgeleiteten Rechteck und Sägezahn
+// LFO-2 
 float calculateLFOWave2(float frequency, float amplitude) {
   //uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_red);
   float schrittweite = frequency / 1000 ;
   unsigned long currentMillis = millis();
 
   const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
-  const int envelopePeriod = 100;
-
-  
   
   if (currentMillis - previousMillisLFO2 >= lfoPeriod / 100.0) {
     previousMillisLFO2 += lfoPeriod / 100.0;
-/*
-    lfo2Value += schrittweite * lfo2Direction;  // 
-    if (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
-      lfo2Direction = -lfo2Direction;  // Richtung umkehren
-    }
-    lfovalue_finalLFO2 = lfo2Value;
-*/
-  
-  switch (lfo2Waveform) {
+    switch (lfo2Waveform) {
       case SQUARE:
         // Dreieck ausrechnen 
         lfo2Value += schrittweite * lfo2Direction;  // 
@@ -565,8 +460,6 @@ float calculateLFOWave2(float frequency, float amplitude) {
     }
 
   }
-  // LED red LFO2
-  //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),lfovalue_finalLFO2 * pwm_led);
 
   float lfovalue_final1 = 0;
   lfovalue_final1 = ( ((lfovalue_finalLFO2 -0.5)*1.5) * (amplitude/100) + 1.0);
@@ -657,7 +550,7 @@ bool chkLoop(int endCount){
 
 void resetLFOParams(){
   lfoValue = 0;
-  envelopeValue = 1;
+  envelopeValue = 2;
   lfoDirection = 1;
   // mit dem aktualisieren der millisekunden wird die Hüllkurve und LFO neu gestartet
   previousMillis = millis();
@@ -928,6 +821,98 @@ void readSerial(){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void setup() {
+  
+  if(LOGLEVEL > 0){
+    Serial.begin(38400);
+  }
+  
+  // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
+  gpio_set_function(wave_outputPin, GPIO_FUNC_PWM);
+  uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
+  
+  // Setze den PWM-Teilungsverhältnis
+  pwm_set_clkdiv(slice_num_wave, 64.f);
+
+  // Starte den PWM-Output
+  pwm_set_enabled(slice_num_wave, true); 
+
+  // LED
+
+  uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
+  uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
+  
+  gpio_set_function(LED1_green, GPIO_FUNC_PWM);
+  gpio_set_function(LED1_red, GPIO_FUNC_PWM);
+  
+  pwm_set_clkdiv(slice_num_led_green, 128.f);
+  pwm_set_clkdiv(slice_num_led_red, 128.f);
+  
+  pwm_set_enabled(slice_num_led_green, true);
+  pwm_set_enabled(slice_num_led_red, true);
+  
+  pwm_set_wrap(slice_num_led_green, pwm_led);
+  pwm_set_wrap(slice_num_led_red, pwm_led);
+  
+  pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+  pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
+  
+
+  // Normale IO's
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  pinMode(LEDShift1, OUTPUT);
+  pinMode(LEDShift2, OUTPUT);
+
+   
+  pinMode(shiftPin1, INPUT_PULLUP);  
+  pinMode(shiftPin2, INPUT_PULLUP);
+  pinMode(firePin1, INPUT_PULLUP); 
+  pinMode(firePin2, INPUT_PULLUP); 
+  pinMode(firePin3, INPUT_PULLUP); 
+  pinMode(firePin4, INPUT_PULLUP); 
+
+  // Bounce-Objekt initialisieren
+  //shiftToggle.attach(shiftPin1);
+  //shiftToggle.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+
+  shift1.attach(shiftPin1);
+  shift1.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+
+  shift2.attach(shiftPin2);
+  shift2.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+
+  fire1.attach(firePin1);
+  fire1.interval(10);  
+
+  fire2.attach(firePin2);
+  fire2.interval(10);  
+
+  fire3.attach(firePin3);
+  fire3.interval(10);  
+
+  fire4.attach(firePin4);
+  fire4.interval(10);  
+  
+  pinMode(waveFormPin_0, INPUT_PULLUP);
+  pinMode(waveFormPin_1, INPUT_PULLUP);
+  // pinMode(waveFormFunctionPin, INPUT_PULLUP);
+  
+  // Initialisieren des Arrays für die Mittelwertbildung des Pitch
+  /*
+  for (int i = 0; i < numReadings; i++) {
+    pitchReadings[i] = 0;
+  }
+ */ 
+  if (!LittleFS.begin()) {
+      debugStr("LittleFS mount failed");
+      return;
+   }
+  // Lampe an, nur zur Kontrolle, dass die SW läuft
+  // debugStr("Setup abgeschlossen.");
+  String _json1 = readSettings("fire1.json");
+  JSON2values(_json1);
+}
 
 void loop() {
   
@@ -1014,13 +999,15 @@ void loop() {
    
 
    // Modulierte Frequenz berechnen
-   float lfoValueActual = calculateLFOWave(lfoFrequency, lfoAmplitude);
+   // float envelope = calculateEnvelope(5,100);
+   float lfo1ValueActual = calculateLFOWave1(lfoFrequency, lfoAmplitude);
    float lfo2ValueActual = calculateLFOWave2(lfo2Frequency, lfo2Amplitude);
+   
    float newModulatedFrequency = 0;
-   if(lfoValueActual == -100){
-    newModulatedFrequency = lfoValueActual;
+   if(lfo1ValueActual == -100){
+    newModulatedFrequency = lfo1ValueActual;
    }else{
-    newModulatedFrequency = baseFrequency * lfoValueActual * lfo2ValueActual;
+    newModulatedFrequency = baseFrequency * lfo1ValueActual * lfo2ValueActual;
    }
    // Reset LFO values if the start button is false
   
@@ -1030,9 +1017,9 @@ void loop() {
   playSound(newModulatedFrequency);
 
   // Überwachung und Debugprints
-  if(chkLoop(10000)){
+  if(chkLoop(100)){
      //debugFloat(shiftStateToggle);
-     debugFloat(lfo2Waveform);
+     debugFloat(newModulatedFrequency);
     //  debugFloat(longPressDetected);
   }
 
