@@ -41,6 +41,9 @@ Bounce shift2;
 byte actualFireButton = 0;
 byte actualFireButtonBak = 0;
 
+// 4 Bänke * 4 FireButtons = 16 Speicherplätze;
+byte bank = 1;
+
 // Zeitmessung, ob die Firebutton lange gedrückt sind
 unsigned long firePressedTime = 0;
 bool longPressDetected = false;
@@ -78,7 +81,7 @@ float lfo2Frequency = 5;  // LFO2-Frequenz in Hz
 float lfo2Amplitude = 0;
 
 // Parameter ENVELOPE-Generator:
-float envelopeDuration = 20;  
+float envelopeDuration = 1;  
 float envelopeAmplitude = 0;
 
 float duty = 50;
@@ -181,7 +184,6 @@ bool receiveStrComplete = false;
 // 18:00:44.574 -> read file fire4.json: {"pitch":1124,"lfoFreq":7.647839,"lfoAmount":34,"lfo2Freq":4.8111,"lfo2Amount":4,"waveform":0,"waveform2":1,"dutyCycle":50}
 
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Werte von den Potis und Schaltern in eine JSON datei speicher
@@ -204,8 +206,8 @@ String values2JSON(){
   dataSet["lfoAmount"] = lfo1Amplitude;
   dataSet["lfo2Freq"]   = lfo2Frequency;
   dataSet["lfo2Amount"] = lfo2Amplitude;
-  //dataSet["envTime"]   = envelopeDuration;
-  //dataSet["envAmount"] = envelopeAmplitude;
+  dataSet["envTime"]   = envelopeDuration;
+  dataSet["envAmount"] = envelopeAmplitude;
   dataSet["waveform"]  = lfo1Waveform;
   dataSet["waveform2"]  = lfo2Waveform;
   dataSet["dutyCycle"]  = duty;
@@ -251,8 +253,8 @@ void JSON2values(String jsonString) {
   lfo1Amplitude = dataSet["lfoAmount"];
   lfo2Frequency = dataSet["lfo2Freq"];
   lfo2Amplitude = dataSet["lfo2Amount"];
-  //envelopeDuration = dataSet["envTime"];
-  //envelopeAmplitude = dataSet["envAmount"];
+  envelopeDuration = dataSet["envTime"];
+  envelopeAmplitude = dataSet["envAmount"];
   lfo1Waveform = dataSet["waveform"];
   lfo2Waveform = dataSet["waveform2"];
   duty = dataSet["dutyCycle"];
@@ -312,10 +314,10 @@ void debugFloat(float f){
 
 
 // Funktion zur Umwandlung einer linearen Eingangsgröße in eine logarithmische Ausgabe
-float linearToLogarithmic(float freq) {
+float linearToLogarithmic(float value,float min, float max) {
   
   
-  float percentage = (freq - minVal ) / ((maxVal - minVal)/100);
+  float percentage = (value - min ) / ((max - min)/100);
   // Überprüfen, ob die Eingabewerte sinnvoll sind
   if (percentage < 0.0) percentage = 0.0;
   if (percentage > 100.0) percentage = 100.0;
@@ -324,16 +326,16 @@ float linearToLogarithmic(float freq) {
   float scaledPercentage = percentage / 100.0;
   
   // Berechne die logarithmische Ausgabe
-  // Wir nehmen an, dass der logarithmische Bereich Basis 10 verwendet
-  float logMin = log10(minVal);
-  float logMax = log10(maxVal);
+  // logarithmischer Bereich mit Basis 10
+  float logMin = log10(min);
+  float logMax = log10(max);
   
   // Interpolieren im logarithmischen Raum
   float logValue = logMin + scaledPercentage * (logMax - logMin);
   
   // Rückkonvertieren in den linearen Raum
   float outputValue = pow(10, logValue);
-  //debug(String(freq)+';'+String(percentage)+';'+String(outputValue));
+  //debug(String(value)+';'+String(percentage)+';'+String(outputValue));
   return outputValue;
 }
 
@@ -352,7 +354,8 @@ float calculateEnvelope(float envelopeDuration, float envelopeAmplitude) {
       envelopeValue = 0.0;  // Unten begrenzen
     }
   }
-  float envelope = envelopeValue  * (envelopeAmplitude / 100) + 1;
+  float envelopeValueLog = linearToLogarithmic(envelopeValue,0.0,1.0);
+  float envelope = ((envelopeValue -0.5)*1.9)  * (envelopeAmplitude / 100) +1;
   return envelope;
 }
 
@@ -573,16 +576,27 @@ byte combineBoolsToByte(bool b0, bool b1) {
 }
 
 void loadOrSave(byte fireButton){
-  String fileName = "fire"+String(fireButton)+".json";
+
+  if(shiftState == 1){ // Shifttaste 1 gedrückt : Bank wechseln
+    bank = fireButton; // Bank schreiben
+    //setChangeState(0,0,0,0);
+    actualFireButtonBak = 0; // absichtlich eine Änderung herbeiführen, um JSON neu laden zu lassen
+  }
+  byte buttonName = (bank * 4) - 4 + fireButton;
+
+  String fileName = "fire"+String(buttonName)+".json";
+
   resetLFOParams();
   // 
-  if(shiftState == 2){ // Shifttaste 2 gedrückt
+  if(shiftState == 2){ // Shifttaste 2 gedrückt : save
     // Save values
     String _json = values2JSON();
     debug("Write");
     dataSaved = writeSettings(_json,fileName);
-    //shiftToggleState = 1;
+    //setChangeState(0,0,0,0);
   } else {
+    
+
     // longPressDetected: wenn Ton gerade gehalten wird, wird sonst der Sound des anderen zuvor gedrückten gespielt
     if((fireButton != actualFireButtonBak) || longPressDetected){ 
       // load Values
@@ -729,7 +743,7 @@ void updateKeys(){
     //longPressDetected = false;
   }
 
-  bool anyFireButtonPressed = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shiftState != 2));
+  bool anyFireButtonPressed = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shiftState != 1)&&(shiftState != 2));
   
   if (anyFireButtonPressed && !longPressDetected) {
     if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
@@ -916,10 +930,11 @@ void setup() {
 }
 
 void loop() {
-  
+  float envelope = 1;
+  float lfo1ValueActual = 1;
+  float lfo2ValueActual = 1;
   updateKeys();
   updatePotis();
-
   readSerial();
 
 
@@ -942,7 +957,7 @@ void loop() {
     // Pitch
     if(potiPitchChanged == 1){
       int freqLin = map(valPotiPitch, 4, 1023, minVal, maxVal );
-      baseFrequency =  linearToLogarithmic(freqLin);
+      baseFrequency =  linearToLogarithmic(freqLin, minVal, maxVal);
       valPotiPitchBak = valPotiPitch;
     }
     // Frequenz
@@ -974,7 +989,7 @@ void loop() {
     // Pitch
     if(potiPitchChanged == 1){
       int freqLin = map(valPotiPitch, 4, 1023, minVal, maxVal );
-      baseFrequency =  linearToLogarithmic(freqLin);
+      baseFrequency =  linearToLogarithmic(freqLin, minVal, maxVal);
       valPotiPitchBak = valPotiPitch;
     }
     // Frequenz
@@ -988,6 +1003,21 @@ void loop() {
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
   }  else if(shiftStateToggle == 2) {
+    
+    if(lfo1WaveformChanged){
+      switch (valLfoWaveformSwitch) {
+        case 1:
+          lfo1Waveform = SQUARE;
+          break;
+        case 2:
+          lfo1Waveform = SAWTOOTH;
+          break;
+        case 3:
+          lfo1Waveform = TRIANGLE;
+          break;
+      }
+    }
+    
     // Pitch-Poti = Duty-Cycle 
     if(potiPitchChanged == 1){
       duty = map(valPotiPitch, 4, 1023, 5, 50 );
@@ -995,7 +1025,7 @@ void loop() {
     }
     // LFO-Frequenz-Poti = Geschwindigkeit Envelope
     if(potiFreqLFOChanged == 1){
-      envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 20);
+      envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 10);
       valPotiFreqLFOBak = valPotiFreqLFO;
     }
      // Amount-Poti = Amount Envelope auf LFO-Frequenz
@@ -1014,15 +1044,11 @@ void loop() {
     shiftToggleState2 = 0;
   }
 
-   
-   
-  float envelope = 1;
-  float lfo1ValueActual = 1;
-  float lfo2ValueActual = 1;
    // Modulierte Frequenz berechnen
+  // float envelopeLin = calculateEnvelope(envelopeDuration,envelopeAmplitude);
+  // envelope = linearToLogarithmic(envelopeLin,0.1,1.9);
   envelope = calculateEnvelope(envelopeDuration,envelopeAmplitude);
-  // envelope = calculateEnvelope(1,100);
-  lfo1ValueActual = calculateLFOWave1(lfo1Frequency * (envelope*3), lfo1Amplitude);
+  lfo1ValueActual = calculateLFOWave1(lfo1Frequency * (envelope), lfo1Amplitude);
   lfo2ValueActual = calculateLFOWave2(lfo2Frequency, lfo2Amplitude);
    
    float newModulatedFrequency = 0;
@@ -1043,8 +1069,9 @@ void loop() {
   // Überwachung und Debugprints
   if(chkLoop(1000)){
      //debug("ShiftstateToggle: "+String(shiftStateToggle)+" Shiftstate: "+String(shiftState));
-     debug("Env Duration: "+String(envelopeDuration)+" Env Amount: "+String(envelopeAmplitude)+"Env Value: "+String(envelope));
+     //debug("Env Duration: "+String(envelopeDuration)+" Env Amount: "+String(envelopeAmplitude)+"Env Value: "+String(envelope));
      //debugFloat(newModulatedFrequency);
+     debug("Bank: "+String(bank)+"Firebutton: "+String(actualFireButton));
     //  debugFloat(longPressDetected);
   }
 
