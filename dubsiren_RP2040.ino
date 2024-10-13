@@ -43,6 +43,7 @@ byte actualFireButtonBak = 0;
 
 // 4 Bänke * 4 FireButtons = 16 Speicherplätze;
 byte bank = 1;
+byte bankBak = 1;
 
 // Zeitmessung, ob die Firebutton lange gedrückt sind
 unsigned long firePressedTime = 0;
@@ -107,12 +108,13 @@ volatile unsigned long previousMillisEnv = 0;
 volatile float lfovalue_finalLFO1 = 0;
 volatile float lfovalue_finalLFO2 = 0;
 
-
+/*
 // Messwerte runden
 const int numReadings = 10;
 int pitchReadings[numReadings];
 int pitchReadIndex = 0;
 int pitchTotal = 0;
+*/
 
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
@@ -185,6 +187,20 @@ bool receiveStrComplete = false;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void setDefaultDataSet(){
+  baseFrequency     = 1000;
+  lfo1Frequency     = 15;
+  lfo1Amplitude     = 0.0;
+  lfo2Frequency     = 5.0;
+  lfo2Amplitude     = 0.0;
+  envelopeDuration  = 2;
+  envelopeAmplitude = 0;
+  lfo1Waveform      = TRIANGLE;
+  lfo2Waveform      = SQUARE;
+  duty = 50;
+}
+
 
 // Werte von den Potis und Schaltern in eine JSON datei speicher
 String values2JSON(){
@@ -271,6 +287,7 @@ String readSettings(String configFile){
         file.close();
     } else {
         Serial.println("Error during reading of file "+configFile);
+        setDefaultDataSet();
         String _json = values2JSON();
         dataSaved = writeSettings(_json,configFile);
     }
@@ -285,7 +302,6 @@ bool writeSettings(String s, String configFile){
       // String in die Datei schreiben
       
       file.println(s);  // Schreibt den String und fügt einen Zeilenumbruch hinzu
-
       file.close();
       return(true);
       //Serial.println("write file "+configFile+": "+s);
@@ -293,6 +309,18 @@ bool writeSettings(String s, String configFile){
     //Serial.println("Error during writing of file "+configFile);
     return(false);
   }
+}
+
+bool deleteSettings(String configFile){
+ // Datei löschen
+  if (LittleFS.remove(configFile)) {
+    Serial.println("Datei erfolgreich gelöscht.");
+    return true;
+  } else {
+    Serial.println("Datei konnte nicht gelöscht werden!");
+    return false;
+  }
+
 }
 
 void debug(String s){
@@ -315,7 +343,6 @@ void debugFloat(float f){
 
 // Funktion zur Umwandlung einer linearen Eingangsgröße in eine logarithmische Ausgabe
 float linearToLogarithmic(float value,float min, float max) {
-  
   
   float percentage = (value - min ) / ((max - min)/100);
   // Überprüfen, ob die Eingabewerte sinnvoll sind
@@ -470,6 +497,10 @@ float calculateLFOWave2(float frequency, float amplitude) {
   return(lfovalue_final1);
 }
 
+float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 // LFO-Variante Sinus 
 /*
 float calculateLFOSin(float baseFreq, float lfoFreq, float lfoDepth) {
@@ -485,31 +516,17 @@ float calculateLFOSin(float baseFreq, float lfoFreq, float lfoDepth) {
   return baseFreq + lfoDepth * sin(lfoPhase);
 }
 */
+
 float setFrequency(float freq){
-  //debugFloat(freq);
   if(freq < minValMod){freq = minValMod;}
   if(freq > maxValMod){freq = maxValMod;}
+  //return(5140 / (freq/1000));
   return(2070 / (freq/1000));
+  //return(1035 / (freq/1000));
 }
 
-/*
-int pitchAverage(){
-  pitchTotal = pitchTotal - pitchReadings[pitchReadIndex];
-  pitchReadings[pitchReadIndex] = analogRead(freqPotPin);
-  pitchTotal = pitchTotal + pitchReadings[pitchReadIndex];
-  pitchReadIndex = pitchReadIndex + 1;
 
-  if (pitchReadIndex >= numReadings) {
-    pitchReadIndex = 0;
-  }
 
-  return(pitchTotal / numReadings);
-}
-*/
-
-float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
 
 // Tonerzeugung
 void playSound(float freqVal){
@@ -560,6 +577,12 @@ void resetLFOParams(){
   previousMillis = millis();
 }
 
+void resetShiftState(){
+  dataSaved = true;
+  shiftToggleState1 = 0;
+  shiftToggleState2 = 0;
+}
+
 byte combineBoolsToByte(bool b0, bool b1) {
   byte result = 0;
   
@@ -576,33 +599,36 @@ byte combineBoolsToByte(bool b0, bool b1) {
 }
 
 void loadOrSave(byte fireButton){
-
-  if(shiftState == 1){ // Shifttaste 1 gedrückt : Bank wechseln
+  // Shifttaste 1 gedrückt : Bank wechseln, aber nicht sofort JSON laden
+  if(shiftState == 1){ 
     bank = fireButton; // Bank schreiben
     //setChangeState(0,0,0,0);
-    actualFireButtonBak = 0; // absichtlich eine Änderung herbeiführen, um JSON neu laden zu lassen
-  }
-  byte buttonName = (bank * 4) - 4 + fireButton;
+    //actualFireButtonBak = fireButton; // damit nicht sofort das JSON neu geladen wird
+    resetShiftState();
+  }else{
+    // virtuelle Taste ausrechnen 1..16
+    byte buttonName = (bank * 4) - 4 + fireButton;
 
-  String fileName = "fire"+String(buttonName)+".json";
+    String fileName = "fire"+String(buttonName)+".json";
 
-  resetLFOParams();
-  // 
-  if(shiftState == 2){ // Shifttaste 2 gedrückt : save
-    // Save values
-    String _json = values2JSON();
-    debug("Write");
-    dataSaved = writeSettings(_json,fileName);
-    //setChangeState(0,0,0,0);
-  } else {
-    
+    resetLFOParams();
+    // 
+    if(shiftState == 2){ // Shifttaste 2 gedrückt : save
+      // Save values
+      String _json = values2JSON();
+      debug("Write");
+      dataSaved = writeSettings(_json,fileName);
+    } else {
+      
 
-    // longPressDetected: wenn Ton gerade gehalten wird, wird sonst der Sound des anderen zuvor gedrückten gespielt
-    if((fireButton != actualFireButtonBak) || longPressDetected){ 
-      // load Values
-      String _json = readSettings(fileName);
-      JSON2values(_json);
-      setChangeState(0,0,0,0);
+      // longPressDetected: wenn Ton gerade gehalten wird, wird sonst der Sound des anderen zuvor gedrückten gespielt
+      if((fireButton != actualFireButtonBak) || (bankBak != bank) || longPressDetected){ 
+        // load Values
+        String _json = readSettings(fileName);
+        JSON2values(_json);
+        setChangeState(0,0,0,0);
+      }
+      bankBak = bank;
     }
   }
   return;
@@ -727,23 +753,32 @@ void updateKeys(){
   }
 
   if (fire1.rose()){
-    firePressedTime = 0;  
+    firePressedTime = 0;
+    
     //longPressDetected = false;
   }
   if (fire2.rose()){
-    firePressedTime = 0;  
+    firePressedTime = 0;
+    
     //longPressDetected = false;
   }
   if (fire3.rose()){
-    firePressedTime = 0;  
+    firePressedTime = 0;
+    
     //longPressDetected = false;
   }
   if (fire4.rose()){
-    firePressedTime = 0;  
+    firePressedTime = 0;
+    
     //longPressDetected = false;
   }
 
-  bool anyFireButtonPressed = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shiftState != 1)&&(shiftState != 2));
+  // AnyfireButton = Tonerzeugung
+  // Bedingungen: 
+  // Firebutton gedrückt
+  // keine Shifttaste
+  // nicht nach einem Bankwechsel, sost dudelt es gleich los
+  bool anyFireButtonPressed = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shiftState != 1)&&(shiftState != 2)&&(bankBak == bank));
   
   if (anyFireButtonPressed && !longPressDetected) {
     if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
@@ -801,6 +836,23 @@ void ledControl(){
   digitalWrite(LEDShift2, shiftToggleState2);
 }
 
+String excractArgument(String inputString){
+  // Position der ersten Klammer '(' und der schließenden Klammer ')'
+  int startIndex = inputString.indexOf('(');
+  int endIndex = inputString.indexOf(')');
+
+  // Überprüfen, ob beide Klammern vorhanden sind
+  if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+    // Extrahiere den Teilstring zwischen den Klammern
+    String extractedString = inputString.substring(startIndex + 1, endIndex);
+    return extractedString;
+    // Serial.println("Extrahierter Teilstring: " + extractedString);
+  } else {
+    return "";
+  }
+}
+
+
 void readSerial(){
   while (Serial.available() > 0) {
     char empfangenesZeichen = Serial.read(); // Ein einzelnes Zeichen lesen
@@ -827,6 +879,26 @@ void readSerial(){
       Serial.println(_json3);
       Serial.println(_json4);
      
+    }
+
+    if(receiveStr.substring(0, 4) == "test"){
+      // excractArgument();
+      // Serial.println(excractArgument(receiveStr));
+      setDefaultDataSet();
+      //  deleteSettings(String configFile)
+    }
+    if(receiveStr.substring(0, 10) == "deleteFile"){
+      // excractArgument();
+       Serial.println("DELETE "+excractArgument(receiveStr));
+       deleteSettings(excractArgument(receiveStr));
+    }
+
+    if(receiveStr.substring(0, 4) == "load"){
+      // Beispiel: load({"pitch":1000,"lfoFreq":10,"lfoAmount":50,"lfo2Freq":5,"lfo2Amount":50,"envTime":2,"envAmount":0,"waveform":0,"waveform2":0,"dutyCycle":50}) 
+      
+      String _json = excractArgument(receiveStr);
+      Serial.println(_json);
+      JSON2values(_json);
     }
     // Die Zeichenkette zurücksetzen, um eine neue zu empfangen
     receiveStr = "";
@@ -923,8 +995,7 @@ void setup() {
       debug("LittleFS mount failed");
       return;
    }
-  // Lampe an, nur zur Kontrolle, dass die SW läuft
-  // debug("Setup abgeschlossen.");
+
   String _json1 = readSettings("fire1.json");
   JSON2values(_json1);
 }
@@ -1039,9 +1110,7 @@ void loop() {
     //envelopeAmplitude = 0;
     lfo2Amplitude = 0;
     envelopeAmplitude = 0;
-    dataSaved = true;
-    shiftToggleState1 = 0;
-    shiftToggleState2 = 0;
+    resetShiftState();
   }
 
    // Modulierte Frequenz berechnen
@@ -1067,7 +1136,7 @@ void loop() {
 
 
   // Überwachung und Debugprints
-  if(chkLoop(1000)){
+  if(chkLoop(5000)){
      //debug("ShiftstateToggle: "+String(shiftStateToggle)+" Shiftstate: "+String(shiftState));
      //debug("Env Duration: "+String(envelopeDuration)+" Env Amount: "+String(envelopeAmplitude)+"Env Value: "+String(envelope));
      //debugFloat(newModulatedFrequency);
