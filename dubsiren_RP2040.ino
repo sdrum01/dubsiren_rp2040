@@ -611,7 +611,10 @@ void loadOrSave(byte fireButton){
 
     String fileName = "fire"+String(buttonName)+".json";
 
-    resetLFOParams();
+    // LongPress: kein retriggern der LFO und Env., nur Ton Stoppen
+    if(longPressDetected == 0){
+      resetLFOParams();
+    }
     // 
     if(shiftState == 2){ // Shifttaste 2 gedrückt : save
       // Save values
@@ -620,9 +623,8 @@ void loadOrSave(byte fireButton){
       dataSaved = writeSettings(_json,fileName);
     } else {
       
-
-      // longPressDetected: wenn Ton gerade gehalten wird, wird sonst der Sound des anderen zuvor gedrückten gespielt
-      if((fireButton != actualFireButtonBak) || (bankBak != bank) || longPressDetected){ 
+      // longPressDetected: wenn Ton gerade gehalten wird sollen die Werte nicht neu geladen werden bei drücken des selben Buttons
+      if( ((fireButton != actualFireButtonBak) || (bankBak != bank)) && (longPressDetected == 0)){ 
         // load Values
         String _json = readSettings(fileName);
         JSON2values(_json);
@@ -755,22 +757,20 @@ void updateKeys(){
   if (fire1.rose()){
     firePressedTime = 0;
     
-    //longPressDetected = false;
   }
   if (fire2.rose()){
     firePressedTime = 0;
     
-    //longPressDetected = false;
+
   }
   if (fire3.rose()){
     firePressedTime = 0;
     
-    //longPressDetected = false;
+
   }
   if (fire4.rose()){
     firePressedTime = 0;
     
-    //longPressDetected = false;
   }
 
   // AnyfireButton = Tonerzeugung
@@ -788,6 +788,7 @@ void updateKeys(){
   }
   
   actualFireButtonBak = actualFireButton;
+  
 
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
   runSound = (anyFireButtonPressed || longPressDetected);
@@ -1139,10 +1140,10 @@ void loop() {
   if(chkLoop(5000)){
      //debug("ShiftstateToggle: "+String(shiftStateToggle)+" Shiftstate: "+String(shiftState));
      //debug("Env Duration: "+String(envelopeDuration)+" Env Amount: "+String(envelopeAmplitude)+"Env Value: "+String(envelope));
-     debug("LFO1: "+String(previousMillis)+" LFO2: "+String(previousMillisLFO2));
+     //debug("LFO1: "+String(previousMillis)+" LFO2: "+String(previousMillisLFO2));
      //debugFloat(newModulatedFrequency);
      //debug("Bank: "+String(bank)+"Firebutton: "+String(actualFireButton));
-    //  debugFloat(longPressDetected);
+    debugFloat(longPressDetected);
   }
 
 }
