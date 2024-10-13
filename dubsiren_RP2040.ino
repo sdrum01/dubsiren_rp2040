@@ -1139,8 +1139,9 @@ void loop() {
   if(chkLoop(5000)){
      //debug("ShiftstateToggle: "+String(shiftStateToggle)+" Shiftstate: "+String(shiftState));
      //debug("Env Duration: "+String(envelopeDuration)+" Env Amount: "+String(envelopeAmplitude)+"Env Value: "+String(envelope));
+     debug("LFO1: "+String(previousMillis)+" LFO2: "+String(previousMillisLFO2));
      //debugFloat(newModulatedFrequency);
-     debug("Bank: "+String(bank)+"Firebutton: "+String(actualFireButton));
+     //debug("Bank: "+String(bank)+"Firebutton: "+String(actualFireButton));
     //  debugFloat(longPressDetected);
   }
 
