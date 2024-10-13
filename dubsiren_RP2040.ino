@@ -1118,7 +1118,7 @@ void loop() {
   // envelope = linearToLogarithmic(envelopeLin,0.1,1.9);
   envelope = calculateEnvelope(envelopeDuration,envelopeAmplitude);
   lfo1ValueActual = calculateLFOWave1(lfo1Frequency * (envelope), lfo1Amplitude);
-  lfo2ValueActual = calculateLFOWave2(lfo2Frequency, lfo2Amplitude);
+  lfo2ValueActual = calculateLFOWave2(lfo2Frequency * (envelope), lfo2Amplitude);
    
    float newModulatedFrequency = 0;
    if(lfo1ValueActual == -100){
