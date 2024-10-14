@@ -1,4 +1,6 @@
 /backup
 /KiCad/VCO_RPIpico-backups
+/KiCad/*.lck
 /.vscode
+
 

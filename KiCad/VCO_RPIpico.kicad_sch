@@ -3428,6 +3428,12 @@
 		(uuid "37059d1d-b340-48d3-853f-7376ba7805c4")
 	)
 	(junction
+		(at 105.41 110.49)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "39ec1166-36a5-4288-b036-2982d2007b27")
+	)
+	(junction
 		(at 105.41 124.46)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3438,12 +3444,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "3f47534f-aec1-4ecf-9b5d-6fc4792382ef")
-	)
-	(junction
-		(at 105.41 113.03)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "67f64acd-fa44-4328-8d82-9e7c1cd9b8a5")
 	)
 	(junction
 		(at 208.28 120.65)
@@ -3480,12 +3480,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "9fbbc516-2aff-4304-a3e0-f0f18e644d42")
-	)
-	(junction
-		(at 116.84 113.03)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "a47620c9-00aa-4adb-8f44-9b2eb4d88900")
 	)
 	(junction
 		(at 105.41 120.65)
@@ -3921,16 +3915,6 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 107.95) (xy 119.38 107.95)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "51762542-7bdd-4e04-b655-eb120cd8f154")
-	)
-	(wire
-		(pts
 			(xy 45.72 157.48) (xy 46.99 157.48)
 		)
 		(stroke
@@ -3938,16 +3922,6 @@
 			(type default)
 		)
 		(uuid "52165e39-2f50-4632-8790-f979e35c5369")
-	)
-	(wire
-		(pts
-			(xy 105.41 113.03) (xy 105.41 120.65)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "528fda6d-6fb3-4caa-a5eb-958b743cf12b")
 	)
 	(wire
 		(pts
@@ -3978,16 +3952,6 @@
 			(type default)
 		)
 		(uuid "5594f704-2954-4692-a58f-f6d2204d0dd7")
-	)
-	(wire
-		(pts
-			(xy 119.38 113.03) (xy 116.84 113.03)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "57f17f28-f2ce-4c4b-9ddc-88d3570c0372")
 	)
 	(wire
 		(pts
@@ -4098,6 +4062,16 @@
 			(type default)
 		)
 		(uuid "705a63b2-0ab2-445e-83fe-045e953ca916")
+	)
+	(wire
+		(pts
+			(xy 105.41 110.49) (xy 105.41 120.65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "71f21214-40bb-4328-9f61-950659065d49")
 	)
 	(wire
 		(pts
@@ -4301,7 +4275,7 @@
 	)
 	(wire
 		(pts
-			(xy 105.41 113.03) (xy 105.41 107.95)
+			(xy 105.41 107.95) (xy 105.41 110.49)
 		)
 		(stroke
 			(width 0)
@@ -4348,6 +4322,16 @@
 			(type default)
 		)
 		(uuid "a9dfbbea-b044-4cec-a1b4-744798a44dc8")
+	)
+	(wire
+		(pts
+			(xy 105.41 110.49) (xy 111.76 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ab00cc4e-6442-45b5-bbfd-ae60c493e24a")
 	)
 	(wire
 		(pts
@@ -4448,16 +4432,6 @@
 			(type default)
 		)
 		(uuid "c0605519-4e7d-4e29-8147-2a3bfd62b07c")
-	)
-	(wire
-		(pts
-			(xy 116.84 113.03) (xy 105.41 113.03)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c24b032b-ee03-42c4-9db4-661240db6550")
 	)
 	(wire
 		(pts
@@ -4718,16 +4692,6 @@
 			(type default)
 		)
 		(uuid "fa344888-f3a4-4b75-87b4-926b2f697825")
-	)
-	(wire
-		(pts
-			(xy 116.84 107.95) (xy 116.84 113.03)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fc86f4dc-c4b0-4e79-a821-7476a6b3f8d5")
 	)
 	(wire
 		(pts
@@ -6593,7 +6557,7 @@
 			)
 		)
 		(property "Value" "Shift2/Save"
-			(at 98.044 107.696 0)
+			(at 97.79 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6835,73 +6799,6 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "SW8")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:LED")
-		(at 123.19 107.95 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "6d946439-e17b-4609-80f2-350ae7c395d4")
-		(property "Reference" "D2"
-			(at 119.888 106.934 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "LED Shift1"
-			(at 122.428 104.394 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "LED_THT:LED_D3.0mm"
-			(at 123.19 107.95 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 123.19 107.95 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Light emitting diode"
-			(at 123.19 107.95 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "3349bf37-eb2c-4f12-bf6f-acce3cd56ba6")
-		)
-		(pin "1"
-			(uuid "872cbc14-244b-4513-addc-23d941b44cce")
-		)
-		(instances
-			(project ""
-				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "D2")
 					(unit 1)
 				)
 			)
@@ -8005,7 +7902,7 @@
 				)
 			)
 		)
-		(property "Value" "LED_Dual_AKA"
+		(property "Value" "LED_Shift1"
 			(at 198.374 140.716 0)
 			(effects
 				(font
@@ -8013,7 +7910,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LED_THT:LED_D5.0mm-3"
+		(property "Footprint" "LED_THT:LED_D3.0mm-3"
 			(at 200.66 130.81 0)
 			(effects
 				(font
@@ -8120,73 +8017,6 @@
 			(project ""
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "R3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:LED")
-		(at 123.19 113.03 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "c3ca8994-66b5-490d-925a-b426c5316a71")
-		(property "Reference" "D3"
-			(at 119.888 112.014 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "LED Shift2"
-			(at 123.19 116.586 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "LED_THT:LED_D3.0mm"
-			(at 123.19 113.03 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 123.19 113.03 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Light emitting diode"
-			(at 123.19 113.03 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "2"
-			(uuid "16e18895-f113-4296-aa4c-2977a5269454")
-		)
-		(pin "1"
-			(uuid "92f8e1ff-0308-4e1e-a14d-6e163f9d2758")
-		)
-		(instances
-			(project "VCO_RPIpico"
-				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "D3")
 					(unit 1)
 				)
 			)
@@ -9205,6 +9035,76 @@
 			(project ""
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "#PWR013")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:LED_Dual_AKA")
+		(at 119.38 110.49 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f0f7c025-7588-40aa-bf10-12d67072e08e")
+		(property "Reference" "D8"
+			(at 121.92 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "LED_Shift2"
+			(at 118.11 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "LED_THT:LED_D3.0mm-3"
+			(at 119.38 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 119.38 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 119.38 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "49bec43c-eff4-4146-96a4-018bdccba6cc")
+		)
+		(pin "2"
+			(uuid "ddcb5c50-1389-4728-ad2c-96414be6ab33")
+		)
+		(pin "3"
+			(uuid "f7e16455-6c7f-4e56-8e1d-ee59c809bc86")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "D8")
 					(unit 1)
 				)
 			)
