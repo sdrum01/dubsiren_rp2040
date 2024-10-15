@@ -849,6 +849,7 @@ void ledControl(){
       pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
     }else{
       pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_finalLFO1 * pwm_led);
+      //pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),lfovalue_finalLFO2 * pwm_led);
     }
   }else{
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
