@@ -575,11 +575,15 @@ bool chkLoop(int endCount){
 }
 
 void resetLFOParams(){
+  unsigned long currentMillis = millis();
   lfoValue = 0;
+  //lfo2Value = 0;
   envelopeValue = 1;
   lfoDirection = 1;
+  //lfo2Direction = 1;
   // mit dem aktualisieren der millisekunden wird die Hüllkurve und LFO neu gestartet
-  previousMillis = millis();
+  previousMillis = currentMillis;
+  previousMillisLFO2 = currentMillis;
 }
 
 void resetShiftState(){
@@ -1151,7 +1155,7 @@ void loop() {
    // Reset LFO values if the start button is false
   
   // Betriebsanzeige
-  blink(500);
+  blink(100);
   
   // Create Tone
   playSound(newModulatedFrequency);
