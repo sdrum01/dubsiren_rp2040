@@ -102,9 +102,12 @@ volatile float lfo2Value = 0;
 volatile float envelopeValue = 1;
 volatile int lfoDirection = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
 volatile int lfo2Direction = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
+
 volatile unsigned long previousMillis = 0;
 volatile unsigned long previousMillisLFO2 = 0;
 volatile unsigned long previousMillisEnv = 0;
+volatile unsigned long previousMillisLED = 0;
+
 volatile float lfovalue_finalLFO1 = 0;
 volatile float lfovalue_finalLFO2 = 0;
 
@@ -133,6 +136,8 @@ bool shiftState2Bak = 0;
 byte shiftState = 0;
 byte shiftStateToggle = 0;
 byte shiftStateBak = 0;
+
+bool ledState = 0;
 
 // LED1+2
 
@@ -815,6 +820,20 @@ void updatePotis(){
   }
 }
 
+void blink(int interval) {
+  // Speichere die aktuelle Zeit
+  unsigned long currentMillis = millis();
+
+  // Prüfe, ob das Intervall abgelaufen ist
+  if (currentMillis - previousMillisLED >= interval) {
+    // Speichere den aktuellen Zeitpunkt als letzten Zeitstempel
+    previousMillisLED = currentMillis;
+
+    // Ändere den LED-Zustand
+    ledState = !ledState;
+  }
+}
+
 void ledControl(){
   uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
   uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_red);
@@ -835,6 +854,7 @@ void ledControl(){
   // LEDs
   // digitalWrite(LEDShift1, shiftToggleState1);
   digitalWrite(LEDShift2, shiftToggleState2);
+  digitalWrite(LED_BUILTIN, ledState);
 }
 
 String excractArgument(String inputString){
@@ -999,6 +1019,7 @@ void setup() {
 
   String _json1 = readSettings("fire1.json");
   JSON2values(_json1);
+  
 }
 
 void loop() {
@@ -1129,6 +1150,8 @@ void loop() {
    }
    // Reset LFO values if the start button is false
   
+  // Betriebsanzeige
+  blink(500);
   
   // Create Tone
   playSound(newModulatedFrequency);
