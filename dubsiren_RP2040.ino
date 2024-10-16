@@ -20,7 +20,7 @@ const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
-//const int shiftTogglePin = 2;  // shift-Taste alt
+const int selectWaveformPin = 2;  // shift-Taste alt
 const int shiftPin1 = 6;  // shift-Taste1
 const int shiftPin2 = 7;  // shift-Taste2
 
@@ -37,6 +37,8 @@ Bounce fire4;
 //Bounce shiftToggle;
 Bounce shift1;
 Bounce shift2;
+
+Bounce selectWaveform;
 
 byte actualFireButton = 0;
 byte actualFireButtonBak = 0;
@@ -646,7 +648,7 @@ void loadOrSave(byte fireButton){
 }
 
 void updateKeys(){
-  //shiftToggle.update();
+
   shift1.update();
   shift2.update();
 
@@ -654,6 +656,8 @@ void updateKeys(){
   fire2.update();
   fire3.update();
   fire4.update();
+
+  selectWaveform.update();
 
     if (shift1.fell()) {
       dataSaved = false;
@@ -765,21 +769,15 @@ void updateKeys(){
 
   if (fire1.rose()){
     firePressedTime = 0;
-    
   }
   if (fire2.rose()){
     firePressedTime = 0;
-    
-
   }
   if (fire3.rose()){
     firePressedTime = 0;
-    
-
   }
   if (fire4.rose()){
     firePressedTime = 0;
-    
   }
 
   // AnyfireButton = Tonerzeugung
@@ -795,10 +793,15 @@ void updateKeys(){
       // Serial.println("LongPress detected!");
     }
   }
+
+  if(selectWaveform.read() == LOW){
+    debugString = "Waveform selected";
+  }else{
+    debugString = "";
+  }
   
   actualFireButtonBak = actualFireButton;
   
-
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
   runSound = (anyFireButtonPressed || longPressDetected);
   
@@ -977,7 +980,7 @@ void setup() {
   pinMode(LEDShift1, OUTPUT);
   pinMode(LEDShift2, OUTPUT);
 
-   
+  pinMode(selectWaveformPin, INPUT_PULLUP); 
   pinMode(shiftPin1, INPUT_PULLUP);  
   pinMode(shiftPin2, INPUT_PULLUP);
   pinMode(firePin1, INPUT_PULLUP); 
@@ -988,6 +991,9 @@ void setup() {
   // Bounce-Objekt initialisieren
   //shiftToggle.attach(shiftPin1);
   //shiftToggle.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+
+  selectWaveform.attach(selectWaveformPin);
+  selectWaveform.interval(50);
 
   shift1.attach(shiftPin1);
   shift1.interval(50);  // Entprellintervall in Millisekunden (50 ms)
@@ -1171,7 +1177,7 @@ void loop() {
      //debug("LFO1: "+String(previousMillis)+" LFO2: "+String(previousMillisLFO2));
      //debugFloat(newModulatedFrequency);
      //debug("Bank: "+String(bank)+"Firebutton: "+String(actualFireButton));
-    debugFloat(longPressDetected);
+    debug(debugString);
   }
 
 }
