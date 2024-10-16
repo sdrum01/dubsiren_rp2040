@@ -3446,6 +3446,12 @@
 		(uuid "3f47534f-aec1-4ecf-9b5d-6fc4792382ef")
 	)
 	(junction
+		(at 158.75 76.2)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "3fb7dcce-b7fc-4556-b512-7af749304696")
+	)
+	(junction
 		(at 208.28 120.65)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3486,6 +3492,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "b0a5f786-4556-48c7-89a1-a55f353155b7")
+	)
+	(junction
+		(at 176.53 82.55)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b32c8bce-78d4-4749-8f8c-dec41d7b8c0f")
 	)
 	(junction
 		(at 144.78 60.96)
@@ -4695,6 +4707,16 @@
 	)
 	(wire
 		(pts
+			(xy 176.53 82.55) (xy 184.15 82.55)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fb2b66f7-c892-431d-b77d-a00d0ca08424")
+	)
+	(wire
+		(pts
 			(xy 224.79 81.28) (xy 226.06 81.28)
 		)
 		(stroke
@@ -5741,10 +5763,9 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "4f114306-5853-4687-8012-20dc8454d58c")
 		(property "Reference" "A1"
-			(at 160.7694 74.93 0)
+			(at 142.24 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5753,7 +5774,7 @@
 			)
 		)
 		(property "Value" "RaspberryPi-Pico"
-			(at 160.7694 77.47 0)
+			(at 160.02 78.74 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7685,6 +7706,75 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C")
+		(at 158.75 72.39 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "9e348880-c42d-4c95-ab24-f7b96451a5ae")
+		(property "Reference" "C5"
+			(at 161.29 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 162.56 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric"
+			(at 159.7152 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 158.75 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 158.75 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "202b40ad-0463-4fb7-ae4b-f7223d1f7405")
+		)
+		(pin "2"
+			(uuid "06e540bf-3f1c-4f47-b6c5-396b85e077a8")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "C5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R")
 		(at 118.11 132.08 90)
 		(unit 1)
@@ -7813,6 +7903,76 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "J7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 184.15 78.74 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "beee2fe5-eef5-4aeb-85fc-129ef1884066")
+		(property "Reference" "C6"
+			(at 189.23 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 191.77 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric"
+			(at 183.1848 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 184.15 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 184.15 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "eaa62b5a-3fcc-4e59-ab81-e4af8b9cdb8e")
+		)
+		(pin "2"
+			(uuid "49f33c1b-d016-44b9-a757-a5d8d1ab0b24")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "C6")
 					(unit 1)
 				)
 			)
@@ -8969,6 +9129,72 @@
 			(project ""
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "R13")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 158.75 68.58 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f06bc6a4-d80d-41c5-bf80-65c937d03def")
+		(property "Reference" "#PWR023"
+			(at 158.75 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 158.75 63.5 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 158.75 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 158.75 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 158.75 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "958ac62c-41ae-42f3-80bc-25b984086584")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "#PWR023")
 					(unit 1)
 				)
 			)
