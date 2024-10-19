@@ -14,13 +14,17 @@ const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
 const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
 
-const int waveFormPin_0 = 3; // WaveForm Kippschalter PIN 1
-const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
+//const int waveFormPin_0 = 3; // WaveForm Kippschalter PIN 1
+//const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
+
+const int selectWaveFormLFO1Pin = 3; // WaveForm Kippschalter PIN 1
+const int selectWaveFormLFO2Pin = 4; // WaveForm Kippschalter Pin 2
+
 //const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
-const int selectWaveformPin = 2;  // shift-Taste alt
+//const int selectWaveformPin = 2;  // shift-Taste alt
 const int shiftPin1 = 6;  // shift-Taste1
 const int shiftPin2 = 7;  // shift-Taste2
 
@@ -28,6 +32,13 @@ const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
 const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
 const int firePin3 = 20;  // Steuerpin für die Tonaktivierung3g
 const int firePin4 = 21;  // Steuerpin für die Tonaktivierung4
+
+const int LED1_red = 16;
+const int LED1_green = 17;
+const int LED2_red = 14;
+const int LED2_green = 15;
+const int LEDShift1 = 8;
+const int LEDShift2 = 9;
 
 // Bounce Objekte erstellen zur Tastenabfrage
 Bounce fire1;
@@ -38,7 +49,8 @@ Bounce fire4;
 Bounce shift1;
 Bounce shift2;
 
-Bounce selectWaveform;
+Bounce selectWaveformLFO1;
+Bounce selectWaveformLFO2;
 
 byte actualFireButton = 0;
 byte actualFireButtonBak = 0;
@@ -55,11 +67,6 @@ bool longPressDetected = false;
 byte valLfoWaveformSwitch = 0;
 // temporäre Sicherung des Wertes des Waveformschalters
 byte valLfoWaveformSwitchBak = 0;
-
-const int LED1_red = 16;
-const int LED1_green = 17;
-const int LEDShift1 = 8;
-const int LEDShift2 = 9;
 
 
 // Konstanten für den minimalen und maximalen Wert der blanken Frequenz ohne Modulation
@@ -135,11 +142,19 @@ bool shiftState2 = 0;
 bool shiftState1Bak = 0;
 bool shiftState2Bak = 0;
 
+// shiftState: Byte, in dem eine Kombination aus Shift1 und Shift2 gespeichert wird
 byte shiftState = 0;
 byte shiftStateToggle = 0;
 byte shiftStateBak = 0;
 
-bool ledState = 0;
+// Modulationsselektor: 0:LFO1, 1: LFO2, 2:Envelope
+// wird gesetzt bei pos. Flange LFO1 oder LFO2 oder neg.Flange Shift1
+byte modSelect = 0; 
+
+// Kombination aus LFO1 und LFO2, wird gesetzt, wenn LFO-Button gehalten wird zur Waveform Auswahl mit den Fire-Buttons
+byte lfoSelectState = 0;
+
+bool blinkState = 0;
 
 // LED1+2
 
@@ -592,19 +607,20 @@ void resetShiftState(){
   dataSaved = true;
   shiftToggleState1 = 0;
   shiftToggleState2 = 0;
+  modSelect = 0;
 }
 
-byte combineBoolsToByte(bool b0, bool b1) {
+byte combineBoolsToByte(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7) {
   byte result = 0;
   
   result |= (b0 << 0);  // Bit 0
   result |= (b1 << 1);  // Bit 1
-  result |= (0 << 2);  // Bit 2
-  result |= (0 << 3);  // Bit 3
-  result |= (0 << 4);  // Bit 4
-  result |= (0 << 5);  // Bit 5
-  result |= (0 << 6);  // Bit 6
-  result |= (0 << 7);  // Bit 7
+  result |= (b2 << 2);  // Bit 2
+  result |= (b3 << 3);  // Bit 3
+  result |= (b4 << 4);  // Bit 4
+  result |= (b5 << 5);  // Bit 5
+  result |= (b6 << 6);  // Bit 6
+  result |= (b7 << 7);  // Bit 7
   
   return result;
 }
@@ -613,8 +629,6 @@ void loadOrSave(byte fireButton){
   // Shifttaste 1 gedrückt : Bank wechseln, aber nicht sofort JSON laden
   if(shiftState == 1){ 
     bank = fireButton; // Bank schreiben
-    //setChangeState(0,0,0,0);
-    //actualFireButtonBak = fireButton; // damit nicht sofort das JSON neu geladen wird
     resetShiftState();
   }else{
     // virtuelle Taste ausrechnen 1..16
@@ -657,7 +671,9 @@ void updateKeys(){
   fire3.update();
   fire4.update();
 
-  selectWaveform.update();
+  selectWaveformLFO1.update();
+  selectWaveformLFO2.update();
+
 
     if (shift1.fell()) {
       dataSaved = false;
@@ -666,6 +682,7 @@ void updateKeys(){
       dataSaved = false;
     }
 
+  /*
   if (dataSaved == 0){
     // fallende Flanke (Taster losgelassen)
     
@@ -678,6 +695,7 @@ void updateKeys(){
       if(shiftToggleState2){shiftToggleState1 = 0;}
     }
   }
+  */
 
 /*
   if(shiftToggleStateBak != shiftToggleState){
@@ -686,10 +704,24 @@ void updateKeys(){
   }
   shiftToggleStateBak = shiftToggleState;
 */  
+  // Button LFO1 pos. Flanke
+  if(selectWaveformLFO1.fell()){
+    modSelect = 0;
+  }
+  // Button LFO2 pos. Flanke
+  if(selectWaveformLFO2.fell()){
+    modSelect = 1;
+  }
+  // Button Bank Select (Shift1) neg.Flanke
+  if (shift1.rose()){
+    if(!dataSaved){modSelect = 2;}
+  }
 
   
-  shiftState = combineBoolsToByte(!shift1.read(),!shift2.read());
-  shiftStateToggle = combineBoolsToByte(shiftToggleState1,shiftToggleState2);
+
+
+  shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),0,0,0,0,0,0);
+  shiftStateToggle = combineBoolsToByte(shiftToggleState1,shiftToggleState2,0,0,0,0,0,0);
 
   if(shiftStateBak != shiftState){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
@@ -712,93 +744,142 @@ void updateKeys(){
   waveFormFunctionBak = waveFormFunction;
 */
   // Aus dem Waveformschalter ein Byte machen
+
+/*
   valLfoWaveformSwitch = combineBoolsToByte(digitalRead(waveFormPin_0),digitalRead(waveFormPin_1));
   if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
     lfo1WaveformChanged = 1;
   }
   valLfoWaveformSwitchBak = valLfoWaveformSwitch;
+*/  
 
+  // zum Setzen des Byte lfoSelectState um den LFO zu wählen
+  bool selectWaveformLFOpressed = (!selectWaveformLFO1.read())||(!selectWaveformLFO2.read());
+  if(selectWaveformLFOpressed){
+    
+    if (fire1.fell()){
+      valLfoWaveformSwitch = 1;
+    }
+    if (fire2.fell()){
+      valLfoWaveformSwitch = 2;
+    }
+    if (fire3.fell()){
+      valLfoWaveformSwitch = 3;
+    }
+    if (fire4.fell()){
+      valLfoWaveformSwitch = 4;
+    }
+    // Kippschalter emulieren
+    if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
+      lfo1WaveformChanged = 1;
+    }
+    valLfoWaveformSwitchBak = valLfoWaveformSwitch;
+
+  }else{
+    // steigende Flanke (Taster gedrückt)
+    if (fire1.fell()){
+      actualFireButton = 1;
+      //firePressedTime = millis();  // Zeit des Tastendrucks speichern
+      if(!fire2.read() || !fire3.read() ||!fire4.read()){
+        longPressDetected = true;
+      }else{
+        loadOrSave(actualFireButton);
+        longPressDetected = false;     // Reset des Langdruck-Flags
+      }
+      
+      
+    }
+    if (fire2.fell()){
+      actualFireButton = 2;
+      //firePressedTime = millis();  
+      //longPressDetected = false;
+      if(!fire1.read() || !fire3.read() ||!fire4.read()){
+        longPressDetected = true;
+      }else{
+        loadOrSave(actualFireButton);
+        longPressDetected = false;     // Reset des Langdruck-Flags
+      }
+    }
+    if (fire3.fell()){
+      actualFireButton = 3;
+      //firePressedTime = millis();  
+      //longPressDetected = false;
+      if(!fire1.read() || !fire2.read() ||!fire4.read()){
+        longPressDetected = true;
+      }else{
+        loadOrSave(actualFireButton);
+        longPressDetected = false;     // Reset des Langdruck-Flags
+      }
+    }
+    if (fire4.fell()){
+      actualFireButton = 4;
+      //firePressedTime = millis();  
+      //longPressDetected = false;
+      if(!fire1.read() || !fire2.read() ||!fire3.read()){
+        longPressDetected = true;
+      }else{
+        loadOrSave(actualFireButton);
+        longPressDetected = false;     // Reset des Langdruck-Flags
+      }
+    }
+
+    if (fire1.rose()){
+      firePressedTime = 0;
+    }
+    if (fire2.rose()){
+      firePressedTime = 0;
+    }
+    if (fire3.rose()){
+      firePressedTime = 0;
+    }
+    if (fire4.rose()){
+      firePressedTime = 0;
+    }
+
+    
+  }
   
   
-  // steigende Flanke (Taster gedrückt)
-  if (fire1.fell()){
-    actualFireButton = 1;
-    //firePressedTime = millis();  // Zeit des Tastendrucks speichern
-    if(!fire2.read() || !fire3.read() ||!fire4.read()){
-      longPressDetected = true;
-    }else{
-      loadOrSave(actualFireButton);
-      longPressDetected = false;     // Reset des Langdruck-Flags
-    }
-    
-    
-  }
-  if (fire2.fell()){
-    actualFireButton = 2;
-    //firePressedTime = millis();  
-    //longPressDetected = false;
-    if(!fire1.read() || !fire3.read() ||!fire4.read()){
-      longPressDetected = true;
-    }else{
-      loadOrSave(actualFireButton);
-      longPressDetected = false;     // Reset des Langdruck-Flags
-    }
-  }
-  if (fire3.fell()){
-    actualFireButton = 3;
-    //firePressedTime = millis();  
-    //longPressDetected = false;
-    if(!fire1.read() || !fire2.read() ||!fire4.read()){
-      longPressDetected = true;
-    }else{
-      loadOrSave(actualFireButton);
-      longPressDetected = false;     // Reset des Langdruck-Flags
-    }
-  }
-  if (fire4.fell()){
-    actualFireButton = 4;
-    //firePressedTime = millis();  
-    //longPressDetected = false;
-    if(!fire1.read() || !fire2.read() ||!fire3.read()){
-      longPressDetected = true;
-    }else{
-      loadOrSave(actualFireButton);
-      longPressDetected = false;     // Reset des Langdruck-Flags
-    }
-  }
-
-  if (fire1.rose()){
-    firePressedTime = 0;
-  }
-  if (fire2.rose()){
-    firePressedTime = 0;
-  }
-  if (fire3.rose()){
-    firePressedTime = 0;
-  }
-  if (fire4.rose()){
-    firePressedTime = 0;
-  }
-
+  
   // AnyfireButton = Tonerzeugung
   // Bedingungen: 
   // Firebutton gedrückt
   // keine Shifttaste
   // nicht nach einem Bankwechsel, sost dudelt es gleich los
-  bool anyFireButtonPressed = (((fire1.read() == LOW)||(fire2.read() == LOW)||(fire3.read() == LOW)||(fire4.read() == LOW))&&(shiftState != 1)&&(shiftState != 2)&&(bankBak == bank));
-  
+  bool anyFireButtonPressed = (
+                                (
+                                  (fire1.read() == LOW)||
+                                  (fire2.read() == LOW)||
+                                  (fire3.read() == LOW)||
+                                  (fire4.read() == LOW)
+                                )&&(
+                                  shiftState != 1
+                                )&&(
+                                  shiftState != 2
+                                )&&(
+                                  selectWaveformLFOpressed == false
+                                )&&(
+                                  bankBak == bank
+                                )
+                              );
+
   if (anyFireButtonPressed && !longPressDetected) {
     if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
       // longPressDetected = true;  // Markiere, dass der lange Druck erkannt wurde
       // Serial.println("LongPress detected!");
     }
   }
-
+  
+  
+  
+/*
   if(selectWaveform.read() == LOW){
     debugString = "Waveform selected";
   }else{
     debugString = "";
   }
+*/
+
   
   actualFireButtonBak = actualFireButton;
   
@@ -837,15 +918,20 @@ void blink(int interval) {
     previousMillisLED = currentMillis;
 
     // Ändere den LED-Zustand
-    ledState = !ledState;
+    blinkState = !blinkState;
   }
 }
 
 void ledControl(){
+  
   uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
   uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_red);
 
+  uint slice_num_led2_green = pwm_gpio_to_slice_num(LED2_green);
+  uint slice_num_led2_red = pwm_gpio_to_slice_num(LED2_red);
+
   // LED Grün
+  /*
   if(shiftToggleState1 == 0){
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_red), 0);
     if(lfovalue_finalLFO1 == -100){
@@ -858,11 +944,37 @@ void ledControl(){
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
     pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),lfovalue_finalLFO2 * pwm_led);
   }
+  */
+  
+  pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
+  pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+  pwm_set_chan_level(slice_num_led2_red, pwm_gpio_to_channel(LED2_red), 0);
+  pwm_set_chan_level(slice_num_led2_green, pwm_gpio_to_channel(LED2_green), 0);
+
+  if(lfovalue_finalLFO1 == -100){
+    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+  }else{
+    if(modSelect == 0){
+      pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),lfovalue_finalLFO1 * (pwm_led/8));
+    }else{
+      
+    }
+    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_finalLFO1 * pwm_led);
+  }
+
+  if(modSelect == 1){
+    pwm_set_chan_level(slice_num_led2_red, pwm_gpio_to_channel(LED2_red),lfovalue_finalLFO2 * (pwm_led/8));
+  }else{
+    
+  }
+  pwm_set_chan_level(slice_num_led2_green, pwm_gpio_to_channel(LED2_green),lfovalue_finalLFO2 * pwm_led);
+
   //
   // LEDs
-  // digitalWrite(LEDShift1, shiftToggleState1);
-  digitalWrite(LEDShift2, shiftToggleState2);
-  digitalWrite(LED_BUILTIN, ledState);
+  digitalWrite(LEDShift1,modSelect == 2);
+  //digitalWrite(LEDShift1, shiftToggleState1);
+  //digitalWrite(LEDShift2, shiftToggleState2);
+  digitalWrite(LED_BUILTIN, blinkState);
 }
 
 String excractArgument(String inputString){
@@ -957,21 +1069,33 @@ void setup() {
 
   uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
   uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
+  uint slice_num_led2_green = pwm_gpio_to_slice_num(LED2_green);
+  uint slice_num_led2_red = pwm_gpio_to_slice_num(LED2_green);
   
   gpio_set_function(LED1_green, GPIO_FUNC_PWM);
   gpio_set_function(LED1_red, GPIO_FUNC_PWM);
+  gpio_set_function(LED2_green, GPIO_FUNC_PWM);
+  gpio_set_function(LED2_red, GPIO_FUNC_PWM);
   
   pwm_set_clkdiv(slice_num_led_green, 128.f);
   pwm_set_clkdiv(slice_num_led_red, 128.f);
+  pwm_set_clkdiv(slice_num_led2_green, 128.f);
+  pwm_set_clkdiv(slice_num_led2_red, 128.f);
   
   pwm_set_enabled(slice_num_led_green, true);
   pwm_set_enabled(slice_num_led_red, true);
+  pwm_set_enabled(slice_num_led2_green, true);
+  pwm_set_enabled(slice_num_led2_red, true);
   
   pwm_set_wrap(slice_num_led_green, pwm_led);
   pwm_set_wrap(slice_num_led_red, pwm_led);
+  pwm_set_wrap(slice_num_led2_green, pwm_led);
+  pwm_set_wrap(slice_num_led2_red, pwm_led);
   
   pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
   pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
+  pwm_set_chan_level(slice_num_led2_green, pwm_gpio_to_channel(LED2_green), 0);
+  pwm_set_chan_level(slice_num_led2_red, pwm_gpio_to_channel(LED2_red), 0);
   
 
   // Normale IO's
@@ -980,9 +1104,11 @@ void setup() {
   pinMode(LEDShift1, OUTPUT);
   pinMode(LEDShift2, OUTPUT);
 
-  pinMode(selectWaveformPin, INPUT_PULLUP); 
+  // pinMode(selectWaveformPin, INPUT_PULLUP); 
   pinMode(shiftPin1, INPUT_PULLUP);  
   pinMode(shiftPin2, INPUT_PULLUP);
+  pinMode(selectWaveFormLFO1Pin, INPUT_PULLUP);  
+  pinMode(selectWaveFormLFO2Pin, INPUT_PULLUP);
   pinMode(firePin1, INPUT_PULLUP); 
   pinMode(firePin2, INPUT_PULLUP); 
   pinMode(firePin3, INPUT_PULLUP); 
@@ -992,8 +1118,11 @@ void setup() {
   //shiftToggle.attach(shiftPin1);
   //shiftToggle.interval(50);  // Entprellintervall in Millisekunden (50 ms)
 
-  selectWaveform.attach(selectWaveformPin);
-  selectWaveform.interval(50);
+  selectWaveformLFO1.attach(selectWaveFormLFO1Pin);
+  selectWaveformLFO1.interval(50);
+
+  selectWaveformLFO2.attach(selectWaveFormLFO2Pin);
+  selectWaveformLFO2.interval(50);
 
   shift1.attach(shiftPin1);
   shift1.interval(50);  // Entprellintervall in Millisekunden (50 ms)
@@ -1013,8 +1142,8 @@ void setup() {
   fire4.attach(firePin4);
   fire4.interval(10);  
   
-  pinMode(waveFormPin_0, INPUT_PULLUP);
-  pinMode(waveFormPin_1, INPUT_PULLUP);
+  // pinMode(waveFormPin_0, INPUT_PULLUP);
+  // pinMode(waveFormPin_1, INPUT_PULLUP);
   // pinMode(waveFormFunctionPin, INPUT_PULLUP);
   
   // Initialisieren des Arrays für die Mittelwertbildung des Pitch
@@ -1042,7 +1171,7 @@ void loop() {
   readSerial();
 
 
-  if(shiftStateToggle == 0){
+  if(modSelect == 0){
     ///////////////////////////// LFO1 ///////////////////////////
     if(lfo1WaveformChanged){
       switch (valLfoWaveformSwitch) {
@@ -1074,7 +1203,7 @@ void loop() {
       lfo1Amplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von 0 bis 100, 50 Mitte
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
-  } else if(shiftStateToggle == 1){
+  } else if(modSelect == 1){
     ///////////////////////////// LFO2 ///////////////////////////
     if(lfo1WaveformChanged){
       switch (valLfoWaveformSwitch) {
@@ -1106,7 +1235,7 @@ void loop() {
       lfo2Amplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
-  }  else if(shiftStateToggle == 2) {
+  }  else if(modSelect == 2) {
     
     if(lfo1WaveformChanged){
       switch (valLfoWaveformSwitch) {
@@ -1177,7 +1306,8 @@ void loop() {
      //debug("LFO1: "+String(previousMillis)+" LFO2: "+String(previousMillisLFO2));
      //debugFloat(newModulatedFrequency);
      //debug("Bank: "+String(bank)+"Firebutton: "+String(actualFireButton));
-    debug(debugString);
+    // debug(debugString);
+    debug(String(modSelect));
   }
 
 }
