@@ -40,6 +40,11 @@ const int LED2_green = 15;
 const int LEDShift1 = 8;
 const int LEDShift2 = 9;
 
+const int LEDFire1 = 10;
+const int LEDFire2 = 11;
+const int LEDFire3 = 12;
+const int LEDFire4 = 13;
+
 // Bounce Objekte erstellen zur Tastenabfrage
 Bounce fire1;
 Bounce fire2;
@@ -144,7 +149,7 @@ bool shiftState2Bak = 0;
 
 // shiftState: Byte, in dem eine Kombination aus Shift1 und Shift2 gespeichert wird
 byte shiftState = 0;
-byte shiftStateToggle = 0;
+//byte shiftStateToggle = 0;
 byte shiftStateBak = 0;
 
 // Modulationsselektor: 0:LFO1, 1: LFO2, 2:Envelope
@@ -155,6 +160,9 @@ byte modSelect = 0;
 byte lfoSelectState = 0;
 
 bool blinkState = 0;
+// LEDs Firebutton 1 aus 4 mit Status an oder aus
+byte selectedFireLed = 0;
+bool selectedFireLedState = 0;
 
 // LED1+2
 
@@ -625,39 +633,53 @@ byte combineBoolsToByte(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bo
   return result;
 }
 
-void loadOrSave(byte fireButton){
+void loadOrSave(byte fireButton,byte selectWaveformLFO){
+  selectedFireLed = fireButton; // LED ansteuern
   // Shifttaste 1 gedrückt : Bank wechseln, aber nicht sofort JSON laden
-  if(shiftState == 1){ 
+  if(selectWaveformLFO == 0){
+    if(shiftState == 1){ 
     bank = fireButton; // Bank schreiben
+    selectedFireLed = bank;
     resetShiftState();
-  }else{
-    // virtuelle Taste ausrechnen 1..16
-    byte buttonName = (bank * 4) - 4 + fireButton;
+    }else{
+      // virtuelle Taste ausrechnen 1..16
+      byte buttonName = (bank * 4) - 4 + fireButton;
 
-    String fileName = "fire"+String(buttonName)+".json";
+      String fileName = "fire"+String(buttonName)+".json";
 
-    // LongPress: kein retriggern der LFO und Env., nur Ton Stoppen
-    if(longPressDetected == 0){
-      resetLFOParams();
-    }
-    // 
-    if(shiftState == 2){ // Shifttaste 2 gedrückt : save
-      // Save values
-      String _json = values2JSON();
-      debug("Write");
-      dataSaved = writeSettings(_json,fileName);
-    } else {
-      
-      // longPressDetected: wenn Ton gerade gehalten wird sollen die Werte nicht neu geladen werden bei drücken des selben Buttons
-      if( ((fireButton != actualFireButtonBak) || (bankBak != bank)) && (longPressDetected == 0)){ 
-        // load Values
-        String _json = readSettings(fileName);
-        JSON2values(_json);
-        setChangeState(0,0,0,0);
+      // LongPress: kein retriggern der LFO und Env., nur Ton Stoppen
+      if(longPressDetected == 0){
+        resetLFOParams();
       }
-      bankBak = bank;
+      // 
+      if(shiftState == 2){ // Shifttaste 2 gedrückt : save
+        // Save values
+        String _json = values2JSON();
+        debug("Write");
+        dataSaved = writeSettings(_json,fileName);
+      } else {
+        
+        // longPressDetected: wenn Ton gerade gehalten wird sollen die Werte nicht neu geladen werden bei drücken des selben Buttons
+        if( ((fireButton != actualFireButtonBak) || (bankBak != bank)) && (longPressDetected == 0)){ 
+          // load Values
+          String _json = readSettings(fileName);
+          JSON2values(_json);
+          setChangeState(0,0,0,0);
+        }
+        bankBak = bank;
+      }
     }
+  }else{
+    // wenn einer der LFO-Taster gedrückt wurde, muss der jeweiilige LFO umgeschalten werden
+    
+    valLfoWaveformSwitch = fireButton;
+
+    if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
+      lfo1WaveformChanged = 1;
+    }
+    valLfoWaveformSwitchBak = valLfoWaveformSwitch;
   }
+  
   return;
 }
 
@@ -677,6 +699,7 @@ void updateKeys(){
 
     if (shift1.fell()) {
       dataSaved = false;
+      //selectedFireLed = bank;
     }
     if (shift2.fell()) {
       dataSaved = false;
@@ -719,9 +742,18 @@ void updateKeys(){
 
   
 
-
+  selectedFireLedState = 0;
   shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),0,0,0,0,0,0);
-  shiftStateToggle = combineBoolsToByte(shiftToggleState1,shiftToggleState2,0,0,0,0,0,0);
+  //shiftStateToggle = combineBoolsToByte(shiftToggleState1,shiftToggleState2,0,0,0,0,0,0);
+  if(shiftState == 1){
+    // Fire-Leds sollen blinken
+    selectedFireLed = bank;
+    selectedFireLedState = blinkState;
+  }else if (shiftState == 2){
+
+  }else if (shiftState == 3){
+
+  }
 
   if(shiftStateBak != shiftState){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
@@ -754,7 +786,9 @@ void updateKeys(){
 */  
 
   // zum Setzen des Byte lfoSelectState um den LFO zu wählen
-  bool selectWaveformLFOpressed = (!selectWaveformLFO1.read())||(!selectWaveformLFO2.read());
+  //bool selectWaveformLFOpressed = (!selectWaveformLFO1.read())||(!selectWaveformLFO2.read());
+  byte selectWaveformLFO = combineBoolsToByte(!selectWaveformLFO1.read(),!selectWaveformLFO2.read(),0,0,0,0,0,0);
+  /*
   if(selectWaveformLFOpressed){
     
     if (fire1.fell()){
@@ -775,7 +809,9 @@ void updateKeys(){
     }
     valLfoWaveformSwitchBak = valLfoWaveformSwitch;
 
-  }else{
+  }else
+  */
+  //{
     // steigende Flanke (Taster gedrückt)
     if (fire1.fell()){
       actualFireButton = 1;
@@ -783,7 +819,7 @@ void updateKeys(){
       if(!fire2.read() || !fire3.read() ||!fire4.read()){
         longPressDetected = true;
       }else{
-        loadOrSave(actualFireButton);
+        loadOrSave(actualFireButton,selectWaveformLFO);
         longPressDetected = false;     // Reset des Langdruck-Flags
       }
       
@@ -796,7 +832,7 @@ void updateKeys(){
       if(!fire1.read() || !fire3.read() ||!fire4.read()){
         longPressDetected = true;
       }else{
-        loadOrSave(actualFireButton);
+        loadOrSave(actualFireButton,selectWaveformLFO);
         longPressDetected = false;     // Reset des Langdruck-Flags
       }
     }
@@ -807,7 +843,7 @@ void updateKeys(){
       if(!fire1.read() || !fire2.read() ||!fire4.read()){
         longPressDetected = true;
       }else{
-        loadOrSave(actualFireButton);
+        loadOrSave(actualFireButton,selectWaveformLFO);
         longPressDetected = false;     // Reset des Langdruck-Flags
       }
     }
@@ -818,10 +854,10 @@ void updateKeys(){
       if(!fire1.read() || !fire2.read() ||!fire3.read()){
         longPressDetected = true;
       }else{
-        loadOrSave(actualFireButton);
+        loadOrSave(actualFireButton,selectWaveformLFO);
         longPressDetected = false;     // Reset des Langdruck-Flags
       }
-    }
+    //}
 
     if (fire1.rose()){
       firePressedTime = 0;
@@ -857,19 +893,19 @@ void updateKeys(){
                                 )&&(
                                   shiftState != 2
                                 )&&(
-                                  selectWaveformLFOpressed == false
+                                  selectWaveformLFO == 0
                                 )&&(
                                   bankBak == bank
                                 )
                               );
-
+/*
   if (anyFireButtonPressed && !longPressDetected) {
     if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
       // longPressDetected = true;  // Markiere, dass der lange Druck erkannt wurde
       // Serial.println("LongPress detected!");
     }
   }
-  
+*/  
   
   
 /*
@@ -885,7 +921,7 @@ void updateKeys(){
   
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
   runSound = (anyFireButtonPressed || longPressDetected);
-  
+  selectedFireLedState = runSound | selectedFireLedState;
 }
 
 void updatePotis(){
@@ -920,6 +956,13 @@ void blink(int interval) {
     // Ändere den LED-Zustand
     blinkState = !blinkState;
   }
+}
+
+void controlFireLed(){
+  digitalWrite(LEDFire1,(selectedFireLedState && selectedFireLed == 1));
+  digitalWrite(LEDFire2,(selectedFireLedState && selectedFireLed == 2));
+  digitalWrite(LEDFire3,(selectedFireLedState && selectedFireLed == 3));
+  digitalWrite(LEDFire4,(selectedFireLedState && selectedFireLed == 4));
 }
 
 void ledControl(){
@@ -975,9 +1018,12 @@ void ledControl(){
   //digitalWrite(LEDShift1, shiftToggleState1);
   //digitalWrite(LEDShift2, shiftToggleState2);
   digitalWrite(LED_BUILTIN, blinkState);
+
+  controlFireLed();
 }
 
-String excractArgument(String inputString){
+
+String extractArgument(String inputString){
   // Position der ersten Klammer '(' und der schließenden Klammer ')'
   int startIndex = inputString.indexOf('(');
   int endIndex = inputString.indexOf(')');
@@ -1023,21 +1069,21 @@ void readSerial(){
     }
 
     if(receiveStr.substring(0, 4) == "test"){
-      // excractArgument();
-      // Serial.println(excractArgument(receiveStr));
+      // extractArgument();
+      // Serial.println(extractArgument(receiveStr));
       setDefaultDataSet();
       //  deleteSettings(String configFile)
     }
     if(receiveStr.substring(0, 10) == "deleteFile"){
-      // excractArgument();
-       Serial.println("DELETE "+excractArgument(receiveStr));
-       deleteSettings(excractArgument(receiveStr));
+      // extractArgument();
+       Serial.println("DELETE "+extractArgument(receiveStr));
+       deleteSettings(extractArgument(receiveStr));
     }
 
     if(receiveStr.substring(0, 4) == "load"){
       // Beispiel: load({"pitch":1000,"lfoFreq":10,"lfoAmount":50,"lfo2Freq":5,"lfo2Amount":50,"envTime":2,"envAmount":0,"waveform":0,"waveform2":0,"dutyCycle":50}) 
       
-      String _json = excractArgument(receiveStr);
+      String _json = extractArgument(receiveStr);
       Serial.println(_json);
       JSON2values(_json);
     }
@@ -1104,6 +1150,11 @@ void setup() {
   pinMode(LEDShift1, OUTPUT);
   pinMode(LEDShift2, OUTPUT);
 
+  pinMode(LEDFire1, OUTPUT);
+  pinMode(LEDFire2, OUTPUT);
+  pinMode(LEDFire3, OUTPUT);
+  pinMode(LEDFire4, OUTPUT);
+
   // pinMode(selectWaveformPin, INPUT_PULLUP); 
   pinMode(shiftPin1, INPUT_PULLUP);  
   pinMode(shiftPin2, INPUT_PULLUP);
@@ -1159,6 +1210,8 @@ void setup() {
 
   String _json1 = readSettings("fire1.json");
   JSON2values(_json1);
+
+  
   
 }
 
@@ -1307,7 +1360,7 @@ void loop() {
      //debugFloat(newModulatedFrequency);
      //debug("Bank: "+String(bank)+"Firebutton: "+String(actualFireButton));
     // debug(debugString);
-    debug(String(modSelect));
+    debug(String(shiftState));
   }
 
 }
