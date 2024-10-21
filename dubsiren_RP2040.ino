@@ -149,13 +149,12 @@ bool shiftState2Bak = 0;
 
 // shiftState: Byte, in dem eine Kombination aus Shift1 und Shift2 gespeichert wird
 byte shiftState = 0;
-//byte shiftStateToggle = 0;
 byte shiftStateBak = 0;
 
 // Modulationsselektor: 0:LFO1, 1: LFO2, 2:Envelope
 // wird gesetzt bei pos. Flange LFO1 oder LFO2 oder neg.Flange Shift1
 byte modSelect = 0; 
-
+byte modSelectBak = 0;
 // Kombination aus LFO1 und LFO2, wird gesetzt, wenn LFO-Button gehalten wird zur Waveform Auswahl mit den Fire-Buttons
 byte lfoSelectState = 0;
 
@@ -635,8 +634,9 @@ byte combineBoolsToByte(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bo
 
 void loadOrSave(byte fireButton,byte selectWaveformLFO){
   selectedFireLed = fireButton; // LED ansteuern
-  // Shifttaste 1 gedrückt : Bank wechseln, aber nicht sofort JSON laden
+  // kein LFO-Taster gedrückt
   if(selectWaveformLFO == 0){
+    // Shifttaste 1 gedrückt : Bank wechseln, aber nicht sofort JSON laden
     if(shiftState == 1){ 
     bank = fireButton; // Bank schreiben
     selectedFireLed = bank;
@@ -670,10 +670,10 @@ void loadOrSave(byte fireButton,byte selectWaveformLFO){
       }
     }
   }else{
-    // wenn einer der LFO-Taster gedrückt wurde, muss der jeweiilige LFO umgeschalten werden
+    // wenn einer der LFO-Taster gedrückt wurde, muss zum jeweiligen LFO umgeschalten werden
     
     valLfoWaveformSwitch = fireButton;
-
+   
     if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
       lfo1WaveformChanged = 1;
     }
@@ -742,6 +742,15 @@ void updateKeys(){
 
   
 
+   // wenn sich die Modulationsquelle geändert hat, dürfen nicht nach dem Umschalten sofort die neuen Werte von den Potis übernommen werden
+  if(modSelectBak != modSelect){
+    //lfo1WaveformChanged = 1;
+    setChangeState(0,0,0,0);
+  }
+  modSelectBak = modSelect;
+
+  
+
   selectedFireLedState = 0;
   shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),0,0,0,0,0,0);
   //shiftStateToggle = combineBoolsToByte(shiftToggleState1,shiftToggleState2,0,0,0,0,0,0);
@@ -785,9 +794,24 @@ void updateKeys(){
   valLfoWaveformSwitchBak = valLfoWaveformSwitch;
 */  
 
-  // zum Setzen des Byte lfoSelectState um den LFO zu wählen
-  //bool selectWaveformLFOpressed = (!selectWaveformLFO1.read())||(!selectWaveformLFO2.read());
+
+
+  // ein Byte aus
   byte selectWaveformLFO = combineBoolsToByte(!selectWaveformLFO1.read(),!selectWaveformLFO2.read(),0,0,0,0,0,0);
+  if((selectWaveformLFO == 1)||(selectWaveformLFO == 2)){
+    if(modSelect == 0){
+     //valLfoWaveformSwitch = lfo1Waveform;
+    } else if (modSelect == 1){
+      //valLfoWaveformSwitch = lfo2Waveform;
+    } else {
+      //
+    }
+    // Fire-Leds sollen blinken
+    selectedFireLed = valLfoWaveformSwitch;
+    selectedFireLedState = blinkState;
+  }
+  
+ 
   /*
   if(selectWaveformLFOpressed){
     
@@ -883,21 +907,21 @@ void updateKeys(){
   // keine Shifttaste
   // nicht nach einem Bankwechsel, sost dudelt es gleich los
   bool anyFireButtonPressed = (
-                                (
-                                  (fire1.read() == LOW)||
-                                  (fire2.read() == LOW)||
-                                  (fire3.read() == LOW)||
-                                  (fire4.read() == LOW)
-                                )&&(
-                                  shiftState != 1
-                                )&&(
-                                  shiftState != 2
-                                )&&(
-                                  selectWaveformLFO == 0
-                                )&&(
-                                  bankBak == bank
-                                )
-                              );
+  (
+    (fire1.read() == LOW)||
+    (fire2.read() == LOW)||
+    (fire3.read() == LOW)||
+    (fire4.read() == LOW)
+  )&&(
+    shiftState != 1
+  )&&(
+    shiftState != 2
+  )&&(
+    selectWaveformLFO == 0
+  )&&(
+    bankBak == bank
+  )
+);
 /*
   if (anyFireButtonPressed && !longPressDetected) {
     if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
@@ -958,6 +982,7 @@ void blink(int interval) {
   }
 }
 
+// Helper, um aus Einmal 1 aus 4 LEDs anzuzeigen
 void controlFireLed(){
   digitalWrite(LEDFire1,(selectedFireLedState && selectedFireLed == 1));
   digitalWrite(LEDFire2,(selectedFireLedState && selectedFireLed == 2));
@@ -1360,7 +1385,7 @@ void loop() {
      //debugFloat(newModulatedFrequency);
      //debug("Bank: "+String(bank)+"Firebutton: "+String(actualFireButton));
     // debug(debugString);
-    debug(String(shiftState));
+    debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged));
   }
 
 }
