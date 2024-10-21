@@ -759,7 +759,8 @@ void updateKeys(){
     selectedFireLed = bank;
     selectedFireLedState = blinkState;
   }else if (shiftState == 2){
-
+    selectedFireLed = actualFireButtonBak;
+    selectedFireLedState = blinkState;
   }else if (shiftState == 3){
 
   }
@@ -800,9 +801,9 @@ void updateKeys(){
   byte selectWaveformLFO = combineBoolsToByte(!selectWaveformLFO1.read(),!selectWaveformLFO2.read(),0,0,0,0,0,0);
   if((selectWaveformLFO == 1)||(selectWaveformLFO == 2)){
     if(modSelect == 0){
-     //valLfoWaveformSwitch = lfo1Waveform;
+     //valLfoWaveformSwitch = lfo1Waveform+1;
     } else if (modSelect == 1){
-      //valLfoWaveformSwitch = lfo2Waveform;
+      //valLfoWaveformSwitch = lfo2Waveform+1;
     } else {
       //
     }
