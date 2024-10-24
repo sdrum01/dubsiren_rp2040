@@ -34,7 +34,9 @@ const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
 const int firePin3 = 20;  // Steuerpin für die Tonaktivierung3
 const int firePin4 = 21;  // Steuerpin für die Tonaktivierung4
 
-const int LED1_red = 16;
+
+// 
+const int LED1_red = 16; 
 const int LED1_green = 17;
 //const int LED2_red = 14;
 //const int LED2_green = 15;
@@ -58,7 +60,7 @@ Bounce shift2;
 // Bounce selectWaveformLFO1;
 // Bounce selectWaveformLFO2;
 
-byte actualFireButton = 0;
+byte actualFireButton = 1;
 byte actualFireButtonBak = 0;
 
 // 4 Bänke * 4 FireButtons = 16 Speicherplätze;
@@ -105,7 +107,7 @@ float duty = 50;
 // die finale LFO WaveForm Variable, die durch Schalter oder Speicher gesetzt wird
 enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
 LfoWaveform lfo1Waveform = TRIANGLE;  //
-LfoWaveform lfo2Waveform = TRIANGLE;  //
+LfoWaveform lfo2Waveform = SQUARE;  //
 
 
 bool dataSaved = false;
@@ -160,6 +162,9 @@ byte modSelectBak = 0;
 byte lfoSelectState = 0;
 
 bool blinkState = 0;
+bool blinkState_slow = 0;
+byte blinkCounter1 = 0;
+
 // LEDs Firebutton 1 aus 4 mit Status an oder aus
 byte selectedFireLed = 0;
 bool selectedFireLedState = 0;
@@ -729,8 +734,9 @@ void updateKeys(){
     
   if (selectLFO.rose()) {
     if (!dataSaved){
-      shiftToggleState1 = !(shiftToggleState1);
+      shiftToggleState1 = !shiftToggleState1;
       modSelect = shiftToggleState1; // Modulationsquelle ist 0 oder 1, weil LFO-Selektor gedrückt wurde
+      setChangeState(0,0,0,0);
     }
   }
     
@@ -760,6 +766,7 @@ void updateKeys(){
     if(!dataSaved){
       modSelect = 2;
       shiftToggleState1 = 0;
+      setChangeState(0,0,0,0);
     }
   }
 
@@ -784,8 +791,11 @@ void updateKeys(){
     selectedFireLed = bank;
     selectedFireLedState = blinkState;
   }else if (shiftState == 2){
-    selectedFireLed = actualFireButtonBak;
+    selectedFireLed = actualFireButton;
     selectedFireLedState = blinkState;
+  }else{
+    selectedFireLed = actualFireButton;
+    selectedFireLedState = blinkState_slow;
   }
 
   if(shiftStateBak != shiftState){
@@ -796,18 +806,6 @@ void updateKeys(){
 
 
 
-  // Abfrage Schalter, welche Funktion die Potis haben sollen
-  /*
-  waveFormFunction = digitalRead(waveFormFunctionPin);
-
-
-  // Wenn der Funktionsschalter sich geändert hat
-  if(waveFormFunctionBak != waveFormFunction){
-    // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
-    setChangeState(1,0,0,0);
-  }
-  waveFormFunctionBak = waveFormFunction;
-*/
   // Aus dem Waveformschalter ein Byte machen
 
 
@@ -820,49 +818,7 @@ void updateKeys(){
 
 
 
-  // 2 LFO Buttons
-  /*
-    byte selectWaveformLFO = combineBoolsToByte(!selectWaveformLFO1.read(),!selectWaveformLFO2.read(),0,0,0,0,0,0);
-  if((selectWaveformLFO == 1)||(selectWaveformLFO == 2)){
-    if(modSelect == 0){
-     //valLfoWaveformSwitch = lfo1Waveform+1;
-    } else if (modSelect == 1){
-      //valLfoWaveformSwitch = lfo2Waveform+1;
-    } else {
-      //
-    }
-    // Fire-Leds sollen blinken
-    selectedFireLed = valLfoWaveformSwitch;
-    selectedFireLedState = blinkState;
-  }
-  */
-
   
- 
-  /*
-  if(selectWaveformLFOpressed){
-    
-    if (fire1.fell()){
-      valLfoWaveformSwitch = 1;
-    }
-    if (fire2.fell()){
-      valLfoWaveformSwitch = 2;
-    }
-    if (fire3.fell()){
-      valLfoWaveformSwitch = 3;
-    }
-    if (fire4.fell()){
-      valLfoWaveformSwitch = 4;
-    }
-    // Kippschalter emulieren
-    if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
-      lfo1WaveformChanged = 1;
-    }
-    valLfoWaveformSwitchBak = valLfoWaveformSwitch;
-
-  }else
-  */
-  //{
     // steigende Flanke (Taster gedrückt)
     if (fire1.fell()){
       actualFireButton = 1;
@@ -999,6 +955,7 @@ void updatePotis(){
   }
 }
 
+// Zyklische Timer
 void blink(int interval) {
   // Speichere die aktuelle Zeit
   unsigned long currentMillis = millis();
@@ -1010,8 +967,17 @@ void blink(int interval) {
 
     // Ändere den LED-Zustand
     blinkState = !blinkState;
+    blinkState_slow = 0;
+    blinkCounter1++;
   }
+  if(blinkCounter1 == 16){
+    blinkCounter1 = 0;
+    blinkState_slow = 1;
+  }
+
 }
+
+
 
 // Helper, um aus Einmal 1 aus 4 LEDs anzuzeigen
 void controlFireLed(){
@@ -1044,32 +1010,6 @@ void ledControl(){
   }
   
   
-  // pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
-  // pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
-  // pwm_set_chan_level(slice_num_led2_red, pwm_gpio_to_channel(LED2_red), 0);
-  // pwm_set_chan_level(slice_num_led2_green, pwm_gpio_to_channel(LED2_green), 0);
-/*
-  if(lfovalue_finalLFO1 == -100){
-    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
-  }else{
-    if(modSelect == 0){
-      pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),lfovalue_finalLFO1 * (pwm_led/8));
-    }else{
-      
-    }
-    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_finalLFO1 * pwm_led);
-  }
-
-  if(modSelect == 1){
-    pwm_set_chan_level(slice_num_led2_red, pwm_gpio_to_channel(LED2_red),lfovalue_finalLFO2 * (pwm_led/8));
-  }else{
-    
-  }
-  pwm_set_chan_level(slice_num_led2_green, pwm_gpio_to_channel(LED2_green),lfovalue_finalLFO2 * pwm_led); 
-*/
-  
-
-  //
   // LEDs
   digitalWrite(LEDShift1,modSelect == 2);
   //digitalWrite(LEDShift1, shiftToggleState1);
@@ -1400,7 +1340,7 @@ void loop() {
    // Reset LFO values if the start button is false
   
   // Betriebsanzeige
-  blink(100);
+  blink(50);
   
   // Create Tone
   playSound(newModulatedFrequency);
@@ -1415,7 +1355,7 @@ void loop() {
      //debug("LFO1: "+String(previousMillis)+" LFO2: "+String(previousMillisLFO2));
      //debugFloat(newModulatedFrequency);
      //debug("Bank: "+String(bank)+"Firebutton: "+String(actualFireButton));
-    debug("DEBUGINFO: "+debugString);
+    // debug("DEBUGINFO: "+debugString);
     debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", shiftToggleState1: "+String(shiftToggleState1));
   }
 
