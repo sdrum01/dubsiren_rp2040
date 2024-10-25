@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "RPI_pico_MCU_Module")(type "KiCad")(uri "${KICAD6_3RD_PARTY}/Symbol/RPI_pico_MCU_Module.kicad_sym")(options "")(descr ""))
+)

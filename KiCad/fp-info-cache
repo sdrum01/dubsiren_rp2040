@@ -1,4 +1,4 @@
-23854487403522367
+23856219037308086
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -1679,6 +1679,13 @@ Push Button
 0
 4
 4
+Button_Switch_THT
+SW-MS-500X-3
+
+
+0
+3
+3
 Button_Switch_THT
 SW_CK_JS202011AQN_DPDT_Angled
 C&K sub miniature slide switch, JS series, DPDT, right angle, http://www.ckswitches.com/media/1422/js.pdf
@@ -86792,28 +86799,28 @@ WiFi IEEE802.11 b/g/n
 0
 44
 44
-RPI
+RPI_pico_Module
 Raspberry_Pi_Pico_AddOn
 Raspberry Pi Pico (W) Add-On Board
 Pico-W RPL RPTL RPi module
 0
 181
 45
-RPI
+RPI_pico_Module
 Raspberry_Pi_Pico_SMT_THT
 Raspberry Pi Pico (W), RP2040-based microcontroller board (with wireless)
 Pico-W RPL RPTL RPi module RP2040 CYW43439 2.4GHz RF radio Wi-Fi WiFi SMD
 0
 95
 49
-RPI
+RPI_pico_Module
 Raspberry_Pi_Pico_SMT_THT_noDebugPort
 Raspberry Pi Pico (W), RP2040-based microcontroller board (with wireless)
 Pico-W RPL RPTL RPi module RP2040 CYW43439 2.4GHz RF radio Wi-Fi WiFi SMD
 0
 89
 49
-RPI
+RPI_pico_Module
 Raspberry_Pi_Pico_THT
 Raspberry Pi Pico (W), RP2040-based microcontroller board (with wireless)
 Pico-W RPL RPTL RPi module RP2040 CYW43439 2.4GHz RF radio Wi-Fi WiFi
