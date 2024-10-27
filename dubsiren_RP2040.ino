@@ -35,7 +35,7 @@ const int firePin3 = 20;  // Steuerpin für die Tonaktivierung3
 const int firePin4 = 21;  // Steuerpin für die Tonaktivierung4
 
 
-// 
+// LED 
 const int LED1_red = 16; 
 const int LED1_green = 17;
 //const int LED2_red = 14;
@@ -47,6 +47,18 @@ const int LEDFire1 = 10;
 const int LEDFire2 = 11;
 const int LEDFire3 = 12;
 const int LEDFire4 = 13;
+
+// LED Matrix
+// Pins für die Zeilen und Spalten definieren
+const int LEDrowPins[3] = {10, 11, 12};     // Zeilenpins (Anode)
+const int LEDcolPins[3] = {13, 14, 15};     // Spaltenpins (Kathode)
+
+// Array zum Speichern des Zustands jeder LED (1 = an, 0 = aus)
+int ledState[3][3] = {
+  {1, 0, 1},
+  {0, 1, 0},
+  {1, 0, 1}
+};
 
 // Bounce Objekte erstellen zur Tastenabfrage
 Bounce fire1;
@@ -1010,13 +1022,53 @@ void ledControl(){
   }
   
   
-  // LEDs
+  // LEDs an Pin
+  /*
   digitalWrite(LEDShift1,modSelect == 2);
-  //digitalWrite(LEDShift1, shiftToggleState1);
-  //digitalWrite(LEDShift2, shiftToggleState2);
   digitalWrite(LED_BUILTIN, blinkState);
-
   controlFireLed();
+  */
+
+// Test
+  // ledState[0][0] = 1;
+  // ledState[1][0] = 1;
+  // ledState[2][0] = 1;
+  // ledState[0][1] = 1;
+  
+
+
+  // LED Matrix
+  // Durch jede Zeile iterieren
+  for (int row = 0; row < 3; row++) {
+    // Zeile deaktivieren
+    digitalWrite(LEDrowPins[row], LOW);
+
+    // Spalten deaktivieren
+    for (int col = 0; col < 3; col++) {
+      digitalWrite(LEDcolPins[col], HIGH); // LEDs aus
+    }
+
+
+    // Zeile aktivieren (auf HIGH setzen)
+    digitalWrite(LEDrowPins[row], HIGH);
+
+    // Durch jede Spalte iterieren
+    for (int col = 0; col < 3; col++) {
+      // LED in dieser Spalte je nach ledState ein- oder ausschalten
+      if (ledState[row][col] == 1) {
+        digitalWrite(LEDcolPins[col], LOW);  // LED an
+      } else {
+        digitalWrite(LEDcolPins[col], HIGH); // LED aus
+      }
+    }
+
+    // Kurz warten, damit die LED leuchtet
+    // delay(2);
+
+    
+
+  }
+
 }
 
 
@@ -1144,6 +1196,8 @@ void setup() {
   // Normale IO's
   pinMode(LED_BUILTIN, OUTPUT);
 
+/*
+*/
   pinMode(LEDShift1, OUTPUT);
   pinMode(LEDShift2, OUTPUT);
 
@@ -1151,6 +1205,19 @@ void setup() {
   pinMode(LEDFire2, OUTPUT);
   pinMode(LEDFire3, OUTPUT);
   pinMode(LEDFire4, OUTPUT);
+
+  // LED Matrix initialisieren
+  for (int i = 0; i < 3; i++) {
+    pinMode(LEDrowPins[i], OUTPUT);
+    digitalWrite(LEDrowPins[i], LOW);   // Anfangszustand aus
+  }
+
+  // Spalten als Ausgang festlegen
+  for (int i = 0; i < 3; i++) {
+    pinMode(LEDcolPins[i], OUTPUT);
+    digitalWrite(LEDcolPins[i], HIGH);  // Anfangszustand aus (LOW schaltet die LED ein)
+  }
+
 
   pinMode(selectLFOPin, INPUT_PULLUP); 
   pinMode(shiftPin1, INPUT_PULLUP);  
