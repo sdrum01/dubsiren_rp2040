@@ -60,6 +60,9 @@ int ledState[3][3] = {
   {1, 0, 1}
 };
 
+byte activeLedRow = 0;
+byte activeLedCol = 0;
+
 // Bounce Objekte erstellen zur Tastenabfrage
 Bounce fire1;
 Bounce fire2;
@@ -1034,11 +1037,26 @@ void ledControl(){
   // ledState[1][0] = 1;
   // ledState[2][0] = 1;
   // ledState[0][1] = 1;
-  
 
 
   // LED Matrix
-  // Durch jede Zeile iterieren
+  for (int row = 0; row < 3; row++) {
+    // Zeile deaktivieren
+    digitalWrite(LEDrowPins[row], LOW); // Anode
+
+    // Spalten deaktivieren
+    for (int col = 0; col < 3; col++) {
+      digitalWrite(LEDcolPins[col], HIGH); // Kathode
+    }
+  }
+
+   digitalWrite(LEDrowPins[1], HIGH); // Anode
+   digitalWrite(LEDrowPins[2], HIGH); // Anode
+   digitalWrite(LEDcolPins[2], LOW); // Kathode
+
+  // digitalWrite(LEDrowPins[activeLedRow], HIGH); // Anode
+  // digitalWrite(LEDcolPins[activeLedCol], LOW); // Kathode
+/*
   for (int row = 0; row < 3; row++) {
     // Zeile deaktivieren
     digitalWrite(LEDrowPins[row], LOW);
@@ -1068,6 +1086,8 @@ void ledControl(){
     
 
   }
+*/
+
 
 }
 
@@ -1197,7 +1217,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
 /*
-*/
+
   pinMode(LEDShift1, OUTPUT);
   pinMode(LEDShift2, OUTPUT);
 
@@ -1205,7 +1225,7 @@ void setup() {
   pinMode(LEDFire2, OUTPUT);
   pinMode(LEDFire3, OUTPUT);
   pinMode(LEDFire4, OUTPUT);
-
+*/
   // LED Matrix initialisieren
   for (int i = 0; i < 3; i++) {
     pinMode(LEDrowPins[i], OUTPUT);
