@@ -8124,8 +8124,8 @@
 				)
 			)
 		)
-		(property "Value" "LED LFO2"
-			(at 207.772 146.05 0)
+		(property "Value" "LED LFO1"
+			(at 207.01 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9078,8 +9078,8 @@
 				)
 			)
 		)
-		(property "Value" "LED LFO1"
-			(at 207.772 140.97 0)
+		(property "Value" "LED LFO2"
+			(at 207.01 140.97 0)
 			(effects
 				(font
 					(size 1.27 1.27)
