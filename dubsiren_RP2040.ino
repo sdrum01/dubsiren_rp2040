@@ -139,6 +139,7 @@ volatile unsigned long previousMillis = 0;
 volatile unsigned long previousMillisLFO2 = 0;
 volatile unsigned long previousMillisEnv = 0;
 volatile unsigned long previousMillisLED = 0;
+// volatile unsigned long previousMillisLEDPoll = 0;
 
 volatile float lfovalue_finalLFO1 = 0;
 volatile float lfovalue_finalLFO2 = 0;
@@ -994,7 +995,9 @@ void blink(int interval) {
 
 
 
-// Helper, um aus Einmal 1 aus 4 LEDs anzuzeigen
+
+
+// Helper, um auf Einmal 1 aus 4 LEDs anzuzeigen
 void controlFireLed(){
   digitalWrite(LEDFire1,(selectedFireLedState && selectedFireLed == 1));
   digitalWrite(LEDFire2,(selectedFireLedState && selectedFireLed == 2));
@@ -1026,70 +1029,59 @@ void ledControl(){
   
   
   // LEDs an Pin
-  /*
-  digitalWrite(LEDShift1,modSelect == 2);
+  
+  // digitalWrite(LEDShift1,modSelect == 2);
   digitalWrite(LED_BUILTIN, blinkState);
-  controlFireLed();
-  */
+  
+  
+//  controlFireLed();
 
-// Test
-  // ledState[0][0] = 1;
-  // ledState[1][0] = 1;
-  // ledState[2][0] = 1;
-  // ledState[0][1] = 1;
 
 
   // LED Matrix
   for (int row = 0; row < 3; row++) {
     // Zeile deaktivieren
     digitalWrite(LEDrowPins[row], LOW); // Anode
-
     // Spalten deaktivieren
     for (int col = 0; col < 3; col++) {
       digitalWrite(LEDcolPins[col], HIGH); // Kathode
     }
   }
 
-   digitalWrite(LEDrowPins[1], HIGH); // Anode
-   digitalWrite(LEDrowPins[2], HIGH); // Anode
-   digitalWrite(LEDcolPins[2], LOW); // Kathode
 
-  // digitalWrite(LEDrowPins[activeLedRow], HIGH); // Anode
-  // digitalWrite(LEDcolPins[activeLedCol], LOW); // Kathode
-/*
-  for (int row = 0; row < 3; row++) {
-    // Zeile deaktivieren
-    digitalWrite(LEDrowPins[row], LOW);
-
-    // Spalten deaktivieren
-    for (int col = 0; col < 3; col++) {
-      digitalWrite(LEDcolPins[col], HIGH); // LEDs aus
+  digitalWrite(LEDrowPins[activeLedRow], ledState[activeLedRow][activeLedCol]); // Anode
+  digitalWrite(LEDcolPins[activeLedCol], LOW); // Kathode
+  
+  // bei jedem DUrchlauf die Matrix eins weiter zählen
+  activeLedCol++; 
+  if(activeLedCol > 2){
+    activeLedCol = 0;
+    activeLedRow++;
+    if(activeLedRow > 2){
+      activeLedRow = 0;
     }
-
-
-    // Zeile aktivieren (auf HIGH setzen)
-    digitalWrite(LEDrowPins[row], HIGH);
-
-    // Durch jede Spalte iterieren
-    for (int col = 0; col < 3; col++) {
-      // LED in dieser Spalte je nach ledState ein- oder ausschalten
-      if (ledState[row][col] == 1) {
-        digitalWrite(LEDcolPins[col], LOW);  // LED an
-      } else {
-        digitalWrite(LEDcolPins[col], HIGH); // LED aus
-      }
-    }
-
-    // Kurz warten, damit die LED leuchtet
-    // delay(2);
-
-    
-
   }
-*/
+  
+  
 
 
 }
+
+/*
+// Zyklische Timer
+void ledTimer(int interval) {
+  // Speichere die aktuelle Zeit
+  unsigned long currentMillis = millis();
+
+  // Prüfe, ob das Intervall abgelaufen ist
+  if (currentMillis - previousMillisLEDPoll >= interval) {
+    // Speichere den aktuellen Zeitpunkt als letzten Zeitstempel
+    previousMillisLEDPoll = currentMillis;
+    ledControl();
+  } 
+}
+*/
+
 
 
 String extractArgument(String inputString){
@@ -1433,17 +1425,19 @@ void loop() {
   playSound(newModulatedFrequency);
   // Control LED's
   ledControl();
+  //ledTimer(1);
 
 
-  // Überwachung und Debugprints
-  if(chkLoop(5000)){
+  // Überwachung und Debugprits
+
+  if(chkLoop(100)){
      //debug("ShiftstateToggle: "+String(shiftStateToggle)+" Shiftstate: "+String(shiftState));
      //debug("Env Duration: "+String(envelopeDuration)+" Env Amount: "+String(envelopeAmplitude)+"Env Value: "+String(envelope));
      //debug("LFO1: "+String(previousMillis)+" LFO2: "+String(previousMillisLFO2));
      //debugFloat(newModulatedFrequency);
-     //debug("Bank: "+String(bank)+"Firebutton: "+String(actualFireButton));
+     debug("activeLEDrow: "+String(activeLedRow)+"ActiveLedCol: "+String(activeLedCol));
     // debug("DEBUGINFO: "+debugString);
-    debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", shiftToggleState1: "+String(shiftToggleState1));
+    // debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", shiftToggleState1: "+String(shiftToggleState1));
   }
 
 }
