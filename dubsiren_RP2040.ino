@@ -85,10 +85,10 @@ byte bankBak = 1;
 unsigned long firePressedTime = 0;
 bool longPressDetected = false;
 
-// globale V. für Schalter für WaveForm
-byte valLfoWaveformSwitch = 1;
-// temporäre Sicherung des Wertes des Waveformschalters
-byte valLfoWaveformSwitchBak = 1;
+// globale V. für Schalter für WaveForm, wo der Wert reinwandert, egal ob per Taster oder Kippschalter
+byte valLfoWaveformSwitch = 0;
+// temporärer  Wertes des Waveformschalters zum detektieren der Statusänderung
+byte valLfoWaveformSwitchBak = 0;
 
 
 // Konstanten für den minimalen und maximalen Wert der blanken Frequenz ohne Modulation
@@ -119,9 +119,9 @@ float envelopeAmplitude = 0;
 float duty = 50;
 
 // die finale LFO WaveForm Variable, die durch Schalter oder Speicher gesetzt wird
-enum LfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
-LfoWaveform lfo1Waveform = TRIANGLE;  //
-LfoWaveform lfo2Waveform = SQUARE;  //
+enum eLfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
+eLfoWaveform lfo1Waveform = TRIANGLE;  //
+eLfoWaveform lfo2Waveform = SQUARE;  //
 
 
 bool dataSaved = false;
@@ -155,15 +155,8 @@ int pitchTotal = 0;
 bool runSound = 1;
 
 // shiftToggle-taste
-bool shiftToggleState1 = 0;
-bool shiftToggleState2 = 0;
+bool lfoToggleState = 0;
 bool shiftToggleStateBak = 0;
-
-bool shiftState1 = 0;
-bool shiftState2 = 0;
-
-bool shiftState1Bak = 0;
-bool shiftState2Bak = 0;
 
 // shiftState: Byte, in dem eine Kombination aus Shift1 und Shift2 gespeichert wird
 byte shiftState = 0;
@@ -173,8 +166,7 @@ byte shiftStateBak = 0;
 // wird gesetzt bei pos. Flange LFO1 oder LFO2 oder neg.Flange Shift1
 byte modSelect = 0; 
 byte modSelectBak = 0;
-// Kombination aus LFO1 und LFO2, wird gesetzt, wenn LFO-Button gehalten wird zur Waveform Auswahl mit den Fire-Buttons
-byte lfoSelectState = 0;
+
 
 bool blinkState = 0;
 bool blinkState_slow = 0;
@@ -199,10 +191,8 @@ int valPotiFreqLFOBak = 0;
 int valPotiAmpLFOBak = 0;
 
 
+bool retriggerLFO2 = false;
 
-// Funktionsschalter
-// bool waveFormFunction = 0;
-// bool waveFormFunctionBak = 0;
 
 
 //  Flags, wenn es an den Potis gewackelt hat
@@ -305,7 +295,6 @@ void JSON2values(String jsonString) {
   /*
   // Jetzt können wir die Werte aus dem JSON-Dokument extrahieren
   JsonObject actualDataset = doc["fire1"];
-
   // Variablen aus dem JSON extrahieren und den globalen Variablen zuweisen
   baseFrequency = actualDataset["pitch"];
   lfo1Frequency = actualDataset["lfoFreq"];
@@ -314,6 +303,7 @@ void JSON2values(String jsonString) {
   envelopeAmplitude = actualDataset["envAmount"];
   lfoWaveform = actualDataset["waveform"];
   */
+
   baseFrequency = dataSet["pitch"];
   lfo1Frequency = dataSet["lfoFreq"];
   lfo1Amplitude = dataSet["lfoAmount"];
@@ -633,8 +623,8 @@ void resetLFOParams(){
 
 void resetShiftState(){
   dataSaved = true;
-  shiftToggleState1 = 0;
-  shiftToggleState2 = 0;
+  lfoToggleState = 0;
+  //shiftToggleState2 = 0;
   modSelect = 0;
 }
 
@@ -657,64 +647,59 @@ byte combineBoolsToByte(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bo
 void loadOrSave(byte fireButton){
   selectedFireLed = fireButton; // LED ansteuern
   // kein LFO-Taster gedrückt
-  // if(selectWaveformLFO == 0){
-    // Shifttaste 1 gedrückt : Bank wechseln, aber nicht sofort JSON laden
-    if(shiftState == 1){ 
+
+  // Shifttaste 1 gedrückt : Bank wechseln, aber nicht sofort JSON laden
+  if(shiftState == 1){ 
     bank = fireButton; // Bank schreiben
     selectedFireLed = bank;
     resetShiftState();
-    }else{
-      // virtuelle Taste ausrechnen 1..16
-      byte buttonName = (bank * 4) - 4 + fireButton;
+  }else{
+    // virtuelle Taste ausrechnen 1..16
+    byte buttonName = (bank * 4) - 4 + fireButton;
+    // den Filename bestimmen
+    String fileName = "fire"+String(buttonName)+".json";
 
-      String fileName = "fire"+String(buttonName)+".json";
-
-      // LongPress: kein retriggern der LFO und Env., nur Ton Stoppen
-      if(longPressDetected == 0){
-        resetLFOParams();
-      }
-      // 
-      if(shiftState == 2){ // Shifttaste 2 gedrückt : save
-        // Save values
-        String _json = values2JSON();
-        debug("Write");
-        dataSaved = writeSettings(_json,fileName);
-      } else {
-        
-        // longPressDetected: wenn Ton gerade gehalten wird sollen die Werte nicht neu geladen werden bei drücken des selben Buttons
-        if( ((fireButton != actualFireButtonBak) || (bankBak != bank)) && (longPressDetected == 0)){ 
-          // load Values
-          String _json = readSettings(fileName);
-          JSON2values(_json);
-          setChangeState(0,0,0,0);
-        }
-        bankBak = bank;
-      }
+    // LongPress: kein retriggern der LFO und Env., nur Ton Stoppen
+    if(longPressDetected == 0){
+      resetLFOParams();
     }
-  // }else{
-  //   // wenn einer der LFO-Taster gedrückt wurde, muss zum jeweiligen LFO umgeschalten werden
-    
-  //   valLfoWaveformSwitch = fireButton;
-   
-  //   if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
-  //     lfo1WaveformChanged = 1;
-  //   }
-  //   valLfoWaveformSwitchBak = valLfoWaveformSwitch;
-  // }
-  
+    // 
+    if(shiftState == 2){ // Shifttaste 2 gedrückt : save
+      // Save values
+      String _json = values2JSON();
+      dataSaved = writeSettings(_json,fileName);
+      debug("Write");
+    } else {
+      
+      // longPressDetected: wenn Ton gerade gehalten wird sollen die Werte nicht neu geladen werden bei drücken des selben Buttons
+      if( ((fireButton != actualFireButtonBak) || (bankBak != bank)) && (longPressDetected == 0)){ 
+        // load Values
+        debug("Load");
+        String _json = readSettings(fileName);
+        JSON2values(_json);
+        setChangeState(0,0,0,0);
+        setWaveFormSwitch();
+      }
+      bankBak = bank;
+    }
+  }
   return;
 }
 
+// Wahlschalter, welche WaveForm der LFO machen soll
 void enumWaveForm(){
   // 
   valLfoWaveformSwitch++;
-  if( (valLfoWaveformSwitch < 1)||(valLfoWaveformSwitch > 3)){
-    valLfoWaveformSwitch = 1;
+  if( (valLfoWaveformSwitch < 0)||(valLfoWaveformSwitch > 2)){
+    valLfoWaveformSwitch = 0;
   }
+  /*
   if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
     lfo1WaveformChanged = 1;
   }
-  valLfoWaveformSwitchBak = valLfoWaveformSwitch;
+  */
+  lfo1WaveformChanged = 1;
+  //valLfoWaveformSwitchBak = valLfoWaveformSwitch;
 }
 
 void updateKeys(){
@@ -744,12 +729,14 @@ void updateKeys(){
 
  
     // fallende Flanke (Taster losgelassen)
-    
+  // LFO1 oder LFO2 wählen  
   if (selectLFO.rose()) {
     if (!dataSaved){
-      shiftToggleState1 = !shiftToggleState1;
-      modSelect = shiftToggleState1; // Modulationsquelle ist 0 oder 1, weil LFO-Selektor gedrückt wurde
+      lfoToggleState = !lfoToggleState;
+      modSelect = lfoToggleState; // Modulationsquelle ist 0 oder 1, weil LFO-Selektor gedrückt wurde
+      setWaveFormSwitch();
       setChangeState(0,0,0,0);
+      
     }
   }
     
@@ -758,35 +745,23 @@ void updateKeys(){
   if (shift1.rose()){
     if(!dataSaved){
       modSelect = 2;
-      shiftToggleState1 = 0;
+      lfoToggleState = 0;
       setChangeState(0,0,0,0);
     }
   }
 
   if (selectWaveForm.rose()) {
-    
-      
       setChangeState(0,0,0,0);
       enumWaveForm();
-    
   }
 
   
-/*
-   // wenn sich die Modulationsquelle geändert hat, dürfen nicht nach dem Umschalten sofort die neuen Werte von den Potis übernommen werden
-  if(modSelectBak != modSelect){
-    //lfo1WaveformChanged = 1;
-    setChangeState(0,0,0,0);
-  }
-  modSelectBak = modSelect;
-*/
-
 
   
 
   selectedFireLedState = 0;
   shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),0,0,0,0,0,0);
-  //shiftStateToggle = combineBoolsToByte(shiftToggleState1,shiftToggleState2,0,0,0,0,0,0);
+  //shiftStateToggle = combineBoolsToByte(lfoToggleState,shiftToggleState2,0,0,0,0,0,0);
   if(shiftState == 1){
     // Fire-Leds sollen blinken
     selectedFireLed = bank;
@@ -980,7 +955,7 @@ void ledControl(){
 
   // LED Grün
   
-  if(shiftToggleState1 == 0){
+  if(lfoToggleState == 0){
     pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_red), 0);
     if(lfovalue_finalLFO1 == -100){
       pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
@@ -1019,9 +994,9 @@ void ledControl(){
   ledState[1][0] = (selectedFireLedState && selectedFireLed == 4);
   ledState[1][1] = (modSelect == 2);
   ledState[1][2] = (shiftState == 2 && blinkState);
-  ledState[2][0] = (valLfoWaveformSwitch == 1);
-  ledState[2][1] = (valLfoWaveformSwitch == 2);
-  ledState[2][2] = (valLfoWaveformSwitch == 3);
+  ledState[2][0] = (valLfoWaveformSwitch == 0);
+  ledState[2][1] = (valLfoWaveformSwitch == 1);
+  ledState[2][2] = (valLfoWaveformSwitch == 2);
 
 
   digitalWrite(LEDrowPins[activeLedRow], ledState[activeLedRow][activeLedCol]); // Anode
@@ -1040,6 +1015,18 @@ void ledControl(){
   
 
 
+}
+
+void setWaveFormSwitch(){
+  // Übertragen des aktuellen LFO auf den LFO-Selekt-LED's, aber nur wenn der Schalter nicht geändert wurde
+  switch (lfoToggleState) {
+  case 0:
+    valLfoWaveformSwitch = lfo1Waveform;
+    break;
+  case 1:
+    valLfoWaveformSwitch = lfo2Waveform;
+    break;
+  }
 }
 
 /*
@@ -1282,17 +1269,20 @@ void loop() {
   if(modSelect == 0){
     ///////////////////////////// LFO1 ///////////////////////////
     if(lfo1WaveformChanged){
+      
       switch (valLfoWaveformSwitch) {
-        case 1:
+        case 0:
           lfo1Waveform = SQUARE;
+          break;
+        case 1:
+          lfo1Waveform = TRIANGLE;
           break;
         case 2:
           lfo1Waveform = SAWTOOTH;
           break;
-        case 3:
-          lfo1Waveform = TRIANGLE;
-          break;
       }
+      
+      //lfo1Waveform = valLfoWaveformSwitch;
     }
     
     // Pitch
@@ -1314,17 +1304,20 @@ void loop() {
   } else if(modSelect == 1){
     ///////////////////////////// LFO2 ///////////////////////////
     if(lfo1WaveformChanged){
+      
       switch (valLfoWaveformSwitch) {
-        case 1:
+        case 0:
           lfo2Waveform = SQUARE;
+          break;
+        case 1:
+          lfo2Waveform = TRIANGLE;
           break;
         case 2:
           lfo2Waveform = SAWTOOTH;
           break;
-        case 3:
-          lfo2Waveform = TRIANGLE;
-          break;
       }
+      
+     //lfo2Waveform = valLfoWaveformSwitch;
     }
 
     // Pitch
@@ -1346,17 +1339,20 @@ void loop() {
   }  else if(modSelect == 2) {
     
     if(lfo1WaveformChanged){
+      
       switch (valLfoWaveformSwitch) {
-        case 1:
+        case 0:
           lfo1Waveform = SQUARE;
+          break;
+        case 1:
+          lfo1Waveform = TRIANGLE;
           break;
         case 2:
           lfo1Waveform = SAWTOOTH;
           break;
-        case 3:
-          lfo1Waveform = TRIANGLE;
-          break;
       }
+      
+      // lfo1Waveform = valLfoWaveformSwitch;
     }
     
     // Pitch-Poti = Duty-Cycle 
@@ -1397,7 +1393,6 @@ void loop() {
     newModulatedFrequency = baseFrequency * lfo1ValueActual * lfo2ValueActual;
    }
    // Reset LFO values if the start button is false
-  
   // Betriebsanzeige
   blink(50);
   
@@ -1411,15 +1406,10 @@ void loop() {
   // Überwachung und Debugprits
 
   if(chkLoop(1000)){
-     //debug("ShiftstateToggle: "+String(shiftStateToggle)+" Shiftstate: "+String(shiftState));
-     //debug("Env Duration: "+String(envelopeDuration)+" Env Amount: "+String(envelopeAmplitude)+"Env Value: "+String(envelope));
-     //debug("LFO1: "+String(previousMillis)+" LFO2: "+String(previousMillisLFO2));
-     //debugFloat(newModulatedFrequency);
-     //debug("activeLEDrow: "+String(activeLedRow)+"ActiveLedCol: "+String(activeLedCol));
+
     // debug("DEBUGINFO: "+debugString);
-    debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", shiftToggleState1: "+String(shiftToggleState1));
-    // debug(String(valLfoWaveformSwitch));
-  
+    debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", lfoToggleState: "+String(lfoToggleState));
+    //debug("WaveForm1 "+String(lfo1Waveform)+" WaveForm2 "+String(lfo1Waveform));
   
   }
 
