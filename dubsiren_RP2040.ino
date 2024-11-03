@@ -17,14 +17,12 @@ const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
 const int waveFormPin_0 = 3; // WaveForm Kippschalter PIN 1
 const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
 
-//const int selectWaveFormLFO1Pin = 3; // WaveForm Kippschalter PIN 1
-//const int selectWaveFormLFO2Pin = 4; // WaveForm Kippschalter Pin 2
+//const int selectWaveFormPin = 3; // WaveForm Taster
 
 //const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
-//const int selectWaveformPin = 2;  // shift-Taste alt
 const int selectLFOPin = 2;  // Toggletaster LFO Quelle
 const int shiftPin1 = 6;  // shift-Taste1
 const int shiftPin2 = 7;  // shift-Taste2
@@ -55,9 +53,9 @@ const int LEDcolPins[3] = {13, 14, 15};     // Spaltenpins (Kathode)
 
 // Array zum Speichern des Zustands jeder LED (1 = an, 0 = aus)
 int ledState[3][3] = {
-  {1, 0, 1},
-  {0, 1, 0},
-  {1, 0, 1}
+  {0, 0, 0}, // Fire1,Fire2,Fire3
+  {0, 0, 0}, // Fire4, Shift1, Shift2
+  {0, 0, 0}  // Wav1,Wav2,Wav3
 };
 
 byte activeLedRow = 0;
@@ -71,6 +69,7 @@ Bounce fire4;
 Bounce selectLFO;
 Bounce shift1;
 Bounce shift2;
+Bounce selectWaveForm;
 
 // Bounce selectWaveformLFO1;
 // Bounce selectWaveformLFO2;
@@ -87,9 +86,9 @@ unsigned long firePressedTime = 0;
 bool longPressDetected = false;
 
 // globale V. für Schalter für WaveForm
-byte valLfoWaveformSwitch = 0;
+byte valLfoWaveformSwitch = 1;
 // temporäre Sicherung des Wertes des Waveformschalters
-byte valLfoWaveformSwitchBak = 0;
+byte valLfoWaveformSwitchBak = 1;
 
 
 // Konstanten für den minimalen und maximalen Wert der blanken Frequenz ohne Modulation
@@ -706,12 +705,24 @@ void loadOrSave(byte fireButton){
   return;
 }
 
+void enumWaveForm(){
+  // 
+  valLfoWaveformSwitch++;
+  if( (valLfoWaveformSwitch < 1)||(valLfoWaveformSwitch > 3)){
+    valLfoWaveformSwitch = 1;
+  }
+  if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
+    lfo1WaveformChanged = 1;
+  }
+  valLfoWaveformSwitchBak = valLfoWaveformSwitch;
+}
+
 void updateKeys(){
 
   shift1.update();
   shift2.update();
   selectLFO.update();
-
+  selectWaveForm.update();
 
   fire1.update();
   fire2.update();
@@ -730,20 +741,6 @@ void updateKeys(){
       dataSaved = false;
     }
 
-  /*
-  if (dataSaved == 0){
-    // fallende Flanke (Taster losgelassen)
-    
-    if (shift1.rose()) {
-      shiftToggleState1 = !(shiftToggleState1);
-      if(shiftToggleState1){shiftToggleState2 = 0;}
-    }
-    if (shift2.rose()) {
-      shiftToggleState2 = !(shiftToggleState2);
-      if(shiftToggleState2){shiftToggleState1 = 0;}
-    }
-  }
-  */
 
  
     // fallende Flanke (Taster losgelassen)
@@ -757,26 +754,6 @@ void updateKeys(){
   }
     
   
-
-
-/*
-  if(shiftToggleStateBak != shiftToggleState){
-    // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
-    setChangeState(0,0,0,0);
-  }
-  shiftToggleStateBak = shiftToggleState;
-*/  
- /*
- // Button LFO1 pos. Flanke
-  if(selectWaveformLFO1.fell()){
-    modSelect = 0;
-  }
-  // Button LFO2 pos. Flanke
-  if(selectWaveformLFO2.fell()){
-    modSelect = 1;
-  }
- */ 
-  
   // Button Bank Select (Shift1) neg.Flanke
   if (shift1.rose()){
     if(!dataSaved){
@@ -784,6 +761,14 @@ void updateKeys(){
       shiftToggleState1 = 0;
       setChangeState(0,0,0,0);
     }
+  }
+
+  if (selectWaveForm.rose()) {
+    
+      
+      setChangeState(0,0,0,0);
+      enumWaveForm();
+    
   }
 
   
@@ -822,14 +807,13 @@ void updateKeys(){
 
 
 
+  // Schaltervariante LFO Waveform
   // Aus dem Waveformschalter ein Byte machen
-
-
-  valLfoWaveformSwitch = combineBoolsToByte(digitalRead(waveFormPin_0),digitalRead(waveFormPin_1),0,0,0,0,0,0);
-  if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
-    lfo1WaveformChanged = 1;
-  }
-  valLfoWaveformSwitchBak = valLfoWaveformSwitch;
+  // valLfoWaveformSwitch = combineBoolsToByte(digitalRead(waveFormPin_0),digitalRead(waveFormPin_1),0,0,0,0,0,0);
+  // if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
+  //   lfo1WaveformChanged = 1;
+  // }
+  // valLfoWaveformSwitchBak = valLfoWaveformSwitch;
 
 
 
@@ -934,14 +918,6 @@ void updateKeys(){
   }
 */  
   
-  
-/*
-  if(selectWaveform.read() == LOW){
-    debugString = "Waveform selected";
-  }else{
-    debugString = "";
-  }
-*/
 
   
   actualFireButtonBak = actualFireButton;
@@ -994,17 +970,6 @@ void blink(int interval) {
 }
 
 
-
-
-
-// Helper, um auf Einmal 1 aus 4 LEDs anzuzeigen
-void controlFireLed(){
-  digitalWrite(LEDFire1,(selectedFireLedState && selectedFireLed == 1));
-  digitalWrite(LEDFire2,(selectedFireLedState && selectedFireLed == 2));
-  digitalWrite(LEDFire3,(selectedFireLedState && selectedFireLed == 3));
-  digitalWrite(LEDFire4,(selectedFireLedState && selectedFireLed == 4));
-}
-
 void ledControl(){
   
   uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
@@ -1047,6 +1012,16 @@ void ledControl(){
       digitalWrite(LEDcolPins[col], HIGH); // Kathode
     }
   }
+
+  ledState[0][0] = (selectedFireLedState && selectedFireLed == 1);
+  ledState[0][1] = (selectedFireLedState && selectedFireLed == 2);
+  ledState[0][2] = (selectedFireLedState && selectedFireLed == 3);
+  ledState[1][0] = (selectedFireLedState && selectedFireLed == 4);
+  ledState[1][1] = (modSelect == 2);
+  ledState[1][2] = (shiftState == 2 && blinkState);
+  ledState[2][0] = (valLfoWaveformSwitch == 1);
+  ledState[2][1] = (valLfoWaveformSwitch == 2);
+  ledState[2][2] = (valLfoWaveformSwitch == 3);
 
 
   digitalWrite(LEDrowPins[activeLedRow], ledState[activeLedRow][activeLedCol]); // Anode
@@ -1256,11 +1231,14 @@ void setup() {
   selectLFO.attach(selectLFOPin);
   selectLFO.interval(50);
 
-  shift1.attach(shiftPin1);
+  selectWaveForm.attach(waveFormPin_0);
+  selectWaveForm.interval(50);
+
+  shift1.attach(shiftPin1); // Shift / Env
   shift1.interval(50);  // Entprellintervall in Millisekunden (50 ms)
 
-  shift2.attach(shiftPin2);
-  shift2.interval(50);  // Entprellintervall in Millisekunden (50 ms)
+  shift2.attach(shiftPin2); // Save
+  shift2.interval(50);  
 
   fire1.attach(firePin1);
   fire1.interval(10);  
@@ -1273,6 +1251,8 @@ void setup() {
 
   fire4.attach(firePin4);
   fire4.interval(10);  
+
+  
   
   
   // Initialisieren des Arrays für die Mittelwertbildung des Pitch
@@ -1430,14 +1410,17 @@ void loop() {
 
   // Überwachung und Debugprits
 
-  if(chkLoop(100)){
+  if(chkLoop(1000)){
      //debug("ShiftstateToggle: "+String(shiftStateToggle)+" Shiftstate: "+String(shiftState));
      //debug("Env Duration: "+String(envelopeDuration)+" Env Amount: "+String(envelopeAmplitude)+"Env Value: "+String(envelope));
      //debug("LFO1: "+String(previousMillis)+" LFO2: "+String(previousMillisLFO2));
      //debugFloat(newModulatedFrequency);
-     debug("activeLEDrow: "+String(activeLedRow)+"ActiveLedCol: "+String(activeLedCol));
+     //debug("activeLEDrow: "+String(activeLedRow)+"ActiveLedCol: "+String(activeLedCol));
     // debug("DEBUGINFO: "+debugString);
-    // debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", shiftToggleState1: "+String(shiftToggleState1));
+    debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", shiftToggleState1: "+String(shiftToggleState1));
+    // debug(String(valLfoWaveformSwitch));
+  
+  
   }
 
 }
