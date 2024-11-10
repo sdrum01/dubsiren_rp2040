@@ -3457,7 +3457,7 @@
 	)
 	(wire
 		(pts
-			(xy 99.06 130.81) (xy 109.22 130.81)
+			(xy 99.06 130.81) (xy 104.14 130.81)
 		)
 		(stroke
 			(width 0)
@@ -3487,7 +3487,7 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 130.81) (xy 119.38 130.81)
+			(xy 111.76 130.81) (xy 119.38 130.81)
 		)
 		(stroke
 			(width 0)
@@ -3667,7 +3667,7 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 161.29) (xy 119.38 161.29)
+			(xy 111.76 161.29) (xy 119.38 161.29)
 		)
 		(stroke
 			(width 0)
@@ -3877,7 +3877,7 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 146.05) (xy 119.38 146.05)
+			(xy 111.76 146.05) (xy 119.38 146.05)
 		)
 		(stroke
 			(width 0)
@@ -4017,7 +4017,7 @@
 	)
 	(wire
 		(pts
-			(xy 99.06 153.67) (xy 109.22 153.67)
+			(xy 99.06 153.67) (xy 104.14 153.67)
 		)
 		(stroke
 			(width 0)
@@ -4067,7 +4067,7 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 138.43) (xy 119.38 138.43)
+			(xy 111.76 138.43) (xy 119.38 138.43)
 		)
 		(stroke
 			(width 0)
@@ -4137,7 +4137,7 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 123.19) (xy 119.38 123.19)
+			(xy 111.76 123.19) (xy 119.38 123.19)
 		)
 		(stroke
 			(width 0)
@@ -4297,7 +4297,7 @@
 	)
 	(wire
 		(pts
-			(xy 109.22 123.19) (xy 99.06 123.19)
+			(xy 104.14 123.19) (xy 99.06 123.19)
 		)
 		(stroke
 			(width 0)
@@ -4317,7 +4317,7 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 153.67) (xy 119.38 153.67)
+			(xy 111.76 153.67) (xy 119.38 153.67)
 		)
 		(stroke
 			(width 0)
@@ -4687,7 +4687,7 @@
 	)
 	(wire
 		(pts
-			(xy 99.06 146.05) (xy 109.22 146.05)
+			(xy 99.06 146.05) (xy 104.14 146.05)
 		)
 		(stroke
 			(width 0)
@@ -4797,7 +4797,7 @@
 	)
 	(wire
 		(pts
-			(xy 99.06 161.29) (xy 109.22 161.29)
+			(xy 99.06 161.29) (xy 104.14 161.29)
 		)
 		(stroke
 			(width 0)
@@ -4817,7 +4817,7 @@
 	)
 	(wire
 		(pts
-			(xy 99.06 138.43) (xy 109.22 138.43)
+			(xy 99.06 138.43) (xy 104.14 138.43)
 		)
 		(stroke
 			(width 0)
@@ -5017,6 +5017,7 @@
 			(effects
 				(font
 					(size 1.27 1.27)
+					(thickness 0.1588)
 				)
 			)
 		)
@@ -5528,7 +5529,7 @@
 	)
 	(symbol
 		(lib_id "Device:LED")
-		(at 113.03 130.81 0)
+		(at 107.95 130.81 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5536,7 +5537,7 @@
 		(dnp no)
 		(uuid "253f1051-9a7f-4930-b240-8e4326d9be74")
 		(property "Reference" "D5"
-			(at 116.078 129.286 0)
+			(at 110.998 129.286 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5544,7 +5545,7 @@
 			)
 		)
 		(property "Value" "LED Fire2"
-			(at 113.03 127 0)
+			(at 107.95 127 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5552,7 +5553,7 @@
 			)
 		)
 		(property "Footprint" "LED_THT:LED_D3.0mm"
-			(at 113.03 130.81 0)
+			(at 107.95 130.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5561,7 +5562,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 113.03 130.81 0)
+			(at 107.95 130.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5570,7 +5571,7 @@
 			)
 		)
 		(property "Description" "Light emitting diode"
-			(at 113.03 130.81 0)
+			(at 107.95 130.81 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5927,7 +5928,7 @@
 	)
 	(symbol
 		(lib_id "Device:LED")
-		(at 113.03 123.19 0)
+		(at 107.95 123.19 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5935,7 +5936,7 @@
 		(dnp no)
 		(uuid "40b91fa2-4550-4a64-8829-2804dbb2a5d1")
 		(property "Reference" "D4"
-			(at 116.078 121.666 0)
+			(at 110.998 121.666 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5943,7 +5944,7 @@
 			)
 		)
 		(property "Value" "LED Fire1"
-			(at 113.03 119.38 0)
+			(at 107.95 119.38 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5951,7 +5952,7 @@
 			)
 		)
 		(property "Footprint" "LED_THT:LED_D3.0mm"
-			(at 113.03 123.19 0)
+			(at 107.95 123.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5960,7 +5961,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 113.03 123.19 0)
+			(at 107.95 123.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5969,7 +5970,7 @@
 			)
 		)
 		(property "Description" "Light emitting diode"
-			(at 113.03 123.19 0)
+			(at 107.95 123.19 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7095,7 +7096,7 @@
 	)
 	(symbol
 		(lib_id "Device:LED")
-		(at 113.03 153.67 0)
+		(at 107.95 153.67 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -7103,7 +7104,7 @@
 		(dnp no)
 		(uuid "66c96de6-65d0-4c61-9269-4c35a98c6bd7")
 		(property "Reference" "D3"
-			(at 116.078 152.146 0)
+			(at 110.998 152.146 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7111,7 +7112,7 @@
 			)
 		)
 		(property "Value" "LED Shift1"
-			(at 114.3 149.86 0)
+			(at 109.22 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7119,7 +7120,7 @@
 			)
 		)
 		(property "Footprint" "LED_THT:LED_D3.0mm"
-			(at 113.03 153.67 0)
+			(at 107.95 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7128,7 +7129,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 113.03 153.67 0)
+			(at 107.95 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7137,7 +7138,7 @@
 			)
 		)
 		(property "Description" "Light emitting diode"
-			(at 113.03 153.67 0)
+			(at 107.95 153.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8039,7 +8040,7 @@
 	)
 	(symbol
 		(lib_id "Device:LED")
-		(at 113.03 161.29 0)
+		(at 107.95 161.29 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -8047,7 +8048,7 @@
 		(dnp no)
 		(uuid "824833d1-63a2-43cc-aed1-1be150b78609")
 		(property "Reference" "D9"
-			(at 116.078 159.766 0)
+			(at 110.998 159.766 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8055,7 +8056,7 @@
 			)
 		)
 		(property "Value" "LED Shift2"
-			(at 114.3 157.48 0)
+			(at 109.22 157.48 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8063,7 +8064,7 @@
 			)
 		)
 		(property "Footprint" "LED_THT:LED_D3.0mm"
-			(at 113.03 161.29 0)
+			(at 107.95 161.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8072,7 +8073,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 113.03 161.29 0)
+			(at 107.95 161.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8081,7 +8082,7 @@
 			)
 		)
 		(property "Description" "Light emitting diode"
-			(at 113.03 161.29 0)
+			(at 107.95 161.29 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9385,7 +9386,7 @@
 	)
 	(symbol
 		(lib_id "Device:LED")
-		(at 113.03 146.05 0)
+		(at 107.95 146.05 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -9393,7 +9394,7 @@
 		(dnp no)
 		(uuid "c87b3c10-7140-4656-9d1d-ff509df558b0")
 		(property "Reference" "D7"
-			(at 116.078 144.526 0)
+			(at 110.998 144.526 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9401,7 +9402,7 @@
 			)
 		)
 		(property "Value" "LED Fire4"
-			(at 113.03 142.24 0)
+			(at 107.95 142.24 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9409,7 +9410,7 @@
 			)
 		)
 		(property "Footprint" "LED_THT:LED_D3.0mm"
-			(at 113.03 146.05 0)
+			(at 107.95 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9418,7 +9419,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 113.03 146.05 0)
+			(at 107.95 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9427,7 +9428,7 @@
 			)
 		)
 		(property "Description" "Light emitting diode"
-			(at 113.03 146.05 0)
+			(at 107.95 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9584,7 +9585,7 @@
 	)
 	(symbol
 		(lib_id "Device:LED")
-		(at 113.03 138.43 0)
+		(at 107.95 138.43 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -9592,7 +9593,7 @@
 		(dnp no)
 		(uuid "df0df2fc-58ed-4880-bfbb-b913600e4073")
 		(property "Reference" "D6"
-			(at 116.078 136.906 0)
+			(at 110.998 136.906 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9600,7 +9601,7 @@
 			)
 		)
 		(property "Value" "LED Fire3"
-			(at 113.03 134.62 0)
+			(at 107.95 134.62 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9608,7 +9609,7 @@
 			)
 		)
 		(property "Footprint" "LED_THT:LED_D3.0mm"
-			(at 113.03 138.43 0)
+			(at 107.95 138.43 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9617,7 +9618,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 113.03 138.43 0)
+			(at 107.95 138.43 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9626,7 +9627,7 @@
 			)
 		)
 		(property "Description" "Light emitting diode"
-			(at 113.03 138.43 0)
+			(at 107.95 138.43 0)
 			(effects
 				(font
 					(size 1.27 1.27)
