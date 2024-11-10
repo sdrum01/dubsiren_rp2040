@@ -1,7 +1,8 @@
 (fp_lib_table
   (version 7)
-  (lib (name "Connector Eigene")(type "KiCad")(uri "C:/Users/DirHan/OneDrive - Gunnebo Group/Documents/KiCad/6.0/footprints/connector_eigene.pretty")(options "")(descr ""))
-  (lib (name "RPI")(type "KiCad")(uri "${KICAD7_3RD_PARTY}/Footprint/RPI_pico_Module.pretty")(options "")(descr ""))
-  (lib (name "RPI_pico_Module")(type "KiCad")(uri "${KICAD6_3RD_PARTY}/Footprint/RPI_pico_Module.pretty")(options "")(descr ""))
+  (lib (name "Connector Eigene")(type "KiCad")(uri "C:/Users/DirHan/OneDrive - Gunnebo Group/Documents/KiCad/6.0/footprints/connector_eigene.pretty")(options "")(descr "")(disabled))
+  (lib (name "RPI")(type "KiCad")(uri "${KICAD7_3RD_PARTY}/Footprint/RPI_pico_Module.pretty")(options "")(descr "")(disabled))
+  (lib (name "RPI_pico_Module")(type "KiCad")(uri "${KICAD6_3RD_PARTY}/Footprint/RPI_pico_Module.pretty")(options "")(descr "")(disabled))
   (lib (name "PT2399_modul")(type "KiCad")(uri "${KIPRJMOD}/PT2399_modul.pretty")(options "")(descr ""))
+  (lib (name "MCU_RaspberryPi_and_Boards")(type "KiCad")(uri "${KIPRJMOD}/MCU_RaspberryPi_and_Boards.pretty")(options "")(descr ""))
 )
