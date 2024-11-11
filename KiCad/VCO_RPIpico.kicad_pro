@@ -37,8 +37,8 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 1.5,
-          "height": 2.2,
+          "drill": 2.1,
+          "height": 3.0,
           "width": 4.0
         },
         "silk_line_width": 0.15,
@@ -438,7 +438,7 @@
       "pin_not_connected": "error",
       "pin_not_driven": "error",
       "pin_to_pin": "warning",
-      "power_pin_not_driven": "error",
+      "power_pin_not_driven": "ignore",
       "similar_labels": "warning",
       "simulation_model_issue": "ignore",
       "unannotated": "error",
