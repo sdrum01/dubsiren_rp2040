@@ -13,9 +13,11 @@ const byte LOGLEVEL = 1;
 const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
 const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
-
+/*
 const int waveFormPin_0 = 3; // WaveForm Kippschalter PIN 1
 const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
+*/
+
 
 //const int selectWaveFormPin = 3; // WaveForm Taster
 
@@ -23,9 +25,12 @@ const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
-const int selectLFOPin = 2;  // Toggletaster LFO Quelle
+
 const int shiftPin1 = 6;  // shift-Taste1
 const int shiftPin2 = 7;  // shift-Taste2
+const int selectWaveFormPin = 8; // WaveForm Kippschalter PIN 1
+const int selectLFOPin = 9;  // Toggletaster LFO Quelle
+
 
 const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
 const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
@@ -38,18 +43,24 @@ const int LED1_red = 16;
 const int LED1_green = 17;
 //const int LED2_red = 14;
 //const int LED2_green = 15;
-const int LEDShift1 = 8;
-const int LEDShift2 = 9;
+const int LEDShift1 = 14;
+const int LEDShift2 = 15;
 
 const int LEDFire1 = 10;
 const int LEDFire2 = 11;
 const int LEDFire3 = 12;
 const int LEDFire4 = 13;
 
+const int LEDWaveSquare = 2;
+const int LEDWaveTri = 3;
+const int LEDWaveSaw = 4;
+
 // LED Matrix
 // Pins für die Zeilen und Spalten definieren
+/*
 const int LEDrowPins[3] = {10, 11, 12};     // Zeilenpins (Anode)
 const int LEDcolPins[3] = {13, 14, 15};     // Spaltenpins (Kathode)
+
 
 // Array zum Speichern des Zustands jeder LED (1 = an, 0 = aus)
 int ledState[3][3] = {
@@ -57,6 +68,7 @@ int ledState[3][3] = {
   {0, 0, 0}, // Fire4, Shift1, Shift2
   {0, 0, 0}  // Wav1,Wav2,Wav3
 };
+*/
 
 byte activeLedRow = 0;
 byte activeLedCol = 0;
@@ -972,12 +984,21 @@ void ledControl(){
   
   // digitalWrite(LEDShift1,modSelect == 2);
   digitalWrite(LED_BUILTIN, blinkState);
+
+  digitalWrite(LEDShift1,modSelect == 2);
+  digitalWrite(LEDShift2,shiftState == 2 && blinkState);
   
-  
-//  controlFireLed();
+  digitalWrite(LEDWaveSquare,valLfoWaveformSwitch == 0);
+  digitalWrite(LEDWaveTri,valLfoWaveformSwitch == 1);
+  digitalWrite(LEDWaveSaw,valLfoWaveformSwitch == 2);
+
+  digitalWrite(LEDFire1,selectedFireLedState && selectedFireLed == 1);
+  digitalWrite(LEDFire2,selectedFireLedState && selectedFireLed == 2);
+  digitalWrite(LEDFire3,selectedFireLedState && selectedFireLed == 3);
+  digitalWrite(LEDFire4,selectedFireLedState && selectedFireLed == 4);
 
 
-
+/*
   // LED Matrix
   for (int row = 0; row < 3; row++) {
     // Zeile deaktivieren
@@ -1012,7 +1033,7 @@ void ledControl(){
     }
   }
   
-  
+*/
 
 
 }
@@ -1170,7 +1191,7 @@ void setup() {
   // Normale IO's
   pinMode(LED_BUILTIN, OUTPUT);
 
-/*
+
 
   pinMode(LEDShift1, OUTPUT);
   pinMode(LEDShift2, OUTPUT);
@@ -1179,7 +1200,12 @@ void setup() {
   pinMode(LEDFire2, OUTPUT);
   pinMode(LEDFire3, OUTPUT);
   pinMode(LEDFire4, OUTPUT);
-*/
+
+  pinMode(LEDWaveSquare, OUTPUT);
+  pinMode(LEDWaveTri, OUTPUT);
+  pinMode(LEDWaveSaw, OUTPUT);
+
+/*
   // LED Matrix initialisieren
   for (int i = 0; i < 3; i++) {
     pinMode(LEDrowPins[i], OUTPUT);
@@ -1191,13 +1217,14 @@ void setup() {
     pinMode(LEDcolPins[i], OUTPUT);
     digitalWrite(LEDcolPins[i], HIGH);  // Anfangszustand aus (LOW schaltet die LED ein)
   }
-
+*/
 
   pinMode(selectLFOPin, INPUT_PULLUP); 
   pinMode(shiftPin1, INPUT_PULLUP);  
   pinMode(shiftPin2, INPUT_PULLUP);
-  pinMode(waveFormPin_0, INPUT_PULLUP);  
-  pinMode(waveFormPin_1, INPUT_PULLUP);
+  pinMode(selectWaveFormPin, INPUT_PULLUP);  
+  // pinMode(waveFormPin_0, INPUT_PULLUP);  
+  // pinMode(waveFormPin_1, INPUT_PULLUP);
   // pinMode(selectWaveFormLFO1Pin, INPUT_PULLUP);  
   // pinMode(selectWaveFormLFO2Pin, INPUT_PULLUP);
   pinMode(firePin1, INPUT_PULLUP); 
@@ -1218,7 +1245,7 @@ void setup() {
   selectLFO.attach(selectLFOPin);
   selectLFO.interval(50);
 
-  selectWaveForm.attach(waveFormPin_0);
+  selectWaveForm.attach(selectWaveFormPin);
   selectWaveForm.interval(50);
 
   shift1.attach(shiftPin1); // Shift / Env
