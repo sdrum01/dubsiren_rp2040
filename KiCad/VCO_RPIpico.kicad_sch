@@ -3622,7 +3622,7 @@
 	)
 	(wire
 		(pts
-			(xy 46.99 39.37) (xy 46.99 40.64)
+			(xy 46.99 39.37) (xy 46.99 41.91)
 		)
 		(stroke
 			(width 0)
@@ -5632,6 +5632,16 @@
 	)
 	(wire
 		(pts
+			(xy 68.58 41.91) (xy 68.58 39.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f1e8a76b-b2cb-4886-8c8e-b78a04a0428d")
+	)
+	(wire
+		(pts
 			(xy 213.36 63.5) (xy 213.36 71.12)
 		)
 		(stroke
@@ -5868,7 +5878,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 60.96 156.972 90)
 			(effects
 				(font
@@ -5921,7 +5931,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 46.99 40.64 0)
+		(at 46.99 41.91 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5930,7 +5940,7 @@
 		(fields_autoplaced yes)
 		(uuid "09c99a9c-2edd-4bdb-b084-82e59b31322d")
 		(property "Reference" "#PWR014"
-			(at 46.99 46.99 0)
+			(at 46.99 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5939,7 +5949,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 46.99 45.72 0)
+			(at 46.99 46.99 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5947,7 +5957,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 46.99 40.64 0)
+			(at 46.99 41.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5956,7 +5966,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 46.99 40.64 0)
+			(at 46.99 41.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5965,7 +5975,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 46.99 40.64 0)
+			(at 46.99 41.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6270,7 +6280,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 64.77 103.632 90)
 			(effects
 				(font
@@ -6534,7 +6544,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 60.96 141.732 90)
 			(effects
 				(font
@@ -6611,7 +6621,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_Tantalum_SMD:CP_EIA-2012-12_Kemet-R_Pad1.30x1.05mm_HandSolder"
 			(at 223.52 37.1348 0)
 			(effects
 				(font
@@ -7588,7 +7598,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:CP_Elec_4x5.7"
 			(at 251.46 47.2948 0)
 			(effects
 				(font
@@ -7988,7 +7998,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_Tantalum_SMD:CP_EIA-2012-12_Kemet-R_Pad1.30x1.05mm_HandSolder"
 			(at 190.5 24.4348 0)
 			(effects
 				(font
@@ -8125,7 +8135,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 135.5852 114.3 0)
 			(effects
 				(font
@@ -8396,7 +8406,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 167.3352 119.38 0)
 			(effects
 				(font
@@ -8465,7 +8475,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 152.0952 116.84 0)
 			(effects
 				(font
@@ -8935,7 +8945,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:CP_Elec_6.3x5.8"
 			(at 106.3752 45.72 0)
 			(effects
 				(font
@@ -9600,7 +9610,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 64.77 96.012 90)
 			(effects
 				(font
@@ -9667,7 +9677,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 60.96 160.528 90)
 			(effects
 				(font
@@ -9734,7 +9744,7 @@
 				)
 			)
 		)
-		(property "Value" "LED WF_Squ"
+		(property "Value" "LED_WF_Squ"
 			(at 45.72 90.17 0)
 			(effects
 				(font
@@ -10270,7 +10280,7 @@
 	)
 	(symbol
 		(lib_id "power:GNDA")
-		(at 68.58 39.37 0)
+		(at 68.58 41.91 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -10279,7 +10289,7 @@
 		(fields_autoplaced yes)
 		(uuid "8dc6a12b-9c98-48c7-9972-b369c55e2e34")
 		(property "Reference" "#PWR012"
-			(at 68.58 45.72 0)
+			(at 68.58 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10288,7 +10298,7 @@
 			)
 		)
 		(property "Value" "GNDA"
-			(at 68.58 44.45 0)
+			(at 68.58 46.99 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10296,7 +10306,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 68.58 39.37 0)
+			(at 68.58 41.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10305,7 +10315,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 68.58 39.37 0)
+			(at 68.58 41.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10314,7 +10324,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GNDA\" , analog ground"
-			(at 68.58 39.37 0)
+			(at 68.58 41.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10547,7 +10557,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 64.77 111.252 90)
 			(effects
 				(font
@@ -10693,7 +10703,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 97.4852 92.71 0)
 			(effects
 				(font
@@ -10752,7 +10762,7 @@
 				)
 			)
 		)
-		(property "Value" "LED WF_Tri"
+		(property "Value" "LED_WF_Tri"
 			(at 45.72 97.79 0)
 			(effects
 				(font
@@ -11083,7 +11093,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 60.96 175.768 90)
 			(effects
 				(font
@@ -11150,7 +11160,7 @@
 				)
 			)
 		)
-		(property "Value" "LED WF_Saw"
+		(property "Value" "LED_WF_Saw"
 			(at 45.72 105.41 0)
 			(effects
 				(font
@@ -11425,7 +11435,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 120.9548 99.06 0)
 			(effects
 				(font
@@ -11551,7 +11561,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 121.92 165.1 90)
 			(effects
 				(font
@@ -11753,7 +11763,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 60.96 149.352 90)
 			(effects
 				(font
@@ -11888,7 +11898,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 60.96 168.148 90)
 			(effects
 				(font
@@ -12556,7 +12566,7 @@
 				)
 			)
 		)
-		(property "Value" "100"
+		(property "Value" "680"
 			(at 121.92 154.94 90)
 			(effects
 				(font
@@ -12634,7 +12644,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:CP_Elec_8x10.5"
+		(property "Footprint" "Capacitor_SMD:CP_Elec_6.3x5.8"
 			(at 47.9552 39.37 0)
 			(effects
 				(font
@@ -12914,7 +12924,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 100.0252 45.72 0)
 			(effects
 				(font
@@ -13182,7 +13192,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:CP_Elec_6.3x5.3"
 			(at 115.57 41.6052 0)
 			(effects
 				(font
@@ -13319,7 +13329,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:CP_Elec_4x5.7"
 			(at 223.52 51.1048 0)
 			(effects
 				(font
