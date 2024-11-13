@@ -66,7 +66,7 @@
 			)
 		)
 	)
-	(attr smd)
+	(attr through_hole)
 	(fp_line
 		(start -5 -5)
 		(end 5 -5)
@@ -203,7 +203,7 @@
 		(uuid "2c3ffadc-e88c-4694-8ed4-2777edd1101d")
 	)
 	(pad "5" thru_hole circle
-		(at -5.06 -1.26)
+		(at -5.588 -1.26)
 		(size 1.8 1.8)
 		(drill 1)
 		(layers "*.Cu" "*.Mask")
@@ -211,7 +211,7 @@
 		(uuid "700306ff-4b4f-4f81-8bc2-41e979605a3a")
 	)
 	(pad "6" thru_hole circle
-		(at 5.1 1.28)
+		(at 5.588 1.28)
 		(size 1.8 1.8)
 		(drill 1)
 		(layers "*.Cu" "*.Mask")

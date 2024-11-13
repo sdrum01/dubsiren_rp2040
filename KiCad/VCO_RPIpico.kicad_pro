@@ -59,7 +59,12 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        "starved_thermal|139276500|65256000|303eb660-6564-4ab8-924f-b394e83dcfd1|c85e750f-c59b-4165-9b98-8fa079b65249|B.Cu",
+        "starved_thermal|66146000|97514000|303eb660-6564-4ab8-924f-b394e83dcfd1|d2964e4d-300c-45a8-bf87-607221c324ad|B.Cu",
+        "starved_thermal|66146000|97514000|303eb660-6564-4ab8-924f-b394e83dcfd1|f2fc6554-026b-44c7-9776-c60433916f5e|B.Cu",
+        "starved_thermal|90500000|71450000|303eb660-6564-4ab8-924f-b394e83dcfd1|be50e859-0689-445c-8604-35e0741babd8|B.Cu"
+      ],
       "meta": {
         "version": 2
       },
@@ -90,7 +95,7 @@
         "lib_footprint_mismatch": "warning",
         "malformed_courtyard": "error",
         "microvia_drill_out_of_range": "error",
-        "missing_courtyard": "ignore",
+        "missing_courtyard": "error",
         "missing_footprint": "warning",
         "net_conflict": "warning",
         "npth_inside_courtyard": "ignore",
@@ -492,7 +497,7 @@
       "plot": "production/gerber/",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "VCO_RPIpico.step",
       "svg": "",
       "vrml": ""
     },

@@ -4605,6 +4605,12 @@
 		(uuid "5ce53e2e-7121-4eed-a8d8-fa7de89f94bd")
 	)
 	(junction
+		(at 180.34 64.77)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "6392224e-d588-4e3c-857e-4e38c0da1949")
+	)
+	(junction
 		(at 224.79 115.57)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4621,12 +4627,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "70a7b696-a03b-4152-bea4-2e37f7622753")
-	)
-	(junction
-		(at 185.42 78.74)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "71164579-04f2-4809-a759-79351ffe6af3")
 	)
 	(junction
 		(at 234.95 101.6)
@@ -5206,7 +5206,7 @@
 	)
 	(wire
 		(pts
-			(xy 185.42 78.74) (xy 200.66 78.74)
+			(xy 180.34 78.74) (xy 200.66 78.74)
 		)
 		(stroke
 			(width 0)
@@ -5386,7 +5386,7 @@
 	)
 	(wire
 		(pts
-			(xy 167.64 55.88) (xy 168.91 55.88)
+			(xy 168.91 55.88) (xy 167.64 55.88)
 		)
 		(stroke
 			(width 0)
@@ -5746,16 +5746,6 @@
 	)
 	(wire
 		(pts
-			(xy 180.34 78.74) (xy 185.42 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5238d739-eaf7-422d-9147-22d0e5e3ac01")
-	)
-	(wire
-		(pts
 			(xy 241.3 129.54) (xy 241.3 115.57)
 		)
 		(stroke
@@ -5766,7 +5756,7 @@
 	)
 	(wire
 		(pts
-			(xy 168.91 62.23) (xy 168.91 55.88)
+			(xy 168.91 64.77) (xy 168.91 55.88)
 		)
 		(stroke
 			(width 0)
@@ -5973,6 +5963,16 @@
 			(type default)
 		)
 		(uuid "67664c23-1fd5-4545-a25d-317a5c6b6379")
+	)
+	(wire
+		(pts
+			(xy 180.34 64.77) (xy 180.34 78.74)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "67970bde-ea97-4ee7-b743-6327df441c9d")
 	)
 	(wire
 		(pts
@@ -6263,6 +6263,16 @@
 			(type default)
 		)
 		(uuid "83e1876a-9641-42e1-bb78-54ab0fff4ffc")
+	)
+	(wire
+		(pts
+			(xy 180.34 64.77) (xy 185.42 64.77)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "84566d56-8a4f-4d2b-9867-691f7112ed45")
 	)
 	(wire
 		(pts
@@ -6576,13 +6586,23 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 62.23) (xy 168.91 62.23)
+			(xy 173.99 64.77) (xy 168.91 64.77)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "a15aecc1-82db-4b1f-9427-5323a1d4bc4d")
+	)
+	(wire
+		(pts
+			(xy 173.99 64.77) (xy 173.99 62.23)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a18997ba-a304-4a5b-bfc7-f697f2c49cbb")
 	)
 	(wire
 		(pts
@@ -6606,7 +6626,7 @@
 	)
 	(wire
 		(pts
-			(xy 180.34 62.23) (xy 180.34 78.74)
+			(xy 180.34 62.23) (xy 180.34 64.77)
 		)
 		(stroke
 			(width 0)
@@ -6903,6 +6923,16 @@
 			(type default)
 		)
 		(uuid "c073105a-2624-4a9c-9a6d-72d46562d0dc")
+	)
+	(wire
+		(pts
+			(xy 185.42 64.77) (xy 185.42 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c2787470-2041-4b10-8d7b-36e85d134158")
 	)
 	(wire
 		(pts
@@ -7393,16 +7423,6 @@
 			(type default)
 		)
 		(uuid "efb95fab-2868-4078-80ac-714fbb5d5317")
-	)
-	(wire
-		(pts
-			(xy 185.42 78.74) (xy 185.42 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "efcaeb4c-1916-4fb2-b233-84f9ce2bb9bf")
 	)
 	(wire
 		(pts
@@ -10239,10 +10259,9 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "58dde1fc-8578-48d5-a4e3-0d0a25682ad6")
 		(property "Reference" "C2"
-			(at 138.43 109.2199 0)
+			(at 136.398 108.204 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10251,7 +10270,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 138.43 111.7599 0)
+			(at 135.89 112.776 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10510,10 +10529,9 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "5be38e64-bea6-4dba-b031-12a45e7a939d")
 		(property "Reference" "C4"
-			(at 170.18 114.2999 0)
+			(at 167.64 113.538 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10522,7 +10540,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 170.18 116.8399 0)
+			(at 167.894 118.11 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10650,7 +10668,7 @@
 		(dnp no)
 		(uuid "5cc1cc81-8c94-4a0f-9d86-ac629ca2b1cb")
 		(property "Reference" "C3"
-			(at 154.94 111.7599 0)
+			(at 152.654 110.744 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10659,7 +10677,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 153.67 115.57 0)
+			(at 152.4 115.316 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14796,7 +14814,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100n"
+		(property "Value" "10n"
 			(at 207.01 58.42 0)
 			(effects
 				(font
