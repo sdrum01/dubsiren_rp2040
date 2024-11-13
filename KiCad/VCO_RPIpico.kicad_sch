@@ -4575,6 +4575,12 @@
 		(uuid "403d54ea-0033-4e72-a8a3-18ad721e7d95")
 	)
 	(junction
+		(at 36.83 166.37)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "49562c56-0815-4a0e-8c58-44b9faf34fb5")
+	)
+	(junction
 		(at 68.58 39.37)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4597,6 +4603,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "5343e497-f1d0-42eb-ae77-4cfacc543ae5")
+	)
+	(junction
+		(at 36.83 158.75)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "555f0757-c438-4c89-9b77-438a0410c930")
 	)
 	(junction
 		(at 36.83 177.8)
@@ -4701,6 +4713,18 @@
 		(uuid "aa650e36-6379-4fa5-9b94-d303b644351e")
 	)
 	(junction
+		(at 26.67 162.56)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "abdc5b70-8f43-4ab4-bbd3-6a674a2d8416")
+	)
+	(junction
+		(at 26.67 139.7)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "add45934-013c-4756-b85f-31362983c009")
+	)
+	(junction
 		(at 36.83 154.94)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4713,6 +4737,12 @@
 		(uuid "b19d4bc9-25fc-4dbc-9139-abcd26a3acf5")
 	)
 	(junction
+		(at 26.67 147.32)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b28137f7-e1a5-4ab3-8004-03dae4c67e97")
+	)
+	(junction
 		(at 241.3 129.54)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4723,6 +4753,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "b32c8bce-78d4-4749-8f8c-dec41d7b8c0f")
+	)
+	(junction
+		(at 36.83 143.51)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "bca3af70-df90-446d-96d3-816cb2619906")
 	)
 	(junction
 		(at 241.3 115.57)
@@ -4749,6 +4785,12 @@
 		(uuid "c54561fd-3a2c-4628-9c8d-187849459d7d")
 	)
 	(junction
+		(at 36.83 151.13)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c8b2b33e-8379-4e02-9fd1-0c87ddc494ff")
+	)
+	(junction
 		(at 218.44 121.92)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4765,6 +4807,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "d51a6a41-d7f1-42aa-83bf-dde50ff7d6e2")
+	)
+	(junction
+		(at 26.67 154.94)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d6c4334c-8b0d-46e8-9df3-3021f1332565")
 	)
 	(junction
 		(at 36.83 101.6)
@@ -5456,6 +5504,16 @@
 	)
 	(wire
 		(pts
+			(xy 34.29 158.75) (xy 36.83 158.75)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3bfa62c3-e43c-42d4-b837-cdcd456d6a5a")
+	)
+	(wire
+		(pts
 			(xy 71.12 144.78) (xy 71.12 170.18)
 		)
 		(stroke
@@ -5493,6 +5551,16 @@
 			(type default)
 		)
 		(uuid "3e7d1cdc-e42e-4740-9aa0-a976b6df9179")
+	)
+	(wire
+		(pts
+			(xy 26.67 162.56) (xy 26.67 166.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3f3222fb-ddac-40ad-8b9d-cff7010a4293")
 	)
 	(wire
 		(pts
@@ -5736,6 +5804,16 @@
 	)
 	(wire
 		(pts
+			(xy 26.67 147.32) (xy 26.67 151.13)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5157755a-102c-47df-9dbd-208c3b6b2c64")
+	)
+	(wire
+		(pts
 			(xy 208.28 52.07) (xy 212.09 52.07)
 		)
 		(stroke
@@ -5886,7 +5964,7 @@
 	)
 	(wire
 		(pts
-			(xy 36.83 154.94) (xy 36.83 162.56)
+			(xy 36.83 154.94) (xy 36.83 158.75)
 		)
 		(stroke
 			(width 0)
@@ -5906,6 +5984,26 @@
 	)
 	(wire
 		(pts
+			(xy 36.83 151.13) (xy 36.83 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5eba63e0-c752-4fcb-88c3-4ab9d4ae6464")
+	)
+	(wire
+		(pts
+			(xy 26.67 154.94) (xy 26.67 158.75)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "61ab2fde-d09c-49f3-a0e5-e5516dac3795")
+	)
+	(wire
+		(pts
 			(xy 215.9 115.57) (xy 224.79 115.57)
 		)
 		(stroke
@@ -5916,6 +6014,16 @@
 	)
 	(wire
 		(pts
+			(xy 26.67 139.7) (xy 26.67 143.51)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6352658c-e8c8-4d89-b8bd-aac7983a99be")
+	)
+	(wire
+		(pts
 			(xy 123.19 45.72) (xy 113.03 45.72)
 		)
 		(stroke
@@ -5923,6 +6031,16 @@
 			(type default)
 		)
 		(uuid "636127a7-bbc5-45f5-9672-2dee67f3786c")
+	)
+	(wire
+		(pts
+			(xy 36.83 158.75) (xy 36.83 162.56)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "643e27b7-867c-4efc-861c-a9b54deb6139")
 	)
 	(wire
 		(pts
@@ -6076,7 +6194,7 @@
 	)
 	(wire
 		(pts
-			(xy 36.83 147.32) (xy 36.83 154.94)
+			(xy 36.83 147.32) (xy 36.83 151.13)
 		)
 		(stroke
 			(width 0)
@@ -6313,6 +6431,16 @@
 			(type default)
 		)
 		(uuid "8804eac3-d69a-4c35-a5a0-adae4628ad90")
+	)
+	(wire
+		(pts
+			(xy 34.29 151.13) (xy 36.83 151.13)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "882f76e6-d6f4-465c-9744-69257acb0d38")
 	)
 	(wire
 		(pts
@@ -6556,7 +6684,7 @@
 	)
 	(wire
 		(pts
-			(xy 36.83 139.7) (xy 36.83 147.32)
+			(xy 36.83 139.7) (xy 36.83 143.51)
 		)
 		(stroke
 			(width 0)
@@ -6573,6 +6701,16 @@
 			(type default)
 		)
 		(uuid "9e7c7f81-74d6-49e3-85d4-b6cd24e00198")
+	)
+	(wire
+		(pts
+			(xy 34.29 143.51) (xy 36.83 143.51)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9eef0458-aa66-4636-9d10-cca945084ccf")
 	)
 	(wire
 		(pts
@@ -6643,6 +6781,16 @@
 			(type default)
 		)
 		(uuid "a6bc524b-7320-4708-89e2-09cce1ebea5d")
+	)
+	(wire
+		(pts
+			(xy 36.83 143.51) (xy 36.83 147.32)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a797c982-56b8-413c-abe6-2fe0dd0f7604")
 	)
 	(wire
 		(pts
@@ -6853,6 +7001,16 @@
 			(type default)
 		)
 		(uuid "bc9cd241-6fcf-477d-8039-f6fdd78b1645")
+	)
+	(wire
+		(pts
+			(xy 34.29 166.37) (xy 36.83 166.37)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bcbd133c-bfeb-4b77-841d-0ea929eb30cb")
 	)
 	(wire
 		(pts
@@ -7236,6 +7394,16 @@
 	)
 	(wire
 		(pts
+			(xy 36.83 166.37) (xy 36.83 170.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dd725b64-d337-4546-8090-53bf1177feb7")
+	)
+	(wire
+		(pts
 			(xy 134.62 63.5) (xy 134.62 64.77)
 		)
 		(stroke
@@ -7396,7 +7564,7 @@
 	)
 	(wire
 		(pts
-			(xy 36.83 162.56) (xy 36.83 170.18)
+			(xy 36.83 162.56) (xy 36.83 166.37)
 		)
 		(stroke
 			(width 0)
@@ -8389,6 +8557,75 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "R8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:LED")
+		(at 30.48 151.13 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "139d3381-b657-4164-96d3-659fab1d98c1")
+		(property "Reference" "D17"
+			(at 26.924 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "LED Fire2"
+			(at 30.48 147.32 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
+			(at 30.48 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 30.48 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Light emitting diode"
+			(at 30.48 151.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "14c93757-7747-489d-9cd8-6a549fb4a128")
+		)
+		(pin "1"
+			(uuid "4ba25695-5081-489c-aa39-1e47d52cc491")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "D17")
 					(unit 1)
 				)
 			)
@@ -10601,7 +10838,7 @@
 		(dnp no)
 		(uuid "5c82b635-c2f8-4ea6-a441-48459c43ccfe")
 		(property "Reference" "D12"
-			(at 27.432 138.176 0)
+			(at 26.924 141.478 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10614,6 +10851,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
@@ -11900,7 +12138,7 @@
 		(dnp no)
 		(uuid "7a206e31-a454-4bdd-a8c7-083c5cebd79d")
 		(property "Reference" "D14"
-			(at 27.432 153.416 0)
+			(at 26.924 156.464 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11913,6 +12151,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
@@ -12507,6 +12746,75 @@
 	)
 	(symbol
 		(lib_id "Device:LED")
+		(at 30.48 158.75 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "824e1eb9-70cc-4686-ab69-0efb15218232")
+		(property "Reference" "D18"
+			(at 26.924 160.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "LED Fire3"
+			(at 30.48 154.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
+			(at 30.48 158.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 30.48 158.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Light emitting diode"
+			(at 30.48 158.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "6e89c514-b0ea-4b56-b7c5-e80b55ce931a")
+		)
+		(pin "1"
+			(uuid "86cb45a5-36d9-4c25-b943-12e44d9d34c1")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "D18")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:LED")
 		(at 30.48 147.32 0)
 		(mirror y)
 		(unit 1)
@@ -12516,7 +12824,7 @@
 		(dnp no)
 		(uuid "8532d91f-5caa-4c2c-b9ba-633aa7784f3e")
 		(property "Reference" "D13"
-			(at 27.432 145.796 0)
+			(at 26.924 149.098 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12529,6 +12837,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
@@ -14197,6 +14506,75 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:LED")
+		(at 30.48 166.37 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c393a521-2bcf-4ec1-90c3-e79da1f83c95")
+		(property "Reference" "D19"
+			(at 26.67 167.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "LED Fire4"
+			(at 20.828 164.338 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
+			(at 30.48 166.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 30.48 166.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Light emitting diode"
+			(at 30.48 166.37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "d52064e8-23fb-4311-a7d7-ec03563815df")
+		)
+		(pin "1"
+			(uuid "a2b0baff-818a-4441-bfce-dd801552918c")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "D19")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R")
 		(at 144.78 106.68 180)
 		(unit 1)
@@ -15354,7 +15732,7 @@
 		(dnp no)
 		(uuid "e8cace55-eaa5-40f4-a7af-4e19fe396223")
 		(property "Reference" "D15"
-			(at 27.432 161.036 0)
+			(at 26.67 164.084 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15367,6 +15745,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
@@ -16157,6 +16536,75 @@
 			(project ""
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "U3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:LED")
+		(at 30.48 143.51 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ff3450a0-7dcd-4345-ab79-52078207d7b6")
+		(property "Reference" "D16"
+			(at 26.924 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "LED Fire1"
+			(at 30.48 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" "LED_SMD:LED_1206_3216Metric"
+			(at 30.48 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 30.48 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Light emitting diode"
+			(at 30.48 143.51 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "f0e4fa40-3372-4fc4-8411-2452fbf46576")
+		)
+		(pin "1"
+			(uuid "7ce983d7-4b21-4016-ae67-47c5615252d2")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "D16")
 					(unit 1)
 				)
 			)
