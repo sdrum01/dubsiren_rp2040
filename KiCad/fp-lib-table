@@ -5,4 +5,5 @@
   (lib (name "RPI_pico_Module")(type "KiCad")(uri "${KICAD6_3RD_PARTY}/Footprint/RPI_pico_Module.pretty")(options "")(descr "")(disabled))
   (lib (name "PT2399_modul")(type "KiCad")(uri "${KIPRJMOD}/lib/PT2399/PT2399_modul.pretty")(options "")(descr ""))
   (lib (name "MCU_RaspberryPi_and_Boards")(type "KiCad")(uri "${KIPRJMOD}/lib/RP-Pico Libraries/MCU_RaspberryPi_and_Boards.pretty")(options "")(descr ""))
+  (lib (name "switches")(type "KiCad")(uri "${KIPRJMOD}/switches.pretty")(options "")(descr ""))
 )
