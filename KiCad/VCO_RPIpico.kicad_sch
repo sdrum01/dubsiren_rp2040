@@ -1071,22 +1071,22 @@
 				)
 			)
 		)
-		(symbol "Device:R_Potentiometer"
+		(symbol "Device:R_Potentiometer_MountingPin"
 			(pin_names
 				(offset 1.016) hide)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
 			(property "Reference" "RV"
-				(at -4.445 0 90)
+				(at -8.255 0 90)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
 				)
 			)
-			(property "Value" "R_Potentiometer"
-				(at -2.54 0 90)
+			(property "Value" "R_Potentiometer_MountingPin"
+				(at -6.35 0 90)
 				(effects
 					(font
 						(size 1.27 1.27)
@@ -1111,7 +1111,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" "Potentiometer"
+			(property "Description" "Potentiometer with a mounting pin"
 				(at 0 0 0)
 				(effects
 					(font
@@ -1138,7 +1138,7 @@
 					(hide yes)
 				)
 			)
-			(symbol "R_Potentiometer_0_1"
+			(symbol "R_Potentiometer_MountingPin_0_1"
 				(polyline
 					(pts
 						(xy 2.54 0) (xy 1.524 0)
@@ -1153,7 +1153,7 @@
 				)
 				(polyline
 					(pts
-						(xy 1.143 0) (xy 2.286 0.508) (xy 2.286 -0.508) (xy 1.143 0)
+						(xy 1.143 0) (xy 2.286 0.508) (xy 2.286 -0.508)
 					)
 					(stroke
 						(width 0)
@@ -1175,7 +1175,27 @@
 					)
 				)
 			)
-			(symbol "R_Potentiometer_1_1"
+			(symbol "R_Potentiometer_MountingPin_1_1"
+				(polyline
+					(pts
+						(xy -2.032 1.016) (xy -2.032 -1.016)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(text "Mounting"
+					(at -1.651 0 900)
+					(effects
+						(font
+							(size 0.381 0.381)
+						)
+					)
+				)
 				(pin passive line
 					(at 0 3.81 270)
 					(length 1.27)
@@ -1223,6 +1243,24 @@
 						)
 					)
 					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.048)
+					(name "MountPin"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "MP"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4726,6 +4764,12 @@
 		(uuid "49562c56-0815-4a0e-8c58-44b9faf34fb5")
 	)
 	(junction
+		(at 254 55.88)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4a87a48e-06c8-407e-87e1-047ce62db2b9")
+	)
+	(junction
 		(at 68.58 39.37)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4804,10 +4848,22 @@
 		(uuid "79f1c50c-d03c-4ecc-95ae-0632da19c5dd")
 	)
 	(junction
+		(at 116.84 53.34)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "819e4017-cb36-4183-83c9-07b74fffe457")
+	)
+	(junction
 		(at 46.99 30.48)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "840af751-373c-4a23-addf-34038246bab8")
+	)
+	(junction
+		(at 113.03 53.34)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "9a28795d-da49-4c83-8f7e-b8660998bd17")
 	)
 	(junction
 		(at 77.47 30.48)
@@ -4826,12 +4882,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "9b6baf92-4518-4951-a015-98fe5f7cda77")
-	)
-	(junction
-		(at 254 55.88)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "9fbbc516-2aff-4304-a3e0-f0f18e644d42")
 	)
 	(junction
 		(at 99.06 45.72)
@@ -4936,6 +4986,12 @@
 		(uuid "c8b2b33e-8379-4e02-9fd1-0c87ddc494ff")
 	)
 	(junction
+		(at 236.22 59.69)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "ccd9e1c4-bf7f-4d42-a1e3-99cdc31f07e7")
+	)
+	(junction
 		(at 218.44 121.92)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4976,12 +5032,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "e2f34099-03b4-4c26-994b-a8761d5a8cba")
-	)
-	(junction
-		(at 116.84 50.8)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "e9adb462-cb64-484a-8b17-b45940050ed2")
 	)
 	(junction
 		(at 36.83 162.56)
@@ -5109,7 +5159,7 @@
 	)
 	(wire
 		(pts
-			(xy 144.78 110.49) (xy 144.78 114.3)
+			(xy 144.78 111.76) (xy 144.78 114.3)
 		)
 		(stroke
 			(width 0)
@@ -5126,6 +5176,16 @@
 			(type default)
 		)
 		(uuid "0879aca1-3573-414e-ab72-12ab1bb4c989")
+	)
+	(wire
+		(pts
+			(xy 116.84 52.07) (xy 116.84 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "08b49f9a-391e-4d33-8867-381e022256ed")
 	)
 	(wire
 		(pts
@@ -5209,6 +5269,16 @@
 	)
 	(wire
 		(pts
+			(xy 248.92 52.07) (xy 248.92 55.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0f37be4b-c216-4ecd-ace0-9c094047aa33")
+	)
+	(wire
+		(pts
 			(xy 128.27 134.62) (xy 138.43 134.62)
 		)
 		(stroke
@@ -5229,7 +5299,7 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 50.8) (xy 105.41 50.8)
+			(xy 116.84 53.34) (xy 113.03 53.34)
 		)
 		(stroke
 			(width 0)
@@ -5609,7 +5679,7 @@
 	)
 	(wire
 		(pts
-			(xy 172.72 110.49) (xy 172.72 119.38)
+			(xy 172.72 111.76) (xy 172.72 119.38)
 		)
 		(stroke
 			(width 0)
@@ -5769,7 +5839,7 @@
 	)
 	(wire
 		(pts
-			(xy 158.75 110.49) (xy 158.75 116.84)
+			(xy 158.75 111.76) (xy 158.75 116.84)
 		)
 		(stroke
 			(width 0)
@@ -6139,6 +6209,16 @@
 	)
 	(wire
 		(pts
+			(xy 172.72 91.44) (xy 172.72 92.71)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5ff5ac6a-e7d3-4a96-aca5-797a2aba645e")
+	)
+	(wire
+		(pts
 			(xy 26.67 154.94) (xy 26.67 158.75)
 		)
 		(stroke
@@ -6186,16 +6266,6 @@
 			(type default)
 		)
 		(uuid "643e27b7-867c-4efc-861c-a9b54deb6139")
-	)
-	(wire
-		(pts
-			(xy 128.27 45.72) (xy 139.7 45.72)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "644f8605-90a0-457c-8005-dcc6ae66b2fa")
 	)
 	(wire
 		(pts
@@ -6479,6 +6549,26 @@
 	)
 	(wire
 		(pts
+			(xy 231.14 55.88) (xy 231.14 59.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7cf46cb9-d2cf-4936-9dcd-9fc9311cb477")
+	)
+	(wire
+		(pts
+			(xy 113.03 53.34) (xy 105.41 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7e3e9626-baf6-44c4-b888-0d7e251ee1bc")
+	)
+	(wire
+		(pts
 			(xy 128.27 137.16) (xy 138.43 137.16)
 		)
 		(stroke
@@ -6489,7 +6579,7 @@
 	)
 	(wire
 		(pts
-			(xy 105.41 50.8) (xy 105.41 52.07)
+			(xy 105.41 53.34) (xy 105.41 54.61)
 		)
 		(stroke
 			(width 0)
@@ -6616,6 +6706,16 @@
 			(type default)
 		)
 		(uuid "89ba8794-9f9d-425e-8588-55f7ad329b15")
+	)
+	(wire
+		(pts
+			(xy 124.46 50.8) (xy 124.46 52.07)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8a9badc1-8b80-4278-adeb-90828729057d")
 	)
 	(wire
 		(pts
@@ -6919,6 +7019,16 @@
 	)
 	(wire
 		(pts
+			(xy 248.92 55.88) (xy 254 55.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a45824f6-3b90-4204-bc13-eb6c65f7ef6b")
+	)
+	(wire
+		(pts
 			(xy 166.37 119.38) (xy 172.72 119.38)
 		)
 		(stroke
@@ -6939,7 +7049,7 @@
 	)
 	(wire
 		(pts
-			(xy 116.84 54.61) (xy 116.84 50.8)
+			(xy 116.84 55.88) (xy 116.84 53.34)
 		)
 		(stroke
 			(width 0)
@@ -7159,6 +7269,16 @@
 	)
 	(wire
 		(pts
+			(xy 144.78 91.44) (xy 144.78 92.71)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bcf3745b-55cd-489b-84c1-b9a7624ed4ea")
+	)
+	(wire
+		(pts
 			(xy 173.99 53.34) (xy 173.99 54.61)
 		)
 		(stroke
@@ -7236,6 +7356,16 @@
 			(type default)
 		)
 		(uuid "c2787470-2041-4b10-8d7b-36e85d134158")
+	)
+	(wire
+		(pts
+			(xy 137.16 45.72) (xy 139.7 45.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c2ef5c71-4ebb-4ad1-8e19-d9336fa11c8e")
 	)
 	(wire
 		(pts
@@ -7359,13 +7489,23 @@
 	)
 	(wire
 		(pts
-			(xy 172.72 102.87) (xy 172.72 101.6)
+			(xy 172.72 104.14) (xy 172.72 101.6)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "ccbe7e83-7240-4dbf-8fdb-4e0bc30afca2")
+	)
+	(wire
+		(pts
+			(xy 231.14 59.69) (xy 236.22 59.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cd898538-b1b6-491c-bdfa-4fc04764985a")
 	)
 	(wire
 		(pts
@@ -7399,6 +7539,16 @@
 	)
 	(wire
 		(pts
+			(xy 158.75 91.44) (xy 158.75 92.71)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d24937a6-36e8-4ee6-b1ac-e6c204c4dda4")
+	)
+	(wire
+		(pts
 			(xy 36.83 162.56) (xy 39.37 162.56)
 		)
 		(stroke
@@ -7419,7 +7569,7 @@
 	)
 	(wire
 		(pts
-			(xy 158.75 102.87) (xy 158.75 101.6)
+			(xy 158.75 104.14) (xy 158.75 101.6)
 		)
 		(stroke
 			(width 0)
@@ -7496,6 +7646,16 @@
 			(type default)
 		)
 		(uuid "d7fbb8f3-afa7-4909-ba90-b318263bd82f")
+	)
+	(wire
+		(pts
+			(xy 144.78 101.6) (xy 144.78 104.14)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d865bca5-eb81-4b7c-937e-ec752c66ade5")
 	)
 	(wire
 		(pts
@@ -7629,16 +7789,6 @@
 	)
 	(wire
 		(pts
-			(xy 144.78 102.87) (xy 144.78 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e340a6c0-0d02-436e-803f-7f744f489461")
-	)
-	(wire
-		(pts
 			(xy 45.72 30.48) (xy 46.99 30.48)
 		)
 		(stroke
@@ -7669,7 +7819,7 @@
 	)
 	(wire
 		(pts
-			(xy 120.65 54.61) (xy 116.84 54.61)
+			(xy 120.65 55.88) (xy 116.84 55.88)
 		)
 		(stroke
 			(width 0)
@@ -7749,6 +7899,16 @@
 	)
 	(wire
 		(pts
+			(xy 113.03 46.99) (xy 113.03 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "eff1e84f-075a-4886-a20a-633661527444")
+	)
+	(wire
+		(pts
 			(xy 218.44 107.95) (xy 224.79 107.95)
 		)
 		(stroke
@@ -7756,6 +7916,16 @@
 			(type default)
 		)
 		(uuid "f0e58e98-9fcd-424d-b6d6-3482b66df9a2")
+	)
+	(wire
+		(pts
+			(xy 120.65 46.99) (xy 113.03 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f17f9dbe-1310-418c-b5ca-1dff3dfbb6c3")
 	)
 	(wire
 		(pts
@@ -7879,7 +8049,7 @@
 	)
 	(text "Freq"
 		(exclude_from_sim no)
-		(at 158.75 91.44 0)
+		(at 153.67 90.17 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7889,7 +8059,7 @@
 	)
 	(text "Poti Echo Frequence"
 		(exclude_from_sim no)
-		(at 113.03 57.15 0)
+		(at 113.03 59.69 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7899,7 +8069,7 @@
 	)
 	(text "Tune"
 		(exclude_from_sim no)
-		(at 181.61 91.44 0)
+		(at 167.64 90.17 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7919,7 +8089,7 @@
 	)
 	(text "Amount"
 		(exclude_from_sim no)
-		(at 144.78 91.44 0)
+		(at 139.7 90.17 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -8311,6 +8481,80 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "R11")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Potentiometer_MountingPin")
+		(at 158.75 97.79 90)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "093e10d7-589b-4cdf-9de0-b821afa9f091")
+		(property "Reference" "R14"
+			(at 161.29 100.33 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100k"
+			(at 162.56 95.25 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK09K_Single_Vertical"
+			(at 158.75 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 158.75 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Potentiometer with a mounting pin"
+			(at 158.75 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "a5f592ac-9d27-41ac-b106-e6805df7e4e8")
+		)
+		(pin "2"
+			(uuid "d7042460-3af4-45bd-9701-22d1b97b4092")
+		)
+		(pin "3"
+			(uuid "f57d2d44-ddf9-407a-9503-1650c360ed8b")
+		)
+		(pin "MP"
+			(uuid "9d66001c-25d5-4f73-97b4-164f21da174c")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "R14")
 					(unit 1)
 				)
 			)
@@ -8712,6 +8956,80 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "R8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Potentiometer_MountingPin")
+		(at 236.22 55.88 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "124feae5-8618-45eb-a4b7-3558aecb905b")
+		(property "Reference" "RV5"
+			(at 238.76 53.34 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100k"
+			(at 236.22 55.88 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK09K_Single_Vertical"
+			(at 236.22 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 236.22 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Potentiometer with a mounting pin"
+			(at 236.22 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "848e18a5-38e8-4d47-8e28-2a05f3e9af95")
+		)
+		(pin "2"
+			(uuid "47e0d4b1-8419-46d7-9966-0edbc3cedf45")
+		)
+		(pin "3"
+			(uuid "4dea2284-68f4-4c14-a4ae-6b9c9d4b87c7")
+		)
+		(pin "MP"
+			(uuid "a48afaf7-76ce-432c-93d9-29a30aa0b1b9")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "RV5")
 					(unit 1)
 				)
 			)
@@ -9251,6 +9569,71 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GNDA")
+		(at 144.78 91.44 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "23b9e3e9-43aa-4814-9965-1c7df2ca8201")
+		(property "Reference" "#PWR026"
+			(at 144.78 85.09 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GNDA"
+			(at 144.526 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 144.78 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 144.78 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GNDA\" , analog ground"
+			(at 144.78 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ee974635-5562-4726-af88-67423b4fa65c")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "#PWR026")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C")
 		(at 77.47 34.29 0)
 		(unit 1)
@@ -9456,7 +9839,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 172.72 106.68 180)
+		(at 172.72 107.95 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -9464,7 +9847,7 @@
 		(dnp no)
 		(uuid "27c311bc-9a4b-412f-9004-3dfcb91eb649")
 		(property "Reference" "R6"
-			(at 170.18 106.68 90)
+			(at 170.18 107.95 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9472,7 +9855,7 @@
 			)
 		)
 		(property "Value" "1k"
-			(at 172.72 106.68 90)
+			(at 172.72 107.95 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9480,7 +9863,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_1206_3216Metric"
-			(at 174.498 106.68 90)
+			(at 174.498 107.95 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9489,7 +9872,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 172.72 106.68 0)
+			(at 172.72 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9498,7 +9881,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 172.72 106.68 0)
+			(at 172.72 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9523,7 +9906,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 128.27 45.72 0)
+		(at 137.16 45.72 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -9531,7 +9914,7 @@
 		(dnp no)
 		(uuid "2a431527-1126-4e5d-908f-db1430d5113e")
 		(property "Reference" "#PWR024"
-			(at 128.27 52.07 0)
+			(at 137.16 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9540,7 +9923,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 130.81 44.45 0)
+			(at 139.7 44.45 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9548,7 +9931,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 128.27 45.72 0)
+			(at 137.16 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9557,7 +9940,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 128.27 45.72 0)
+			(at 137.16 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9566,7 +9949,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 128.27 45.72 0)
+			(at 137.16 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9801,7 +10184,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 158.75 106.68 180)
+		(at 158.75 107.95 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -9809,7 +10192,7 @@
 		(dnp no)
 		(uuid "3f4cef4c-869e-4340-a74e-d71ad6416f19")
 		(property "Reference" "R5"
-			(at 156.21 106.68 90)
+			(at 156.21 107.95 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9817,7 +10200,7 @@
 			)
 		)
 		(property "Value" "1k"
-			(at 158.75 106.68 90)
+			(at 158.75 107.95 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9825,7 +10208,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_1206_3216Metric"
-			(at 160.528 106.68 90)
+			(at 160.528 107.95 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9834,7 +10217,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 158.75 106.68 0)
+			(at 158.75 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9843,7 +10226,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 158.75 106.68 0)
+			(at 158.75 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10502,35 +10885,33 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Potentiometer")
-		(at 172.72 97.79 90)
+		(lib_id "Device:R_Potentiometer_MountingPin")
+		(at 120.65 52.07 90)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "54d5493c-eda9-4222-85b4-67f0ceb9f630")
-		(property "Reference" "R15"
-			(at 170.18 95.25 90)
+		(uuid "5469f395-e629-4714-8ef0-fc5ee6e1b54e")
+		(property "Reference" "RV4"
+			(at 123.19 54.61 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
 			)
 		)
 		(property "Value" "100k"
-			(at 170.18 97.79 90)
+			(at 120.65 52.07 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
 			)
 		)
 		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK09K_Single_Vertical"
-			(at 172.72 97.79 0)
+			(at 120.65 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10539,7 +10920,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 172.72 97.79 0)
+			(at 120.65 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10547,8 +10928,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 172.72 97.79 0)
+		(property "Description" "Potentiometer with a mounting pin"
+			(at 120.65 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10557,18 +10938,21 @@
 			)
 		)
 		(pin "1"
-			(uuid "3fa7048b-971e-423a-a00a-030a76aff101")
+			(uuid "4d97f587-473d-411c-b290-8f41fe7d1af8")
 		)
 		(pin "2"
-			(uuid "0eab68b3-4796-4917-a33d-f226f8a40ee5")
+			(uuid "5e13d657-ed44-41b9-9e0b-85a4799ef867")
 		)
 		(pin "3"
-			(uuid "86e6a756-75db-4014-8795-44af12573f79")
+			(uuid "c64991fe-0972-4e3d-a8c4-d1e039d802af")
+		)
+		(pin "MP"
+			(uuid "9285acd4-93fb-4ff6-a180-9f183b50fe24")
 		)
 		(instances
-			(project ""
+			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "R15")
+					(reference "RV4")
 					(unit 1)
 				)
 			)
@@ -11323,6 +11707,71 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GNDA")
+		(at 172.72 91.44 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5eedf09f-45a9-4da3-a288-41a66e2b9ee6")
+		(property "Reference" "#PWR036"
+			(at 172.72 85.09 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GNDA"
+			(at 172.466 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 172.72 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 172.72 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GNDA\" , analog ground"
+			(at 172.72 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d8c8c6de-256d-44d6-a6a1-7fb93056ae06")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "#PWR036")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C")
 		(at 137.16 59.69 0)
 		(unit 1)
@@ -11453,6 +11902,71 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "R21")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GNDA")
+		(at 158.75 91.44 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "621d2147-db00-44ca-b7c0-394e3ce201d8")
+		(property "Reference" "#PWR035"
+			(at 158.75 85.09 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GNDA"
+			(at 158.496 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 158.75 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 158.75 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GNDA\" , analog ground"
+			(at 158.75 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "04d49b8f-f2f8-436f-88e9-b3a4460d9291")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "#PWR035")
 					(unit 1)
 				)
 			)
@@ -12235,7 +12749,7 @@
 				)
 			)
 		)
-		(property "Value" "AudioJack2"
+		(property "Value" "AudioJack"
 			(at 268.986 59.69 0)
 			(effects
 				(font
@@ -12414,79 +12928,6 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "D14")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_Potentiometer")
-		(at 254 52.07 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "7b49800a-736c-47d8-b74e-7579be411818")
-		(property "Reference" "RV6"
-			(at 251.46 53.34 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "50k"
-			(at 254 54.61 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK09K_Single_Vertical"
-			(at 254 52.07 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 254 52.07 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 254 52.07 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "1f88e712-60d6-4ece-9852-5fdc442f7b40")
-		)
-		(pin "2"
-			(uuid "85381251-52bf-4e05-b36c-a574fb02d2c7")
-		)
-		(pin "3"
-			(uuid "26dc2e84-65ba-443d-9f59-ea54a738e02a")
-		)
-		(instances
-			(project "VCO_RPIpico"
-				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "RV6")
 					(unit 1)
 				)
 			)
@@ -12755,79 +13196,6 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "D2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_Potentiometer")
-		(at 236.22 55.88 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "801c40e9-bad8-44df-8c4f-850e93da2fc2")
-		(property "Reference" "RV5"
-			(at 233.68 57.15 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "50k"
-			(at 236.22 58.42 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK09K_Single_Vertical"
-			(at 236.22 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 236.22 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 236.22 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "6e35674b-15bf-44a0-be90-5076ab1e189f")
-		)
-		(pin "2"
-			(uuid "988f98d6-4318-41b9-9109-0a1ad1bb60f7")
-		)
-		(pin "3"
-			(uuid "b91a3ae9-5cd5-438d-b65e-db437eb0fe50")
-		)
-		(instances
-			(project "VCO_RPIpico"
-				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "RV5")
 					(unit 1)
 				)
 			)
@@ -13237,79 +13605,6 @@
 			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "SW2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_Potentiometer")
-		(at 158.75 97.79 90)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "8ce9ffa3-3f56-4a2c-b34c-14ff58f765b3")
-		(property "Reference" "R14"
-			(at 156.21 95.25 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "100k"
-			(at 156.21 97.79 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK09K_Single_Vertical"
-			(at 158.75 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 158.75 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 158.75 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "80d1697f-24d3-4a3a-9f79-0ba35cc9197e")
-		)
-		(pin "2"
-			(uuid "c27f1a31-1812-4652-b274-1c51926fa068")
-		)
-		(pin "3"
-			(uuid "1a1ed4a7-66e1-41b1-82bf-2038f0b788cf")
-		)
-		(instances
-			(project ""
-				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "R14")
 					(unit 1)
 				)
 			)
@@ -14063,7 +14358,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 105.41 52.07 0)
+		(at 105.41 54.61 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -14071,7 +14366,7 @@
 		(dnp no)
 		(uuid "ad3869ed-3441-4fe4-b08a-7e065dd09e0a")
 		(property "Reference" "#PWR032"
-			(at 105.41 58.42 0)
+			(at 105.41 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14080,7 +14375,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 106.68 49.53 0)
+			(at 106.68 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14088,7 +14383,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 105.41 52.07 0)
+			(at 105.41 54.61 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14097,7 +14392,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 105.41 52.07 0)
+			(at 105.41 54.61 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14106,7 +14401,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 105.41 52.07 0)
+			(at 105.41 54.61 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14799,7 +15094,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 144.78 106.68 180)
+		(at 144.78 107.95 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -14807,7 +15102,7 @@
 		(dnp no)
 		(uuid "c3db570e-437c-462e-b428-ed9a21d2ec6d")
 		(property "Reference" "R4"
-			(at 142.24 106.68 90)
+			(at 142.24 107.95 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14815,7 +15110,7 @@
 			)
 		)
 		(property "Value" "1k"
-			(at 144.78 106.68 90)
+			(at 144.78 107.95 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14823,7 +15118,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_1206_3216Metric"
-			(at 146.558 106.68 90)
+			(at 146.558 107.95 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14832,7 +15127,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 144.78 106.68 0)
+			(at 144.78 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14841,7 +15136,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 144.78 106.68 0)
+			(at 144.78 107.95 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15467,6 +15762,80 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:R_Potentiometer_MountingPin")
+		(at 172.72 97.79 90)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d785b89d-41b9-4ca7-8124-fee44a805d8e")
+		(property "Reference" "R15"
+			(at 175.26 100.33 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100k"
+			(at 176.53 95.25 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK09K_Single_Vertical"
+			(at 172.72 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 172.72 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Potentiometer with a mounting pin"
+			(at 172.72 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "9cccd36a-997c-4a14-9540-d836d2d391d7")
+		)
+		(pin "2"
+			(uuid "d0bac639-e062-44fa-afde-f4c253fb5adf")
+		)
+		(pin "3"
+			(uuid "b73e8ec1-2fc4-41cd-9266-7a5bc717b843")
+		)
+		(pin "MP"
+			(uuid "7eb23421-9878-4855-8bc5-846600b40925")
+		)
+		(instances
+			(project "VCO_RPIpico"
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "R15")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GNDA")
 		(at 177.8 100.33 0)
 		(unit 1)
@@ -15872,79 +16241,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Potentiometer")
-		(at 120.65 50.8 90)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "e851004c-fdee-47a1-b01e-f5aa11dfe3c4")
-		(property "Reference" "RV4"
-			(at 118.11 48.26 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "100k"
-			(at 118.11 50.8 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK09K_Single_Vertical"
-			(at 120.65 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 120.65 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 120.65 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "de75f92d-d15e-4edb-88bd-962a4a075e19")
-		)
-		(pin "2"
-			(uuid "4d90a6a2-0286-49e8-981d-94b031322de3")
-		)
-		(pin "3"
-			(uuid "00ef6b39-d91a-4065-b85f-fa516725136a")
-		)
-		(instances
-			(project "VCO_RPIpico"
-				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "RV4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:LED")
 		(at 30.48 162.56 0)
 		(mirror y)
@@ -16079,35 +16375,33 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:R_Potentiometer")
-		(at 144.78 97.79 90)
+		(lib_id "Device:R_Potentiometer_MountingPin")
+		(at 254 52.07 0)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(uuid "ec73e956-7cf2-40c2-9f49-08904a64772e")
-		(property "Reference" "R13"
-			(at 142.24 95.25 90)
+		(uuid "ebab8919-7b19-40c4-8248-54149f0fda57")
+		(property "Reference" "RV6"
+			(at 256.54 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
 			)
 		)
 		(property "Value" "100k"
-			(at 142.24 97.79 90)
+			(at 254 52.07 90)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify right)
 			)
 		)
 		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK09K_Single_Vertical"
-			(at 144.78 97.79 0)
+			(at 254 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16116,7 +16410,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 144.78 97.79 0)
+			(at 254 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16124,8 +16418,8 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
-			(at 144.78 97.79 0)
+		(property "Description" "Potentiometer with a mounting pin"
+			(at 254 52.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16134,18 +16428,21 @@
 			)
 		)
 		(pin "1"
-			(uuid "c8faeb5d-cc5f-49f8-ac92-28a99646e66b")
+			(uuid "01f9c176-c857-4f87-b96a-4df25264979b")
 		)
 		(pin "2"
-			(uuid "aef32fbf-1bac-4a3c-9058-8b7fee1228e8")
+			(uuid "0d30b652-19db-45d4-8175-776f8407c5fb")
 		)
 		(pin "3"
-			(uuid "6efb304a-488a-4d51-b1cd-764c7b8d8018")
+			(uuid "c9c42be4-fa9f-467d-acc1-ffd7cd42c64e")
+		)
+		(pin "MP"
+			(uuid "9f6c286d-1d9d-4c05-8783-662f02269f7b")
 		)
 		(instances
-			(project ""
+			(project "VCO_RPIpico"
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
-					(reference "R13")
+					(reference "RV6")
 					(unit 1)
 				)
 			)
@@ -16414,6 +16711,80 @@
 			(project ""
 				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
 					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Potentiometer_MountingPin")
+		(at 144.78 97.79 90)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f4ebb1cb-7afb-4343-840e-3141cd3705c5")
+		(property "Reference" "R13"
+			(at 147.32 100.33 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100k"
+			(at 148.59 95.25 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Potentiometer_THT:Potentiometer_Alps_RK09K_Single_Vertical"
+			(at 144.78 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 144.78 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Potentiometer with a mounting pin"
+			(at 144.78 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e17d0003-46e7-4c7d-842f-bea18a77635b")
+		)
+		(pin "2"
+			(uuid "2f76a84e-a8e6-4101-ab25-1a88668c2105")
+		)
+		(pin "3"
+			(uuid "60d9a4b1-3594-41f7-9f09-edbd7563a548")
+		)
+		(pin "MP"
+			(uuid "85a27936-9a15-41c2-b17c-7f3794c2c746")
+		)
+		(instances
+			(project ""
+				(path "/0d855e99-162c-4989-8fe3-f98154ec6843"
+					(reference "R13")
 					(unit 1)
 				)
 			)
