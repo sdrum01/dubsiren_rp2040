@@ -5,7 +5,9 @@
 #include "Bounce2.h"
 #include "ArduinoJson.h"
 
-#define LONG_PRESS_DURATION 3000
+
+
+// #define LONG_PRESS_DURATION 3000
 
 const byte LOGLEVEL = 1;
 
@@ -130,6 +132,11 @@ float envelopeAmplitude = 0;
 
 float duty = 50;
 
+// die aktuellen Werte für Envelope und LFO
+float envelope = 1;
+float lfo1ValueActual = 1;
+float lfo2ValueActual = 1;
+
 // die finale LFO WaveForm Variable, die durch Schalter oder Speicher gesetzt wird
 enum eLfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
 eLfoWaveform lfo1Waveform = TRIANGLE;  //
@@ -140,13 +147,13 @@ bool dataSaved = false;
 
 // globale Variablen, die der LFO und envelope zurückgibt
 
-volatile float lfoValue = 0;
+volatile float lfo1Value = 0;
 volatile float lfo2Value = 0;
 volatile float envelopeValue = 1;
 volatile int lfo1Direction = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
 volatile int lfo2Direction = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
 
-volatile unsigned long previousMillis = 0;
+volatile unsigned long previousMillisLFO1 = 0;
 volatile unsigned long previousMillisLFO2 = 0;
 volatile unsigned long previousMillisEnv = 0;
 volatile unsigned long previousMillisLED = 0;
@@ -155,13 +162,6 @@ volatile unsigned long previousMillisLED = 0;
 volatile float lfovalue_finalLFO1 = 0;
 volatile float lfovalue_finalLFO2 = 0;
 
-/*
-// Messwerte runden
-const int numReadings = 10;
-int pitchReadings[numReadings];
-int pitchReadIndex = 0;
-int pitchTotal = 0;
-*/
 
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
@@ -202,13 +202,11 @@ int valPotiPitchBak = 0;
 int valPotiFreqLFOBak = 0;
 int valPotiAmpLFOBak = 0;
 
-
 bool retriggerLFO2 = false;
 
+//  Flags zum ein/Ausschalten von diversen Optionen
 
-
-//  Flags, wenn es an den Potis gewackelt hat
-// byte potisChanged = 0b0000000;  // binär 00000000
+byte optionFlags = 0b0000000;  // binär x,x,x,x,x,x,x,Retrigger LFO2
 
 // wie viel Prozent darf sich das Poti ändern, bis ein wert als Change gilt?
 const int potiTolerance = 10;
@@ -220,7 +218,6 @@ bool potiAmpLFOChanged = 0;
 
 // Flag, wenn es am Waveformschalter gewackelt hat
 bool lfo1WaveformChanged = 0;
-// bool lfo2WaveformChanged = 0;
 
 String debugString = "";
 
@@ -279,6 +276,7 @@ String values2JSON(){
   dataSet["waveform"]  = lfo1Waveform;
   dataSet["waveform2"]  = lfo2Waveform;
   dataSet["dutyCycle"]  = duty;
+  dataSet["optionFlags"]  = optionFlags;
 
   // Erstelle einen JSON-String
   String jsonString;
@@ -326,6 +324,7 @@ void JSON2values(String jsonString) {
   lfo1Waveform = dataSet["waveform"];
   lfo2Waveform = dataSet["waveform2"];
   duty = dataSet["dutyCycle"];
+  optionFlags = dataSet["optionFlags"];
 }
 
 String readSettings(String configFile){
@@ -446,40 +445,39 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
   const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
   
 
-  if (currentMillis - previousMillis >= lfoPeriod / 100.0) {
-    previousMillis += lfoPeriod / 100.0;
+  if (currentMillis - previousMillisLFO1 >= lfoPeriod / 100.0) {
+    previousMillisLFO1 += lfoPeriod / 100.0;
     
     switch (lfo1Waveform) {
       case SQUARE:
         //lfo1Amplitude = lfoAmplitude / 2;
         // Dreieck ausrechnen 
-        lfoValue += schrittweite * lfo1Direction;  // 
-        if (lfoValue >= 1.0 || lfoValue <= 0.0) {
+        lfo1Value += schrittweite * lfo1Direction;  // 
+        if (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
           lfo1Direction = -lfo1Direction;  // Richtung umkehren
         }
         
         if(lfoAmplitude < 0){
-          lfovalue_finalLFO1 = (lfoValue <= 0.5) ? 0.5 : -100; // -100 = muting;
+          lfovalue_finalLFO1 = (lfo1Value <= 0.5) ? 0.5 : -100; // -100 = muting;
         } else {
-          lfovalue_finalLFO1 = (lfoValue >= 0.5) ? 1 : 0;
+          lfovalue_finalLFO1 = (lfo1Value >= 0.5) ? 1 : 0;
         }
         break;
         
       case TRIANGLE:
-        lfoValue += schrittweite * lfo1Direction;  // 
-        if (lfoValue >= 1.0 || lfoValue <= 0.0) {
+        lfo1Value += schrittweite * lfo1Direction;  // 
+        if (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
           lfo1Direction = -lfo1Direction;  // Richtung umkehren
         }
-        //lfovalue_finalLFO1 = lfoValue;
-        lfovalue_finalLFO1 = lfoValue;
+        lfovalue_finalLFO1 = lfo1Value;
         break;
         
       case SAWTOOTH:
-        lfoValue -= schrittweite / 2;  // Schrittweite für den LFO 
-        if (lfoValue <= 0) {
-          lfoValue = 1;  // Zurücksetzen
+        lfo1Value -= schrittweite / 2;  // Schrittweite für den LFO 
+        if (lfo1Value <= 0) {
+          lfo1Value = 1;  // Zurücksetzen
         }
-        lfovalue_finalLFO1 = lfoValue;
+        lfovalue_finalLFO1 = lfo1Value;
         break;
     }
   }
@@ -515,13 +513,6 @@ float calculateLFOWave2(float frequency, float amplitude) {
         if (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
           lfo2Direction = -lfo2Direction;  // Richtung umkehren
         }
-        /*
-        if(lfoAmplitude < 0){
-          lfovalue_finalLFO2 = (lfo2Value <= 0.5) ? 0.5 : -100; // -100 = muting;
-        } else {
-          lfovalue_finalLFO2 = (lfo2Value >= 0.5) ? 1 : 0;
-        }
-        */
         lfovalue_finalLFO2 = (lfo2Value >= 0.5) ? 1 : 0;
         break;
         
@@ -553,21 +544,7 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-// LFO-Variante Sinus 
-/*
-float calculateLFOSin(float baseFreq, float lfoFreq, float lfoDepth) {
-  // Berechne die aktuelle Zeit in Sekunden
-  float time = millis() / 1000.0;
 
-  // Berechne die aktuelle LFO-Phase
-  float lfoPhase = time * lfoFreq * 2 * PI;
-  
-  // debug("LFO-Phase: "+String(lfoPhase));
-
-  // Berechne die modulierte Frequenz
-  return baseFreq + lfoDepth * sin(lfoPhase);
-}
-*/
 
 float setFrequency(float freq){
   if(freq < minValMod){freq = minValMod;}
@@ -576,8 +553,6 @@ float setFrequency(float freq){
   return(2070 / (freq/1000));
   //return(1035 / (freq/1000));
 }
-
-
 
 
 // Tonerzeugung
@@ -621,15 +596,25 @@ bool chkLoop(int endCount){
   return(false);
 }
 
+// Setzt den LFO zurück, wenn in den Optionen definiert
+
 void resetLFOParams(){
   unsigned long currentMillis = millis();
-  lfoValue = 0;
+  //lfo1Value = 0;
   //lfo2Value = 0;
+  if(optionFlags & 0b00000001){
+    lfo1Value = 0;
+    lfo1Direction = 1;
+  }
+  if(optionFlags & 0b00000010){
+    lfo2Value = 0;
+    lfo2Direction = 1;
+  }
   envelopeValue = 1;
-  lfo1Direction = 1;
+  
   //lfo2Direction = 1;
   // mit dem aktualisieren der millisekunden wird die Hüllkurve und LFO neu gestartet
-  previousMillis = currentMillis;
+  previousMillisLFO1 = currentMillis;
   previousMillisLFO2 = currentMillis;
 }
 
@@ -655,7 +640,7 @@ byte combineBoolsToByte(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bo
   return result;
 }
 
-// void loadOrSave(byte fireButton,byte selectWaveformLFO){
+// läd oder speichert einen Datensatz oder macht bei Shiftstate Spezialfunktionen
 void loadOrSave(byte fireButton){
   selectedFireLed = fireButton; // LED ansteuern
   // kein LFO-Taster gedrückt
@@ -665,6 +650,11 @@ void loadOrSave(byte fireButton){
     bank = fireButton; // Bank schreiben
     selectedFireLed = bank;
     resetShiftState();
+  }else if(shiftState == 4){ // SelectLFO gehalten
+    // Maskieren des jeweiligen Bytes (entspricht dem Fire-Button)
+    uint8_t mask = 1 << fireButton -1; // wiels bei 0 losgeht und nicht bei 1
+    // Bit toggeln mit XOR
+    optionFlags ^= mask;
   }else{
     // virtuelle Taste ausrechnen 1..16
     byte buttonName = (bank * 4) - 4 + fireButton;
@@ -756,8 +746,13 @@ void updateKeys(){
   // Button Bank Select (Shift1) neg.Flanke
   if (shift1.rose()){
     if(!dataSaved){
-      modSelect = 2;
-      lfoToggleState = 0;
+      if(modSelect == 2){
+        modSelect = lfoToggleState;
+      }else{
+        modSelect = 2;
+        // lfoToggleState = 0;
+      }
+      
       setChangeState(0,0,0,0);
     }
   }
@@ -772,16 +767,22 @@ void updateKeys(){
   
 
   selectedFireLedState = 0;
-  shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),0,0,0,0,0,0);
-  //shiftStateToggle = combineBoolsToByte(lfoToggleState,shiftToggleState2,0,0,0,0,0,0);
-  if(shiftState == 1){
-    // Fire-Leds sollen blinken
+  shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),!selectWaveForm.read(),0,0,0,0,0);
+  //Shiftstate ist > 0 wenn irgendeine Shift-taste gedrückt ist, die eine 2.FUnktion während des Drückens haben soll
+  if(shiftState == 1){ 
+    // Shift 1 gedrückt: Bank wählen
     selectedFireLed = bank;
     selectedFireLedState = blinkState;
   }else if (shiftState == 2){
+    // Shift 2 (save) gedrückt: aktueller Firebutton blinkt schnell zum Anzeigen des aktuellen Speicherplatzes
     selectedFireLed = actualFireButton;
     selectedFireLedState = blinkState;
-  }else{
+  }else if (shiftState == 4){
+    // Flags für zusätzliche Optionen werden sichtbar
+    selectedFireLed = actualFireButton;
+    selectedFireLedState = blinkState;
+  } else{
+    // IDLE: nur ab und zu den aktuellen FIrebutton blitzen lassen
     selectedFireLed = actualFireButton;
     selectedFireLedState = blinkState_slow;
   }
@@ -887,12 +888,8 @@ void updateKeys(){
     (fire3.read() == LOW)||
     (fire4.read() == LOW)
   )&&(
-    shiftState != 1
+    shiftState == 0
   )&&(
-    shiftState != 2
-  )&&(
-    // selectWaveformLFO == 0 )&&(
-
     bankBak == bank
   )
 );
@@ -957,7 +954,7 @@ void blink(int interval) {
 }
 
 
-void ledControl(){
+void updateLEDs(){
   
   uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
   uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_red);
@@ -992,10 +989,20 @@ void ledControl(){
   digitalWrite(LEDWaveTri,valLfoWaveformSwitch == 1);
   digitalWrite(LEDWaveSaw,valLfoWaveformSwitch == 2);
 
-  digitalWrite(LEDFire1,selectedFireLedState && selectedFireLed == 1);
-  digitalWrite(LEDFire2,selectedFireLedState && selectedFireLed == 2);
-  digitalWrite(LEDFire3,selectedFireLedState && selectedFireLed == 3);
-  digitalWrite(LEDFire4,selectedFireLedState && selectedFireLed == 4);
+
+
+  if(shiftState == 4){
+    digitalWrite(LEDFire1,optionFlags & 0b00000001);
+    digitalWrite(LEDFire2,optionFlags & 0b00000010);
+    digitalWrite(LEDFire3,optionFlags & 0b00000100);
+    digitalWrite(LEDFire4,optionFlags & 0b00001000);
+  }else{
+    digitalWrite(LEDFire1,selectedFireLedState && selectedFireLed == 1);
+    digitalWrite(LEDFire2,selectedFireLedState && selectedFireLed == 2);
+    digitalWrite(LEDFire3,selectedFireLedState && selectedFireLed == 3);
+    digitalWrite(LEDFire4,selectedFireLedState && selectedFireLed == 4);
+  }
+  
 
 
 /*
@@ -1060,7 +1067,7 @@ void ledTimer(int interval) {
   if (currentMillis - previousMillisLEDPoll >= interval) {
     // Speichere den aktuellen Zeitpunkt als letzten Zeitstempel
     previousMillisLEDPoll = currentMillis;
-    ledControl();
+    updateLEDs();
   } 
 }
 */
@@ -1285,9 +1292,7 @@ void setup() {
 }
 
 void loop() {
-  float envelope = 1;
-  float lfo1ValueActual = 1;
-  float lfo2ValueActual = 1;
+  
   updateKeys();
   updatePotis();
   readSerial();
@@ -1364,7 +1369,7 @@ void loop() {
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
   }  else if(modSelect == 2) {
-    
+    ///////////////////////////// Envelope für Speed LFO 1 und 2 ///////////////////////////
     if(lfo1WaveformChanged){
       
       switch (valLfoWaveformSwitch) {
@@ -1422,17 +1427,14 @@ void loop() {
    // Reset LFO values if the start button is false
   // Betriebsanzeige
   blink(50);
-  
   // Create Tone
   playSound(newModulatedFrequency);
   // Control LED's
-  ledControl();
-  //ledTimer(1);
-
+  updateLEDs();
 
   // Überwachung und Debugprits
 
-  if(chkLoop(1000)){
+  if(chkLoop(4000)){
 
     // debug("DEBUGINFO: "+debugString);
     debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", lfoToggleState: "+String(lfoToggleState));
