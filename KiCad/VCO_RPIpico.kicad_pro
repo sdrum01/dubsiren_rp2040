@@ -499,7 +499,7 @@
       "plot": "production/gerber/",
       "pos_files": "",
       "specctra_dsn": "",
-      "step": "VCO_RPIpico.step",
+      "step": "VCO_RPIpico1.step",
       "svg": "",
       "vrml": ""
     },
