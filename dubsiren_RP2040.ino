@@ -600,13 +600,16 @@ bool chkLoop(int endCount){
 
 void resetLFOParams(){
   unsigned long currentMillis = millis();
-  //lfo1Value = 0;
+  lfo1Value = 0;
+  lfo1Direction = 1;
   //lfo2Value = 0;
+  // if(optionFlags & 0b00000001){
+  //   lfo1Value = 0;
+  //   lfo1Direction = 1;
+  // }
+
+  // Bit1: Sync LFO2
   if(optionFlags & 0b00000001){
-    lfo1Value = 0;
-    lfo1Direction = 1;
-  }
-  if(optionFlags & 0b00000010){
     lfo2Value = 0;
     lfo2Direction = 1;
   }
@@ -767,7 +770,7 @@ void updateKeys(){
   
 
   selectedFireLedState = 0;
-  shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),!selectWaveForm.read(),0,0,0,0,0);
+  shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),!selectLFO.read(),0,0,0,0,0);
   //Shiftstate ist > 0 wenn irgendeine Shift-taste gedrückt ist, die eine 2.FUnktion während des Drückens haben soll
   if(shiftState == 1){ 
     // Shift 1 gedrückt: Bank wählen
@@ -786,12 +789,14 @@ void updateKeys(){
     selectedFireLed = actualFireButton;
     selectedFireLedState = blinkState_slow;
   }
-
-  if(shiftStateBak != shiftState){
+/*
+ if(shiftStateBak != shiftState){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
     setChangeState(0,0,0,0);
   }
   shiftStateBak = shiftState;
+*/
+ 
 
 
 
@@ -832,6 +837,7 @@ void updateKeys(){
         loadOrSave(actualFireButton);
         longPressDetected = false;     // Reset des Langdruck-Flags
       }
+      
     }
     if (fire3.fell()){
       actualFireButton = 3;
@@ -844,6 +850,7 @@ void updateKeys(){
         loadOrSave(actualFireButton);
         longPressDetected = false;     // Reset des Langdruck-Flags
       }
+      
     }
     if (fire4.fell()){
       actualFireButton = 4;
@@ -856,7 +863,8 @@ void updateKeys(){
         loadOrSave(actualFireButton);
         longPressDetected = false;     // Reset des Langdruck-Flags
       }
-    //}
+      
+    }
 
     if (fire1.rose()){
       firePressedTime = 0;
@@ -872,7 +880,7 @@ void updateKeys(){
     }
 
     
-  }
+  //}
   
   
   
@@ -881,30 +889,27 @@ void updateKeys(){
   // Firebutton gedrückt
   // keine Shifttaste
   // nicht nach einem Bankwechsel, sost dudelt es gleich los
-  bool anyFireButtonPressed = (
-  (
-    (fire1.read() == LOW)||
-    (fire2.read() == LOW)||
-    (fire3.read() == LOW)||
-    (fire4.read() == LOW)
-  )&&(
-    shiftState == 0
-  )&&(
-    bankBak == bank
-  )
-);
-/*
-  if (anyFireButtonPressed && !longPressDetected) {
-    if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
-      // longPressDetected = true;  // Markiere, dass der lange Druck erkannt wurde
-      // Serial.println("LongPress detected!");
-    }
-  }
-*/  
-  
+  bool anyFireButtonPressed = ( 
+    (
+      (fire1.read() == LOW)||
+      (fire2.read() == LOW)||
+      (fire3.read() == LOW)||
+      (fire4.read() == LOW)
+    )&&(
+      shiftState == 0
+    )&&(
+      bankBak == bank
+    )
+  );
 
-  
+  // if (anyFireButtonPressed && !longPressDetected) {
+      // if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
+      // longPressDetected = true;  // Markiere, dass der lange Druck erkannt wurde
+      // Serial.println("LongPress detected!");}
+      
+  //}
   actualFireButtonBak = actualFireButton;
+
   
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
   runSound = (anyFireButtonPressed || longPressDetected);
