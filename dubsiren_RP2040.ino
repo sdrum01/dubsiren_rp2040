@@ -90,6 +90,7 @@ Bounce selectWaveForm;
 
 byte actualFireButton = 1;
 byte actualFireButtonBak = 0;
+byte lastFireButtonPressed = 0;
 
 // 4 Bänke * 4 FireButtons = 16 Speicherplätze;
 byte bank = 1;
@@ -619,6 +620,7 @@ void resetLFOParams(){
   // mit dem aktualisieren der millisekunden wird die Hüllkurve und LFO neu gestartet
   previousMillisLFO1 = currentMillis;
   previousMillisLFO2 = currentMillis;
+  previousMillisEnv = currentMillis;
 }
 
 void resetShiftState(){
@@ -645,7 +647,7 @@ byte combineBoolsToByte(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bo
 
 // läd oder speichert einen Datensatz oder macht bei Shiftstate Spezialfunktionen
 void loadOrSave(byte fireButton){
-  selectedFireLed = fireButton; // LED ansteuern
+  //selectedFireLed = fireButton; // LED ansteuern
   // kein LFO-Taster gedrückt
 
   // Shifttaste 1 gedrückt : Bank wechseln, aber nicht sofort JSON laden
@@ -705,6 +707,75 @@ void enumWaveForm(){
   */
   lfo1WaveformChanged = 1;
   //valLfoWaveformSwitchBak = valLfoWaveformSwitch;
+}
+
+void updateFireKeys(){
+  // steigende Flanke (Taster gedrückt)
+  if (fire1.fell()){
+    actualFireButton = 1;
+    //firePressedTime = millis();  // Zeit des Tastendrucks speichern
+    if(!fire2.read() || !fire3.read() ||!fire4.read()){
+      longPressDetected = true;
+    }else{
+      // loadOrSave(actualFireButton,selectWaveformLFO);
+      loadOrSave(actualFireButton);
+      longPressDetected = false;     // Reset des Langdruck-Flags
+    }
+    
+    
+  }
+  if (fire2.fell()){
+    actualFireButton = 2;
+    //firePressedTime = millis();  
+    //longPressDetected = false;
+    if(!fire1.read() || !fire3.read() ||!fire4.read()){
+      longPressDetected = true;
+    }else{
+      // loadOrSave(actualFireButton,selectWaveformLFO);
+      loadOrSave(actualFireButton);
+      longPressDetected = false;     // Reset des Langdruck-Flags
+    }
+    
+  }
+  if (fire3.fell()){
+    actualFireButton = 3;
+    //firePressedTime = millis();  
+    //longPressDetected = false;
+    if(!fire1.read() || !fire2.read() ||!fire4.read()){
+      longPressDetected = true;
+    }else{
+      // loadOrSave(actualFireButton,selectWaveformLFO);
+      loadOrSave(actualFireButton);
+      longPressDetected = false;     // Reset des Langdruck-Flags
+    }
+    
+  }
+  if (fire4.fell()){
+    actualFireButton = 4;
+    //firePressedTime = millis();  
+    //longPressDetected = false;
+    if(!fire1.read() || !fire2.read() ||!fire3.read()){
+      longPressDetected = true;
+    }else{
+      // loadOrSave(actualFireButton,selectWaveformLFO);
+      loadOrSave(actualFireButton);
+      longPressDetected = false;     // Reset des Langdruck-Flags
+    }
+    
+  }
+
+  if (fire1.rose()){
+    firePressedTime = 0;
+  }
+  if (fire2.rose()){
+    firePressedTime = 0;
+  }
+  if (fire3.rose()){
+    firePressedTime = 0;
+  }
+  if (fire4.rose()){
+    firePressedTime = 0;
+  }
 }
 
 void updateKeys(){
@@ -786,9 +857,12 @@ void updateKeys(){
     selectedFireLedState = blinkState;
   } else{
     // IDLE: nur ab und zu den aktuellen FIrebutton blitzen lassen
-    selectedFireLed = actualFireButton;
+    selectedFireLed = lastFireButtonPressed;
     selectedFireLedState = blinkState_slow;
+    
   }
+
+  updateFireKeys();
 /*
  if(shiftStateBak != shiftState){
     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
@@ -812,72 +886,7 @@ void updateKeys(){
 
 
   
-    // steigende Flanke (Taster gedrückt)
-    if (fire1.fell()){
-      actualFireButton = 1;
-      //firePressedTime = millis();  // Zeit des Tastendrucks speichern
-      if(!fire2.read() || !fire3.read() ||!fire4.read()){
-        longPressDetected = true;
-      }else{
-        // loadOrSave(actualFireButton,selectWaveformLFO);
-        loadOrSave(actualFireButton);
-        longPressDetected = false;     // Reset des Langdruck-Flags
-      }
-      
-      
-    }
-    if (fire2.fell()){
-      actualFireButton = 2;
-      //firePressedTime = millis();  
-      //longPressDetected = false;
-      if(!fire1.read() || !fire3.read() ||!fire4.read()){
-        longPressDetected = true;
-      }else{
-        // loadOrSave(actualFireButton,selectWaveformLFO);
-        loadOrSave(actualFireButton);
-        longPressDetected = false;     // Reset des Langdruck-Flags
-      }
-      
-    }
-    if (fire3.fell()){
-      actualFireButton = 3;
-      //firePressedTime = millis();  
-      //longPressDetected = false;
-      if(!fire1.read() || !fire2.read() ||!fire4.read()){
-        longPressDetected = true;
-      }else{
-        // loadOrSave(actualFireButton,selectWaveformLFO);
-        loadOrSave(actualFireButton);
-        longPressDetected = false;     // Reset des Langdruck-Flags
-      }
-      
-    }
-    if (fire4.fell()){
-      actualFireButton = 4;
-      //firePressedTime = millis();  
-      //longPressDetected = false;
-      if(!fire1.read() || !fire2.read() ||!fire3.read()){
-        longPressDetected = true;
-      }else{
-        // loadOrSave(actualFireButton,selectWaveformLFO);
-        loadOrSave(actualFireButton);
-        longPressDetected = false;     // Reset des Langdruck-Flags
-      }
-      
-    }
-
-    if (fire1.rose()){
-      firePressedTime = 0;
-    }
-    if (fire2.rose()){
-      firePressedTime = 0;
-    }
-    if (fire3.rose()){
-      firePressedTime = 0;
-    }
-    if (fire4.rose()){
-      firePressedTime = 0;
-    }
+    
 
     
   //}
@@ -913,6 +922,15 @@ void updateKeys(){
   
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
   runSound = (anyFireButtonPressed || longPressDetected);
+  
+  if(runSound){
+    lastFireButtonPressed = actualFireButton;
+  }
+
+  
+  if(shiftState == 0){
+    selectedFireLed = lastFireButtonPressed;
+  }
   selectedFireLedState = runSound | selectedFireLedState;
 }
 
