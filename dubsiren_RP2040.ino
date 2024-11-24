@@ -21,10 +21,6 @@ const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
 */
 
 
-//const int selectWaveFormPin = 3; // WaveForm Taster
-
-//const int waveFormFunctionPin = 6;  // WAVEFORM Funktion
-
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
 
@@ -88,7 +84,7 @@ Bounce selectWaveForm;
 // Bounce selectWaveformLFO1;
 // Bounce selectWaveformLFO2;
 
-byte actualFireButton = 1;
+byte actualFireButton = 0;
 byte actualFireButtonBak = 0;
 byte lastFireButtonPressed = 0;
 
@@ -654,6 +650,8 @@ void loadOrSave(byte fireButton){
   if(shiftState == 1){ 
     bank = fireButton; // Bank schreiben
     selectedFireLed = bank;
+    //actualFireButton = 0;
+    lastFireButtonPressed = 0;
     resetShiftState();
   }else if(shiftState == 4){ // SelectLFO gehalten
     // Maskieren des jeweiligen Bytes (entspricht dem Fire-Button)
