@@ -37,12 +37,10 @@ const int firePin4 = 21;  // Steuerpin für die Tonaktivierung4
 
 
 // LED 
-const int LED1_red = 16; 
-const int LED1_green = 17;
-//const int LED2_red = 14;
-//const int LED2_green = 15;
+const int LEDLfo1 = 17; 
+const int LEDLfo2 = 16;
 const int LEDShift1 = 14;
-const int LEDShift2 = 15;
+const int LEDSave = 15;
 
 const int LEDFire1 = 10;
 const int LEDFire2 = 11;
@@ -331,10 +329,10 @@ String readSettings(String configFile){
     if (file) {
         //String value = file.read();  // Lese die gespeicherte Zahl
         value = file.readStringUntil('\n');
-        Serial.println("read file "+configFile+": "+value);
+        //Serial.println("read file "+configFile+": "+value);
         file.close();
     } else {
-        Serial.println("Error during reading of file "+configFile);
+        //Serial.println("Error during reading of file "+configFile);
         setDefaultDataSet();
         String _json = values2JSON();
         dataSaved = writeSettings(_json,configFile);
@@ -495,7 +493,7 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
 
 // LFO-2 
 float calculateLFOWave2(float frequency, float amplitude) {
-  //uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_red);
+  //uint slice_num_led_red = pwm_gpio_to_slice_num(LEDLfo1);
   float schrittweite = frequency / 1000 ;
   unsigned long currentMillis = millis();
 
@@ -977,8 +975,8 @@ void blink(int interval) {
 
 void updateLEDs(){
   
-  uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
-  uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_red);
+  uint slice_num_led_green = pwm_gpio_to_slice_num(LEDLfo2);
+  uint slice_num_led_red = pwm_gpio_to_slice_num(LEDLfo1);
 
   // uint slice_num_led2_green = pwm_gpio_to_slice_num(LED2_green);
   // uint slice_num_led2_red = pwm_gpio_to_slice_num(LED2_red);
@@ -986,15 +984,15 @@ void updateLEDs(){
   // LED Grün
   
   if(lfoToggleState == 0){
-    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_red), 0);
+    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LEDLfo1), 0);
     if(lfovalue_finalLFO1 == -100){
-      pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
+      pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LEDLfo2), 0);
     }else{
-      pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green),lfovalue_finalLFO1 * pwm_led);
+      pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LEDLfo2),lfovalue_finalLFO1 * pwm_led);
     }
   }else{
-    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
-    pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red),lfovalue_finalLFO2 * pwm_led);
+    pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LEDLfo2), 0);
+    pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LEDLfo1),lfovalue_finalLFO2 * pwm_led);
   }
   
   
@@ -1004,7 +1002,7 @@ void updateLEDs(){
   digitalWrite(LED_BUILTIN, blinkState);
 
   digitalWrite(LEDShift1,modSelect == 2);
-  digitalWrite(LEDShift2,shiftState == 2 && blinkState);
+  digitalWrite(LEDSave,shiftState == 2 && blinkState);
   
   digitalWrite(LEDWaveSquare,valLfoWaveformSwitch == 0);
   digitalWrite(LEDWaveTri,valLfoWaveformSwitch == 1);
@@ -1025,45 +1023,6 @@ void updateLEDs(){
   }
   
 
-
-/*
-  // LED Matrix
-  for (int row = 0; row < 3; row++) {
-    // Zeile deaktivieren
-    digitalWrite(LEDrowPins[row], LOW); // Anode
-    // Spalten deaktivieren
-    for (int col = 0; col < 3; col++) {
-      digitalWrite(LEDcolPins[col], HIGH); // Kathode
-    }
-  }
-
-  ledState[0][0] = (selectedFireLedState && selectedFireLed == 1);
-  ledState[0][1] = (selectedFireLedState && selectedFireLed == 2);
-  ledState[0][2] = (selectedFireLedState && selectedFireLed == 3);
-  ledState[1][0] = (selectedFireLedState && selectedFireLed == 4);
-  ledState[1][1] = (modSelect == 2);
-  ledState[1][2] = (shiftState == 2 && blinkState);
-  ledState[2][0] = (valLfoWaveformSwitch == 0);
-  ledState[2][1] = (valLfoWaveformSwitch == 1);
-  ledState[2][2] = (valLfoWaveformSwitch == 2);
-
-
-  digitalWrite(LEDrowPins[activeLedRow], ledState[activeLedRow][activeLedCol]); // Anode
-  digitalWrite(LEDcolPins[activeLedCol], LOW); // Kathode
-  
-  // bei jedem DUrchlauf die Matrix eins weiter zählen
-  activeLedCol++; 
-  if(activeLedCol > 2){
-    activeLedCol = 0;
-    activeLedRow++;
-    if(activeLedRow > 2){
-      activeLedRow = 0;
-    }
-  }
-  
-*/
-
-
 }
 
 void setWaveFormSwitch(){
@@ -1077,22 +1036,6 @@ void setWaveFormSwitch(){
     break;
   }
 }
-
-/*
-// Zyklische Timer
-void ledTimer(int interval) {
-  // Speichere die aktuelle Zeit
-  unsigned long currentMillis = millis();
-
-  // Prüfe, ob das Intervall abgelaufen ist
-  if (currentMillis - previousMillisLEDPoll >= interval) {
-    // Speichere den aktuellen Zeitpunkt als letzten Zeitstempel
-    previousMillisLEDPoll = currentMillis;
-    updateLEDs();
-  } 
-}
-*/
-
 
 
 String extractArgument(String inputString){
@@ -1126,19 +1069,36 @@ void readSerial(){
 
   // Wenn die Zeichenkette vollständig empfangen wurde, diese anzeigen
   if (receiveStrComplete) {
-    //Serial.print("Empfangen: ");
-    //Serial.println(receiveStr);
-    if(receiveStr == "dump"){
-      String _json1 = readSettings("fire1.json");
-      String _json2 = readSettings("fire2.json");
-      String _json3 = readSettings("fire3.json");
-      String _json4 = readSettings("fire4.json");
-      Serial.println(_json1);
-      Serial.println(_json2);
-      Serial.println(_json3);
-      Serial.println(_json4);
-     
+
+    StaticJsonDocument<200> dataSet1;
+    StaticJsonDocument<200> dataSet2;
+
+    
+
+   
+    if(receiveStr == "receiveDump"){
+       // Verschachtelt
+      JsonObject receiveDumpDataSet = dataSet1.createNestedObject("dump");
+      for (int i = 1; i <= 16; i++) {
+        String _fileName = "fire"+String(i)+".json";
+        String _json = readSettings(_fileName);
+        // Deserialisiere den JSON-String
+        DeserializationError error = deserializeJson(dataSet2, _json);
+        //Serial.println(_fileName);
+        receiveDumpDataSet[_fileName] = dataSet2;
+      }
+      // Erstelle einen JSON-String
+      String jsonString;
+      serializeJson(dataSet1, jsonString);
+      Serial.println(jsonString);
     }
+ 
+
+
+  
+
+
+    
 
     if(receiveStr.substring(0, 4) == "test"){
       // extractArgument();
@@ -1185,13 +1145,13 @@ void setup() {
 
   // LED
 
-  uint slice_num_led_green = pwm_gpio_to_slice_num(LED1_green);
-  uint slice_num_led_red = pwm_gpio_to_slice_num(LED1_green);
+  uint slice_num_led_green = pwm_gpio_to_slice_num(LEDLfo2);
+  uint slice_num_led_red = pwm_gpio_to_slice_num(LEDLfo2);
   // uint slice_num_led2_green = pwm_gpio_to_slice_num(LED2_green);
   // uint slice_num_led2_red = pwm_gpio_to_slice_num(LED2_green);
   
-  gpio_set_function(LED1_green, GPIO_FUNC_PWM);
-  gpio_set_function(LED1_red, GPIO_FUNC_PWM);
+  gpio_set_function(LEDLfo2, GPIO_FUNC_PWM);
+  gpio_set_function(LEDLfo1, GPIO_FUNC_PWM);
   // gpio_set_function(LED2_green, GPIO_FUNC_PWM);
   // gpio_set_function(LED2_red, GPIO_FUNC_PWM);
   
@@ -1210,8 +1170,8 @@ void setup() {
   // pwm_set_wrap(slice_num_led2_green, pwm_led);
   // pwm_set_wrap(slice_num_led2_red, pwm_led);
   
-  pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LED1_green), 0);
-  pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LED1_red), 0);
+  pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LEDLfo2), 0);
+  pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LEDLfo1), 0);
   // pwm_set_chan_level(slice_num_led2_green, pwm_gpio_to_channel(LED2_green), 0);
   // pwm_set_chan_level(slice_num_led2_red, pwm_gpio_to_channel(LED2_red), 0);
   
@@ -1222,7 +1182,7 @@ void setup() {
 
 
   pinMode(LEDShift1, OUTPUT);
-  pinMode(LEDShift2, OUTPUT);
+  pinMode(LEDSave, OUTPUT);
 
   pinMode(LEDFire1, OUTPUT);
   pinMode(LEDFire2, OUTPUT);
@@ -1455,12 +1415,16 @@ void loop() {
 
   // Überwachung und Debugprits
 
-  if(chkLoop(4000)){
+  /*
+   if(chkLoop(4000)){
 
     // debug("DEBUGINFO: "+debugString);
     debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", lfoToggleState: "+String(lfoToggleState));
     //debug("WaveForm1 "+String(lfo1Waveform)+" WaveForm2 "+String(lfo1Waveform));
   
   }
+  
+  */
+ 
 
 }
