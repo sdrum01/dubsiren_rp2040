@@ -2,6 +2,7 @@
 /KiCad/*.lck
 /KiCad/VCO_RPIpico-backups/*
 /KiCad/*.kicad_prl
+/KiCad/CAD/Potiknob/*
 /.vscode
 *.code-workspace
 *.bak
