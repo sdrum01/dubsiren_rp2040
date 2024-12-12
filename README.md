@@ -1,6 +1,6 @@
 # Dubsiren RP2040
 
-DUBSIREN_rp2040 is a simple Project, which was initiated to emulate a analog Tonegenerator, which is used to make some noises for Dub and Reggae.
+DUBSIREN_rp2040 is a simple Project, which was initiated to emulate a analog Frequencygenerator, which is used to make some noises for Dub and Reggae.
 Such Dubsirens are simple Synthesizers without VCA (Voltage Controlled Amplifier) and VCF (Voltage Controlled Filter), 
 but mostly with an VCO (Voltage Controlled Oscillator) which is modulated by an LFO (Low Frequency Generator).
 
