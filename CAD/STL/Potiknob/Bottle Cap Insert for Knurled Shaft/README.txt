@@ -1,1 +1,0 @@
-Bottle Cap Insert for Knurled Shaft by Matsugawa on Thingiverse: https://www.thingiverse.com/thing:2510039

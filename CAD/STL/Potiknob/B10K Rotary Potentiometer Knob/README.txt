@@ -1,1 +1,0 @@
-B10K Rotary Potentiometer Knob by Palada on Thingiverse: https://www.thingiverse.com/thing:4745151
