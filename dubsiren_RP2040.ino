@@ -859,13 +859,13 @@ void updateKeys(){
   }
 
   updateFireKeys();
-/*
- if(shiftStateBak != shiftState){
-    // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
-    setChangeState(0,0,0,0);
-  }
-  shiftStateBak = shiftState;
-*/
+
+//  if(shiftStateBak != shiftState){
+//     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
+//     setChangeState(0,0,0,0);
+//   }
+//   shiftStateBak = shiftState;
+
  
 
 
@@ -919,7 +919,7 @@ void updateKeys(){
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
   runSound = (anyFireButtonPressed || longPressDetected);
   
-  if(runSound){
+  if((runSound)&&(!longPressDetected)){
     lastFireButtonPressed = actualFireButton;
   }
 
