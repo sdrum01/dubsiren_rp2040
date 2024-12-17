@@ -4,3 +4,6 @@
     save tone to internal memory: Save Button + Fire Button
     Adjust LFO Waveform: Waveform
     choose LFO1 or LFO2: LFO
+
+![Alt text](./controllers_brief.svg)
+<img src="./controllers_brief.svg">
