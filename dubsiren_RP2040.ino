@@ -15,10 +15,6 @@ const byte LOGLEVEL = 1;
 const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
 const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
-/*
-const int waveFormPin_0 = 3; // WaveForm Kippschalter PIN 1
-const int waveFormPin_1 = 4; // WaveForm Kippschalter Pin 2
-*/
 
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
@@ -79,8 +75,6 @@ Bounce shift1;
 Bounce shift2;
 Bounce selectWaveForm;
 
-// Bounce selectWaveformLFO1;
-// Bounce selectWaveformLFO2;
 
 byte actualFireButton = 0;
 byte actualFireButtonBak = 0;
@@ -136,7 +130,6 @@ float lfo2ValueActual = 1;
 enum eLfoWaveform { SQUARE, TRIANGLE, SAWTOOTH };
 eLfoWaveform lfo1Waveform = TRIANGLE;  //
 eLfoWaveform lfo2Waveform = SQUARE;  //
-
 
 bool dataSaved = false;
 
@@ -203,15 +196,14 @@ bool retriggerLFO2 = false;
 
 byte optionFlags = 0b0000000;  // binär x,x,x,x,x,x,x,Retrigger LFO2
 
-// wie viel Prozent darf sich das Poti ändern, bis ein wert als Change gilt?
+// wie viel Prozent darf sich das Poti ändern, bis ein wert als geändert gilt?
 const int potiTolerance = 10;
 
+// Flags, ob sich ein Wert geändert hat
 bool potiPitchChanged = 0;
 bool potiFreqLFOChanged = 0;
 bool potiAmpLFOChanged = 0;
 
-
-// Flag, wenn es am Waveformschalter gewackelt hat
 bool lfo1WaveformChanged = 0;
 
 String debugString = "";
@@ -653,7 +645,7 @@ void loadOrSave(byte fireButton){
     resetShiftState();
   }else if(shiftState == 4){ // SelectLFO gehalten
     // Maskieren des jeweiligen Bytes (entspricht dem Fire-Button)
-    uint8_t mask = 1 << fireButton -1; // wiels bei 0 losgeht und nicht bei 1
+    uint8_t mask = 1 << fireButton -1; // weil es bei 0 losgeht und nicht bei 1
     // Bit toggeln mit XOR
     optionFlags ^= mask;
   }else{
@@ -671,7 +663,7 @@ void loadOrSave(byte fireButton){
       // Save values
       String _json = values2JSON();
       dataSaved = writeSettings(_json,fileName);
-      debug("Write");
+      //debug("Write");
     } else {
       
       // longPressDetected: wenn Ton gerade gehalten wird sollen die Werte nicht neu geladen werden bei drücken des selben Buttons
@@ -682,6 +674,11 @@ void loadOrSave(byte fireButton){
         JSON2values(_json);
         setChangeState(0,0,0,0);
         setWaveFormSwitch();
+
+        // Merker, welcher Firebutton als letztes gedrückt wurde
+        
+        actualFireButtonBak = fireButton;
+        debug("actualFireButtonBak="+actualFireButtonBak);
       }
       bankBak = bank;
     }
@@ -696,11 +693,7 @@ void enumWaveForm(){
   if( (valLfoWaveformSwitch < 0)||(valLfoWaveformSwitch > 2)){
     valLfoWaveformSwitch = 0;
   }
-  /*
-  if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
-    lfo1WaveformChanged = 1;
-  }
-  */
+
   lfo1WaveformChanged = 1;
   //valLfoWaveformSwitchBak = valLfoWaveformSwitch;
 }
@@ -846,7 +839,17 @@ void updateKeys(){
   }else if (shiftState == 2){
     // Shift 2 (save) gedrückt: aktueller Firebutton blinkt schnell zum Anzeigen des aktuellen Speicherplatzes
     selectedFireLed = actualFireButton;
-    selectedFireLedState = blinkState;
+    
+    if((fire1.read() == LOW)||
+      (fire2.read() == LOW)||
+      (fire3.read() == LOW)||
+      (fire4.read() == LOW)){
+        // Sobald ein FIrebutton gedrückt, LED Dauerleuchten als Bestätigung
+        selectedFireLedState = 1;
+      }else{
+        // nur Save gedrückt, Taste flimmert
+        selectedFireLedState = blinkState;
+      }
   }else if (shiftState == 4){
     // Flags für zusätzliche Optionen werden sichtbar
     selectedFireLed = actualFireButton;
@@ -913,7 +916,9 @@ void updateKeys(){
       // Serial.println("LongPress detected!");}
       
   //}
-  actualFireButtonBak = actualFireButton;
+
+ 
+  
 
   
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
@@ -925,7 +930,9 @@ void updateKeys(){
 
   
   if(shiftState == 0){
+    
     selectedFireLed = lastFireButtonPressed;
+    
   }
   selectedFireLedState = runSound | selectedFireLedState;
 }
@@ -971,7 +978,6 @@ void blink(int interval) {
   }
 
 }
-
 
 void updateLEDs(){
   
@@ -1036,7 +1042,6 @@ void setWaveFormSwitch(){
     break;
   }
 }
-
 
 String extractArgument(String inputString){
   // Position der ersten Klammer '(' und der schließenden Klammer ')'
@@ -1124,6 +1129,7 @@ void readSerial(){
     receiveStrComplete = false;
   }
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1147,35 +1153,27 @@ void setup() {
 
   uint slice_num_led_green = pwm_gpio_to_slice_num(LEDLfo2);
   uint slice_num_led_red = pwm_gpio_to_slice_num(LEDLfo2);
-  // uint slice_num_led2_green = pwm_gpio_to_slice_num(LED2_green);
-  // uint slice_num_led2_red = pwm_gpio_to_slice_num(LED2_green);
   
   gpio_set_function(LEDLfo2, GPIO_FUNC_PWM);
   gpio_set_function(LEDLfo1, GPIO_FUNC_PWM);
-  // gpio_set_function(LED2_green, GPIO_FUNC_PWM);
-  // gpio_set_function(LED2_red, GPIO_FUNC_PWM);
+
   
   pwm_set_clkdiv(slice_num_led_green, 128.f);
   pwm_set_clkdiv(slice_num_led_red, 128.f);
-  // pwm_set_clkdiv(slice_num_led2_green, 128.f);
-  // pwm_set_clkdiv(slice_num_led2_red, 128.f);
+
   
   pwm_set_enabled(slice_num_led_green, true);
   pwm_set_enabled(slice_num_led_red, true);
-  // pwm_set_enabled(slice_num_led2_green, true);
-  // pwm_set_enabled(slice_num_led2_red, true);
+
   
   pwm_set_wrap(slice_num_led_green, pwm_led);
   pwm_set_wrap(slice_num_led_red, pwm_led);
-  // pwm_set_wrap(slice_num_led2_green, pwm_led);
-  // pwm_set_wrap(slice_num_led2_red, pwm_led);
+
   
   pwm_set_chan_level(slice_num_led_green, pwm_gpio_to_channel(LEDLfo2), 0);
   pwm_set_chan_level(slice_num_led_red, pwm_gpio_to_channel(LEDLfo1), 0);
-  // pwm_set_chan_level(slice_num_led2_green, pwm_gpio_to_channel(LED2_green), 0);
-  // pwm_set_chan_level(slice_num_led2_red, pwm_gpio_to_channel(LED2_red), 0);
-  
 
+  
   // Normale IO's
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -1278,9 +1276,9 @@ void loop() {
   updatePotis();
   readSerial();
 
-
+  ///////////////////////////// LFO1 ///////////////////////////
   if(modSelect == 0){
-    ///////////////////////////// LFO1 ///////////////////////////
+    
     if(lfo1WaveformChanged){
       
       switch (valLfoWaveformSwitch) {
@@ -1415,7 +1413,7 @@ void loop() {
 
   // Überwachung und Debugprits
 
-  /*
+  
    if(chkLoop(4000)){
 
     // debug("DEBUGINFO: "+debugString);
@@ -1424,7 +1422,7 @@ void loop() {
   
   }
   
-  */
+  
  
 
 }
