@@ -448,7 +448,8 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
           lfovalue_finalLFO1 = (lfo1Value <= 0.5) ? 0.5 : -100; // -100 = muting;
         } else {
           if(lfoAmplitude < 0){
-            
+            /*
+            // 5-er Raster
             if(lfo1Value < 0.125){
               lfovalue_finalLFO1 = 0;
             }else if(lfo1Value < 0.375){
@@ -457,6 +458,16 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
               lfovalue_finalLFO1 = 0.5;
             }else if(lfo1Value < 0.875){
               lfovalue_finalLFO1 = 0.75;
+            }else {
+              lfovalue_finalLFO1 = 1;
+            }
+            */
+           
+            // 3-er Raster
+            if(lfo1Value < 0.25){
+              lfovalue_finalLFO1 = 0;
+            }else if(lfo1Value < 0.75){
+              lfovalue_finalLFO1 = 0.5;
             }else {
               lfovalue_finalLFO1 = 1;
             }
