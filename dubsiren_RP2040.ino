@@ -437,17 +437,35 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
     
     switch (lfo1Waveform) {
       case SQUARE:
-        //lfo1Amplitude = lfoAmplitude / 2;
+        
         // Dreieck ausrechnen 
         lfo1Value += schrittweite * lfo1Direction;  // 
         if (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
           lfo1Direction = -lfo1Direction;  // Richtung umkehren
         }
         
-        if(lfoAmplitude < 0){
+        if(lfoAmplitude == -100){
           lfovalue_finalLFO1 = (lfo1Value <= 0.5) ? 0.5 : -100; // -100 = muting;
         } else {
-          lfovalue_finalLFO1 = (lfo1Value >= 0.5) ? 1 : 0;
+          if(lfoAmplitude < 0){
+            
+            if(lfo1Value < 0.125){
+              lfovalue_finalLFO1 = 0;
+            }else if(lfo1Value < 0.375){
+              lfovalue_finalLFO1 = 0.25;
+            }else if(lfo1Value < 0.625){
+              lfovalue_finalLFO1 = 0.5;
+            }else if(lfo1Value < 0.875){
+              lfovalue_finalLFO1 = 0.75;
+            }else {
+              lfovalue_finalLFO1 = 1;
+            }
+            
+            //lfovalue_finalLFO1 = round(lfo1Value * 10000) / 10000;
+          }else{
+            lfovalue_finalLFO1 = (lfo1Value >= 0.5) ? 1 : 0;
+          }
+          
         }
         break;
         
@@ -851,7 +869,7 @@ void updateKeys(){
         selectedFireLedState = blinkState;
       }
   }else if (shiftState == 4){
-    // Flags für zusätzliche Optionen werden sichtbar
+    // selectLFO gedrückt: Flags für zusätzliche Optionen werden sichtbar
     selectedFireLed = actualFireButton;
     selectedFireLedState = blinkState;
   } else{
@@ -1098,12 +1116,6 @@ void readSerial(){
       Serial.println(jsonString);
     }
  
-
-
-  
-
-
-    
 
     if(receiveStr.substring(0, 4) == "test"){
       // extractArgument();
@@ -1417,8 +1429,8 @@ void loop() {
    if(chkLoop(4000)){
 
     // debug("DEBUGINFO: "+debugString);
-    debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", lfoToggleState: "+String(lfoToggleState));
-    //debug("WaveForm1 "+String(lfo1Waveform)+" WaveForm2 "+String(lfo1Waveform));
+    //debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", lfoToggleState: "+String(lfoToggleState));
+    debug("WaveForm1: "+String(lfo1Waveform)+"Amplitude1: "+String(lfo1Amplitude)+" WaveForm2: "+String(lfo1Waveform)+"Amplitude2: "+String(lfo2Amplitude));
   
   }
   
