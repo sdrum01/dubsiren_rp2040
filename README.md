@@ -1,4 +1,4 @@
-# Dubsiren RP2040
+# DUB-IY Dubsiren with RP2040 
 
 DUBSIREN_rp2040 is a simple Project, which was initiated to emulate a analog Frequencygenerator, which is used to make some noises for Dub and Reggae.
 As result we was creating the Dubsiren "DUB-IY". 
