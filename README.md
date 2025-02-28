@@ -1,25 +1,39 @@
-# Dubsiren RP2040
+# DUB-IY Dubsiren with RP2040 
 
 DUBSIREN_rp2040 is a simple Project, which was initiated to emulate a analog Frequencygenerator, which is used to make some noises for Dub and Reggae.
-Such Dubsirens are simple Synthesizers without VCA (Voltage Controlled Amplifier) and VCF (Voltage Controlled Filter), 
+As result we was creating the Dubsiren "DUB-IY". 
+
+Dubsirens are simple Synthesizers without VCA (Voltage Controlled Amplifier) and VCF (Voltage Controlled Filter), 
 but mostly with an VCO (Voltage Controlled Oscillator) which is modulated by an LFO (Low Frequency Generator).
 
-Of course, it is possible to build up the whole project with analog circuits, but the Challange was to develop the same with a digital kernal. 
-Advantage is the possibility to store all parameters, simplifing the electronic and to make it hackable.
 
-The Project is based on a cheap Raspberry Pi Pico with the fast CPU RP2040. It is fast enough to emulate VCO and LFO and has enough possibilities to store the data internally.
+Normally such Sirens were build up with analog circuits, but the Challenge was to develop the same result as digital solution to store the parameters, simplifing the electronic and to make it hackable.
+
+DUB-IY is based on a Raspberry Pi Pico with the CPU RP2040. It is fast enough to emulate VCO and LFO and has enough possibilities to store the data internally.
 
 The Dubsiren creates an Rectangle Tone Signal with adjustable dutycycle.
-The Tone can be modulated by an calculated LFO and an simple envelope-generator
+The Tone can be modulated by 2 LFO and an envelope-generator to modulate the timing parameter. 
 
-On the RPI are following adjustable values, which can be adjusted with Potentiometer or Switches
+Finally, the signal is perfected with an integrated echo effect. 
 
-* Basic Frequency
-* Frequency LFO
-* Amount LFO (neg.and pos)
-* Amount Envelope
-* Envelope Time
-* Duty Cycle of Waveform
+On the  are following values can be adjusted with Potentiometer and Switches:
+
+* Waveform LFO1 
+(Rectangle, Tri-Rectangle, Triangle, Sawtooth, Pulse) 
+* Waveform LFO2 (Rectangle, Triangle, Sawtooth) 
+* Oscillator Basic Frequency
+* Frequency LFO1 and LFO2
+* Amount LFO1 and LFO2 (neg.and pos)
+* Amount Timing Envelope
+* Duty Cycle of Osscillator Waveform
+* Retriggering of LFO-Start
+* Delay Time (Echo) 
+* Feedback (Echo) 
+* Master Volume
+
+Only the combination of LFO 1+2 gets many Experimental Siren sounds, but  the Timing Envelope makes the Sound much more dynamic. 
+
+
 
 >[!NOTE]
    >
