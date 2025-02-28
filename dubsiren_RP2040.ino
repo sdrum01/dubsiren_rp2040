@@ -448,6 +448,15 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
           lfovalue_finalLFO1 = (lfo1Value <= 0.5) ? 0.5 : -100; // -100 = muting;
         } else {
           if(lfoAmplitude < 0){
+            // Multitone
+
+            /*
+            // Sägezahn für nur 3 Töne
+            if (lfo1Value == 1) {
+              lfo1Value = 0;  // Zurücksetzen
+            }
+            */
+           
             /*
             // 5-er Raster
             if(lfo1Value < 0.125){
