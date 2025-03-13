@@ -569,6 +569,12 @@
           "label": "Beschreibung",
           "name": "Description",
           "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Reichelt",
+          "name": "Reichelt",
+          "show": true
         }
       ],
       "filter_string": "",

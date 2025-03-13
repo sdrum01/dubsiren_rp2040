@@ -9289,6 +9289,15 @@
 				(hide yes)
 			)
 		)
+		(property "Articlecode" "Reichelt: EBS 35"
+			(at 276.86 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "T"
 			(uuid "3ad95ff5-e937-4453-8ab3-0fdbdfdd77a5")
 		)
