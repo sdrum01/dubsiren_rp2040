@@ -575,6 +575,12 @@
           "label": "Reichelt",
           "name": "Reichelt",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Articlecode",
+          "name": "Articlecode",
+          "show": false
         }
       ],
       "filter_string": "",
