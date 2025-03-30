@@ -150,6 +150,8 @@ volatile unsigned long previousMillisLED = 0;
 volatile float lfovalue_finalLFO1 = 0;
 volatile float lfovalue_finalLFO2 = 0;
 
+volatile int lfo2Stop = 0;
+
 
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
@@ -190,7 +192,7 @@ int valPotiPitchBak = 0;
 int valPotiFreqLFOBak = 0;
 int valPotiAmpLFOBak = 0;
 
-bool retriggerLFO2 = false;
+// bool retriggerLFO2 = false;
 
 //  Flags zum ein/Ausschalten von diversen Optionen
 
@@ -525,6 +527,7 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
 float calculateLFOWave2(float frequency, float amplitude) {
   //uint slice_num_led_red = pwm_gpio_to_slice_num(LEDLfo1);
   float schrittweite = frequency / 1000 ;
+  
   unsigned long currentMillis = millis();
 
   const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
@@ -542,17 +545,33 @@ float calculateLFOWave2(float frequency, float amplitude) {
         break;
         
       case TRIANGLE:
-        lfo2Value += schrittweite * lfo2Direction;  // 
+
+        // if (lfo2Stop == 2){
+          lfo2Value += schrittweite * lfo2Direction;  // 
+        // }
         if (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
           lfo2Direction = -lfo2Direction;  // Richtung umkehren
+          // if((optionFlags & 0b00000010) == true){
+          //   lfo2Stop++;
+          //   debug("STOP");
+          // }
         }
+        
+
         lfovalue_finalLFO2 = lfo2Value;
         break;
         
       case SAWTOOTH:
-        lfo2Value -= schrittweite / 2;  // Schrittweite für den LFO 
+        // if (lfo2Stop == 2){
+          lfo2Value -= schrittweite / 2;  // Schrittweite für den LFO
+        // }
         if (lfo2Value <= 0) {
           lfo2Value = 1;  // Zurücksetzen
+
+          // if((optionFlags & 0b00000010) == true){
+          //   lfo2Stop++;
+          //   debug("STOP");
+          // }
         }
         lfovalue_finalLFO2 = lfo2Value;
         break;
@@ -716,7 +735,8 @@ void loadOrSave(byte fireButton){
         // Merker, welcher Firebutton als letztes gedrückt wurde
         
         actualFireButtonBak = fireButton;
-        debug("actualFireButtonBak="+actualFireButtonBak);
+        //debug("actualFireButtonBak="+actualFireButtonBak);
+        debug(_json);
       }
       bankBak = bank;
     }

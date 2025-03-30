@@ -64,7 +64,6 @@
         "starved_thermal|60250000|126250000|1f2f32a3-b79f-4736-ac1a-0a76487894f2|7f75985c-c967-481f-b5a6-7107008a8387|F.Cu",
         "starved_thermal|66146000|97514000|303eb660-6564-4ab8-924f-b394e83dcfd1|d2964e4d-300c-45a8-bf87-607221c324ad|B.Cu",
         "starved_thermal|66146000|97514000|303eb660-6564-4ab8-924f-b394e83dcfd1|f2fc6554-026b-44c7-9776-c60433916f5e|B.Cu",
-        "starved_thermal|90500000|71450000|303eb660-6564-4ab8-924f-b394e83dcfd1|be50e859-0689-445c-8604-35e0741babd8|B.Cu",
         "starved_thermal|96250000|126250000|1f2f32a3-b79f-4736-ac1a-0a76487894f2|6d8865c7-9438-4d6a-a517-ac9d6cefb6b4|F.Cu"
       ],
       "meta": {
@@ -569,6 +568,18 @@
           "label": "Beschreibung",
           "name": "Description",
           "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Reichelt",
+          "name": "Reichelt",
+          "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Articlecode",
+          "name": "Articlecode",
+          "show": false
         }
       ],
       "filter_string": "",
@@ -629,7 +640,7 @@
   "sheets": [
     [
       "0d855e99-162c-4989-8fe3-f98154ec6843",
-      "Stammblatt"
+      "Root"
     ]
   ],
   "text_variables": {}

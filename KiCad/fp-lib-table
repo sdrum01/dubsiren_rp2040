@@ -6,4 +6,6 @@
   (lib (name "PT2399_modul")(type "KiCad")(uri "${KIPRJMOD}/lib/PT2399/PT2399_modul.pretty")(options "")(descr ""))
   (lib (name "MCU_RaspberryPi_and_Boards")(type "KiCad")(uri "${KIPRJMOD}/lib/RP-Pico Libraries/MCU_RaspberryPi_and_Boards.pretty")(options "")(descr ""))
   (lib (name "switches")(type "KiCad")(uri "${KIPRJMOD}/switches.pretty")(options "")(descr ""))
+  (lib (name "Audiosockets")(type "KiCad")(uri "${KIPRJMOD}/lib/audio/Connector_Audio.pretty")(options "")(descr ""))
+  (lib (name "poti_alps")(type "KiCad")(uri "${KIPRJMOD}/lib/Potis/poti_alps.pretty")(options "")(descr ""))
 )
