@@ -202,11 +202,11 @@ byte optionFlags = 0b0000000;  // binär x,x,x,x,x,x,x,Retrigger LFO2
 const int potiTolerance = 10;
 
 // Flags, ob sich ein Wert geändert hat
-bool potiPitchChanged = 0;
-bool potiFreqLFOChanged = 0;
-bool potiAmpLFOChanged = 0;
+bool potiPitchChanged = false;
+bool potiFreqLFOChanged = false;
+bool potiAmpLFOChanged = false;
 
-bool lfo1WaveformChanged = 0;
+bool lfo1WaveformChanged = false;
 
 String debugString = "";
 
@@ -388,10 +388,14 @@ float linearToLogarithmic(float value,float min, float max) {
   // Überprüfen, ob die Eingabewerte sinnvoll sind
   if (percentage < 0.0) percentage = 0.0;
   if (percentage > 100.0) percentage = 100.0;
+
+  //int rasterpercentage = percentage ;
   
   // Skaliere den Prozentwert auf den Bereich [0, 1]
   float scaledPercentage = percentage / 100.0;
-  
+
+  //float scaledPercentage = ((optionFlags & 0b00000010) ? rasterpercentage / 100.0 : percentage / 100.0)   ;
+
   // Berechne die logarithmische Ausgabe
   // logarithmischer Bereich mit Basis 10
   float logMin = log10(min);
@@ -402,6 +406,8 @@ float linearToLogarithmic(float value,float min, float max) {
   
   // Rückkonvertieren in den linearen Raum
   float outputValue = pow(10, logValue);
+
+  
   //debug(String(value)+';'+String(percentage)+';'+String(outputValue));
   return outputValue;
 }
@@ -602,8 +608,11 @@ float setFrequency(float freq){
 // Tonerzeugung
 void playSound(float freqVal){
   // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
+ 
   float pwm_val = setFrequency(freqVal);
-  
+
+  //float scaledPercentage = ((optionFlags & 0b00000010) ? rasterpercentage / 100.0 : percentage / 100.0)   ;
+
   // Setze die PWM-Periode
   uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
 
@@ -752,7 +761,7 @@ void enumWaveForm(){
     valLfoWaveformSwitch = 0;
   }
 
-  lfo1WaveformChanged = 1;
+  lfo1WaveformChanged = true;
   //valLfoWaveformSwitchBak = valLfoWaveformSwitch;
 }
 
@@ -1003,15 +1012,15 @@ void updatePotis(){
 
   // Wenns gewackelt hat innerhalb einer Toleranz, wird ein Flag gesetzt
   if((valPotiPitch < valPotiPitchBak - potiTolerance)||(valPotiPitch > valPotiPitchBak + potiTolerance)){
-    potiPitchChanged = 1;
+    potiPitchChanged = true;
   }
 
   if((valPotiFreqLFO < valPotiFreqLFOBak - potiTolerance)||(valPotiFreqLFO > valPotiFreqLFOBak + potiTolerance)){
-    potiFreqLFOChanged = 1;
+    potiFreqLFOChanged = true;
   }
 
   if((valPotiAmpLFO < valPotiAmpLFOBak - potiTolerance)||(valPotiAmpLFO > valPotiAmpLFOBak + potiTolerance)){
-    potiAmpLFOChanged = 1;
+    potiAmpLFOChanged = true;
   }
 }
 
@@ -1349,18 +1358,18 @@ void loop() {
     }
     
     // Pitch
-    if(potiPitchChanged == 1){
+    if(potiPitchChanged){
       int freqLin = map(valPotiPitch, 4, 1023, minVal, maxVal );
       baseFrequency =  linearToLogarithmic(freqLin, minVal, maxVal);
       valPotiPitchBak = valPotiPitch;
     }
     // Frequenz
-    if(potiFreqLFOChanged == 1){
+    if(potiFreqLFOChanged){
       lfo1Frequency = mapFloat(valPotiFreqLFO, 5, 1023, 0.5, 50);   // LFO-Frequenzbereich von 0.5 Hz bis 50 Hz
       valPotiFreqLFOBak = valPotiFreqLFO;
     }
     // Amount
-    if(potiAmpLFOChanged == 1){
+    if(potiAmpLFOChanged){
       lfo1Amplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);   // LFO-Amplitudenbereich von 0 bis 100, 50 Mitte
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
@@ -1384,18 +1393,18 @@ void loop() {
     }
 
     // Pitch
-    if(potiPitchChanged == 1){
+    if(potiPitchChanged){
       int freqLin = map(valPotiPitch, 4, 1023, minVal, maxVal );
-      baseFrequency =  linearToLogarithmic(freqLin, minVal, maxVal);
+      baseFrequency = linearToLogarithmic(freqLin, minVal, maxVal);
       valPotiPitchBak = valPotiPitch;
     }
     // Frequenz
-    if(potiFreqLFOChanged == 1){
+    if(potiFreqLFOChanged){
       lfo2Frequency = mapFloat(valPotiFreqLFO, 5, 1023, 0.1, 20);
       valPotiFreqLFOBak = valPotiFreqLFO;
     }
      // Amount
-    if(potiAmpLFOChanged == 1){
+    if(potiAmpLFOChanged){
       lfo2Amplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
@@ -1419,17 +1428,17 @@ void loop() {
     }
     
     // Pitch-Poti = Duty-Cycle 
-    if(potiPitchChanged == 1){
+    if(potiPitchChanged){
       duty = map(valPotiPitch, 4, 1023, 5, 50 );
       valPotiPitchBak = valPotiPitch;
     }
     // LFO-Frequenz-Poti = Geschwindigkeit Envelope
-    if(potiFreqLFOChanged == 1){
+    if(potiFreqLFOChanged){
       envelopeDuration = mapFloat(valPotiFreqLFO, 5, 1023, 1, 10);
       valPotiFreqLFOBak = valPotiFreqLFO;
     }
      // Amount-Poti = Amount Envelope auf LFO-Frequenz
-    if(potiAmpLFOChanged == 1){
+    if(potiAmpLFOChanged){
       envelopeAmplitude = map(valPotiAmpLFO, 5, 1023, -100, 100);
       valPotiAmpLFOBak = valPotiAmpLFO;
     }
@@ -1443,8 +1452,7 @@ void loop() {
   }
 
    // Modulierte Frequenz berechnen
-  // float envelopeLin = calculateEnvelope(envelopeDuration,envelopeAmplitude);
-  // envelope = linearToLogarithmic(envelopeLin,0.1,1.9);
+
   envelope = calculateEnvelope(envelopeDuration,envelopeAmplitude);
   lfo1ValueActual = calculateLFOWave1(lfo1Frequency * (envelope), lfo1Amplitude);
   lfo2ValueActual = calculateLFOWave2(lfo2Frequency * (envelope), lfo2Amplitude);
