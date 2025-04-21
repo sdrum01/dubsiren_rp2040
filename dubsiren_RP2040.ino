@@ -20,10 +20,10 @@ const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 
 
-const int shiftPin1 = 6;  // shift-Taste1
-const int shiftPin2 = 7;  // shift-Taste2
-const int selectWaveFormPin = 8; // WaveForm Kippschalter PIN 1
-const int selectLFOPin = 9;  // Toggletaster LFO Quelle
+const int shiftPin1 = 6;  // shift-Button : Envelope / Bank Select (during hold)
+const int shiftPin2 = 7;  // SAVE Button
+const int selectWaveFormPin = 8; // WaveForm Select Button
+const int selectLFOPin = 9;  // Togglebutton LFO Source / Toggle Special Flags (during hold)
 
 
 const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
@@ -150,7 +150,8 @@ volatile unsigned long previousMillisLED = 0;
 volatile float lfovalue_finalLFO1 = 0;
 volatile float lfovalue_finalLFO2 = 0;
 
-volatile int lfo2Stop = 0;
+//volatile int lfo2Stop = 0;
+volatile int lfo1PeriodenCounter = 0;
 
 
 // Wenn Ton abgefeuert werden soll:
@@ -197,6 +198,9 @@ int valPotiAmpLFOBak = 0;
 //  Flags zum ein/Ausschalten von diversen Optionen
 
 byte optionFlags = 0b0000000;  // binär x,x,x,x,x,x,x,Retrigger LFO2
+// 0b00000001 : Restart LFO2 on Firepress
+// 0b00000010 : One-Time Shot (LFO1)
+// 0b00000100 : LFO1 Factor Double Amp
 
 // wie viel Prozent darf sich das Poti ändern, bis ein wert als geändert gilt?
 const int potiTolerance = 10;
@@ -433,7 +437,7 @@ float calculateEnvelope(float envelopeDuration, float envelopeAmplitude) {
 }
 
 // LFO-1 mit Dreieck, abgeleiteten Rechteck und Sägezahn
-float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
+float calculateLFOWave1(float lfoFrequency, float amplitude) {
 
   float schrittweite = lfoFrequency / 1000 ;
   unsigned long currentMillis = millis();
@@ -445,17 +449,20 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
     
     switch (lfo1Waveform) {
       case SQUARE:
-        
+        // ist die volle Periode erreicht, zähler eins hoch
+        //if(lfo1Value <= 0.0){lfo1PeriodenCounter++;}
         // Dreieck ausrechnen 
         lfo1Value += schrittweite * lfo1Direction;  // 
         if (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
+          
           lfo1Direction = -lfo1Direction;  // Richtung umkehren
+          lfo1PeriodenCounter++;
         }
         
-        if(lfoAmplitude == -100){
+        if(amplitude == -100){
           lfovalue_finalLFO1 = (lfo1Value <= 0.5) ? 0.5 : -100; // -100 = muting;
         } else {
-          if(lfoAmplitude < 0){
+          if(amplitude < 0){
             // Multitone
 
             /*
@@ -499,8 +506,13 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
         
       case TRIANGLE:
         lfo1Value += schrittweite * lfo1Direction;  // 
+
+        // ist die volle Periode erreicht, zähler eins hoch
+        //if(lfo1Value <= 0.0){lfo1PeriodenCounter++;}
+
         if (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
           lfo1Direction = -lfo1Direction;  // Richtung umkehren
+          lfo1PeriodenCounter++;
         }
         lfovalue_finalLFO1 = lfo1Value;
         break;
@@ -509,6 +521,7 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
         lfo1Value -= schrittweite / 2;  // Schrittweite für den LFO 
         if (lfo1Value <= 0) {
           lfo1Value = 1;  // Zurücksetzen
+          lfo1PeriodenCounter++;
         }
         lfovalue_finalLFO1 = lfo1Value;
         break;
@@ -524,7 +537,10 @@ float calculateLFOWave1(float lfoFrequency, float lfoAmplitude) {
     lfovalue_final1 = lfovalue_finalLFO1; // negativ für Sonderfunktionen wie Muting (-99)
    
   }else{
-    lfovalue_final1 = ( ((lfovalue_finalLFO1 -0.5)*1.5) * (lfo1Amplitude/100) + 1.0);
+    //lfovalue_final1 = ( ((lfovalue_finalLFO1 -0.5)*1.5) * (amplitude/100) + 1.0);
+    //unsigned int verstaerkungsfaktor = 1;
+    //if(optionFlags & 0b00000100){verstaerkungsfaktor = 2;}
+    lfovalue_final1 = ( ((lfovalue_finalLFO1 -0.5)*1.5) * ((amplitude/100)*(optionFlags & 0b00000100 ? 2 : 1)) + 1.0);
   }
   return(lfovalue_final1);
 }
@@ -552,15 +568,12 @@ float calculateLFOWave2(float frequency, float amplitude) {
         
       case TRIANGLE:
 
-        // if (lfo2Stop == 2){
+
           lfo2Value += schrittweite * lfo2Direction;  // 
-        // }
+
         if (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
           lfo2Direction = -lfo2Direction;  // Richtung umkehren
-          // if((optionFlags & 0b00000010) == true){
-          //   lfo2Stop++;
-          //   debug("STOP");
-          // }
+
         }
         
 
@@ -568,9 +581,9 @@ float calculateLFOWave2(float frequency, float amplitude) {
         break;
         
       case SAWTOOTH:
-        // if (lfo2Stop == 2){
+
           lfo2Value -= schrittweite / 2;  // Schrittweite für den LFO
-        // }
+
         if (lfo2Value <= 0) {
           lfo2Value = 1;  // Zurücksetzen
 
@@ -617,18 +630,22 @@ void playSound(float freqVal){
   uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
 
   pwm_set_wrap(slice_num_wave, pwm_val);
+
+  if(((optionFlags & 0b00000010))&&(lfo1PeriodenCounter > 1)){
+    debug("Stop");
+    freqVal = -100;
+  }
   
   if (runSound){
     dataSaved = false;
     if(freqVal == -100) {
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
     }else{
-      //pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * 0.5);
-      //dutyCycle = duty / 100;
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100));
     }
   }else{
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
+    lfo1PeriodenCounter = 0;
   }
 }
 
@@ -1295,7 +1312,7 @@ void setup() {
   selectWaveForm.attach(selectWaveFormPin);
   selectWaveForm.interval(50);
 
-  shift1.attach(shiftPin1); // Shift / Env
+  shift1.attach(shiftPin1); // Shift / Env / Bank
   shift1.interval(50);  // Entprellintervall in Millisekunden (50 ms)
 
   shift2.attach(shiftPin2); // Save
@@ -1474,11 +1491,11 @@ void loop() {
   // Überwachung und Debugprits
 
   
-   if(chkLoop(4000)){
+   if(chkLoop(1000)){
 
     // debug("DEBUGINFO: "+debugString);
     //debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", lfoToggleState: "+String(lfoToggleState));
-    debug("WaveForm1: "+String(lfo1Waveform)+"Amplitude1: "+String(lfo1Amplitude)+" WaveForm2: "+String(lfo1Waveform)+"Amplitude2: "+String(lfo2Amplitude));
+    debug("WaveForm1: "+String(lfo1Waveform)+" Amplitude1: "+String(lfo1Amplitude)+" WaveForm2: "+String(lfo1Waveform)+" Amplitude2: "+String(lfo2Amplitude)+" PeriodeLFO1: "+String(lfo1PeriodenCounter));
   
   }
   
