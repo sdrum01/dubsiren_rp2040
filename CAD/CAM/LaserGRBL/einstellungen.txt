@@ -1,0 +1,13 @@
+Laser-GRBL
+----------
+
+Optional, wenn noch nicht geschehen: FIrmware flashen mit
+Menu->Werkzeuge->Flashen der Grbl Firmware
+Target: Arduino Nano bei CNC3 Controller
+Firmware: V1.1h original
+Port:COM4 (oder der jeweilige USB-Comport wo der Controller hängt)
+Baudrate:115200
+
+
+
+Gravur auf Plastik
