@@ -5,5 +5,5 @@
 * Adjust LFO Waveform: Waveform
 * choose LFO1 or LFO2: LFO
 
-![Alt text](./CAD/DXF/DIYBody - Frontplatte_EMS_grosse_schrift.svg)
-<img src="./CAD/DXF/DIYBody - Frontplatte_EMS_grosse_schrift.svg">
+![Alt text](././CAD/DXF/DIYBody - Frontplatte_EMS_grosse_schrift.svg)
+<img src="././CAD/DXF/DIYBody - Frontplatte_EMS_grosse_schrift.svg">
