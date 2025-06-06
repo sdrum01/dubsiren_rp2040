@@ -3,6 +3,7 @@
 /KiCad/VCO_RPIpico-backups/*
 /KiCad/*.kicad_prl
 /KiCad/CAD/Potiknob/*
+/dataTransfer/venv/*
 /.vscode
 *.code-workspace
 *.bak

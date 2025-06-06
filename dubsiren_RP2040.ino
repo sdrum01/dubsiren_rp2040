@@ -1181,9 +1181,27 @@ void readSerial(){
       serializeJson(dataSet1, jsonString);
       Serial.println(jsonString);
     }
+
+    if (receiveStr == "receive_1") {
+      String _fileName = "fire1.json";
+      String _json = readSettings(_fileName);
+    
+      // Versuche zu deserialisieren
+      DeserializationError error = deserializeJson(dataSet1, _json);
+      if (error) {
+        Serial.print("Deserialization failed: ");
+        Serial.println(error.f_str());
+        return;
+      }
+    
+      // JSON-String erzeugen
+      String jsonString;
+      serializeJson(dataSet1, jsonString);
+      Serial.println(jsonString);
+    }
  
 
-    if(receiveStr.substring(0, 4) == "test"){
+    if(receiveStr.substring(0, 10) == "setdefault"){
       // extractArgument();
       // Serial.println(extractArgument(receiveStr));
       setDefaultDataSet();
@@ -1489,15 +1507,10 @@ void loop() {
   updateLEDs();
 
   // Überwachung und Debugprits
-
   
-   if(chkLoop(1000)){
-
-    // debug("DEBUGINFO: "+debugString);
-    //debug("ShiftState: "+String(shiftState)+", modSelect: "+String(modSelect)+", valLfoWaveformSwitch: "+String(valLfoWaveformSwitch)+", lfo1WaveformChanged: "+String(lfo1WaveformChanged)+", lfoToggleState: "+String(lfoToggleState));
-    debug("WaveForm1: "+String(lfo1Waveform)+" Amplitude1: "+String(lfo1Amplitude)+" WaveForm2: "+String(lfo1Waveform)+" Amplitude2: "+String(lfo2Amplitude)+" PeriodeLFO1: "+String(lfo1PeriodenCounter));
-  
-  }
+   //if(chkLoop(1000)){
+    //debug("WaveForm1: "+String(lfo1Waveform)+" Amplitude1: "+String(lfo1Amplitude)+" WaveForm2: "+String(lfo1Waveform)+" Amplitude2: "+String(lfo2Amplitude)+" PeriodeLFO1: "+String(lfo1PeriodenCounter));
+  //}
   
   
  
