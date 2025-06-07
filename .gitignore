@@ -4,6 +4,7 @@
 /KiCad/*.kicad_prl
 /KiCad/CAD/Potiknob/*
 /dataTransfer/venv/*
+/dataTransfer/*.json
 /.vscode
 *.code-workspace
 *.bak

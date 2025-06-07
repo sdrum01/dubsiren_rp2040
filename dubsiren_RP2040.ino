@@ -338,14 +338,14 @@ String readSettings(String configFile){
   return(value);
 }
 
-bool writeSettings(String s, String configFile){
+bool writeSettings(String _json, String configFile){
   // Daten schreiben
   File file = LittleFS.open(configFile, "w");
   if (file) {
       //file.write(s);  // Schreibe eine Zahl
       // String in die Datei schreiben
       
-      file.println(s);  // Schreibt den String und fügt einen Zeilenumbruch hinzu
+      file.println(_json);  // Schreibt den String und fügt einen Zeilenumbruch hinzu
       file.close();
       return(true);
       //Serial.println("write file "+configFile+": "+s);
@@ -947,35 +947,6 @@ void updateKeys(){
 
   updateFireKeys();
 
-//  if(shiftStateBak != shiftState){
-//     // Flags zurücksetzen, dass die Potis gewackelt haben, sonst springen die Einstellungen sofort auf die neuen Werte
-//     setChangeState(0,0,0,0);
-//   }
-//   shiftStateBak = shiftState;
-
- 
-
-
-
-  // Schaltervariante LFO Waveform
-  // Aus dem Waveformschalter ein Byte machen
-  // valLfoWaveformSwitch = combineBoolsToByte(digitalRead(waveFormPin_0),digitalRead(waveFormPin_1),0,0,0,0,0,0);
-  // if(valLfoWaveformSwitchBak != valLfoWaveformSwitch){
-  //   lfo1WaveformChanged = 1;
-  // }
-  // valLfoWaveformSwitchBak = valLfoWaveformSwitch;
-
-
-
-
-  
-    
-
-    
-  //}
-  
-  
-  
   // AnyfireButton = Tonerzeugung
   // Bedingungen: 
   // Firebutton gedrückt
@@ -1162,14 +1133,12 @@ void readSerial(){
     StaticJsonDocument<200> dataSet1;
     StaticJsonDocument<200> dataSet2;
 
-    
-
-   
     if(receiveStr == "receiveDump"){
-       // Verschachtelt
+        // Verschachtelt
       JsonObject receiveDumpDataSet = dataSet1.createNestedObject("dump");
       for (int i = 1; i <= 16; i++) {
         String _fileName = "fire"+String(i)+".json";
+        String _number = String(i);
         String _json = readSettings(_fileName);
         // Deserialisiere den JSON-String
         DeserializationError error = deserializeJson(dataSet2, _json);
@@ -1181,23 +1150,27 @@ void readSerial(){
       serializeJson(dataSet1, jsonString);
       Serial.println(jsonString);
     }
-
-    if (receiveStr == "receive_1") {
-      String _fileName = "fire1.json";
-      String _json = readSettings(_fileName);
     
-      // Versuche zu deserialisieren
-      DeserializationError error = deserializeJson(dataSet1, _json);
-      if (error) {
-        Serial.print("Deserialization failed: ");
-        Serial.println(error.f_str());
-        return;
+    // Universelle FUnktion zum Empfangen separater Speicherbereiche 
+    if (receiveStr.startsWith("receive_")) {
+      int idx = receiveStr.substring(8).toInt();
+      if (idx >= 1 && idx <= 16) {
+        String _fileName = "fire" + String(idx) + ".json";
+        String _json = readSettings(_fileName);
+    
+        DeserializationError error = deserializeJson(dataSet1, _json);
+        if (error) {
+          Serial.print("Deserialization failed: ");
+          Serial.println(error.f_str());
+          return;
+        }
+    
+        String jsonString;
+        serializeJson(dataSet1, jsonString);
+        Serial.println(jsonString);
+      } else {
+        Serial.println("Index out of range (1-16)");
       }
-    
-      // JSON-String erzeugen
-      String jsonString;
-      serializeJson(dataSet1, jsonString);
-      Serial.println(jsonString);
     }
  
 
@@ -1216,9 +1189,40 @@ void readSerial(){
     if(receiveStr.substring(0, 4) == "load"){
       // Beispiel: load({"pitch":1000,"lfoFreq":10,"lfoAmount":50,"lfo2Freq":5,"lfo2Amount":50,"envTime":2,"envAmount":0,"waveform":0,"waveform2":0,"dutyCycle":50}) 
       
-      String _json = extractArgument(receiveStr);
-      Serial.println(_json);
-      JSON2values(_json);
+      String cmd = extractArgument(receiveStr);
+      //Serial.println(_json);
+      //JSON2values(_json);
+
+      // Inhalt in den Klammern extrahieren: "1:{...}"
+      int start = cmd.indexOf('(') + 1;
+      int end = cmd.lastIndexOf(')');
+      String inner = cmd.substring(start, end);
+
+      // Split bei ':' → Slot | JSON
+      int colon = inner.indexOf(':');
+      if (colon == -1) {
+        //Serial.println("Fehler: kein ':' gefunden");
+        return;
+      }
+
+      String slotStr = inner.substring(0, colon);
+      String jsonStr = inner.substring(colon + 1);
+
+      String fileName = "fire"+String(slotStr)+".json";
+
+      dataSaved = writeSettings(jsonStr,fileName);
+
+      int slot = slotStr.toInt();
+      Serial.print("{\"Slot\":");
+      Serial.print(slot);
+      Serial.print(",");
+      Serial.print("\"JSON\":");
+      Serial.print(jsonStr);
+      Serial.print(",");
+      Serial.print("\"state\":");
+      Serial.print(str(dataSaved));
+      Serial.print("}");
+
     }
     // Die Zeichenkette zurücksetzen, um eine neue zu empfangen
     receiveStr = "";
