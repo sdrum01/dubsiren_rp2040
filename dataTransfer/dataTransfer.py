@@ -137,7 +137,8 @@ if __name__ == "__main__":
 
     # SAVE (receive_x)
     if args.save:
-        cmd = "receiveDump" if args.save == "dump" else f"receive_{args.save}"
+        slot = args.save
+        cmd = "receiveDump" if slot == "dump" else f"receive_{slot}"
         befehle.append(("receive", cmd))          # (Typ, Befehl)
 
     # LOAD (load_x + Datei)

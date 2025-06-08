@@ -1226,6 +1226,40 @@ void readSerial(){
       Serial.print("}");
 
     }
+
+    if (receiveStr.startsWith("loadDump")) {
+      String cmd = extractArgument(receiveStr);
+    
+      // Versuche, den JSON-Inhalt zu deserialisieren
+      StaticJsonDocument<4096> doc; // Größe ggf. anpassen
+      DeserializationError error = deserializeJson(doc, cmd);
+    
+      if (error) {
+        Serial.print("JSON Deserialization failed: ");
+        Serial.println(error.f_str());
+      } else {
+        JsonObject dump = doc["dump"];
+        for (JsonPair kv : dump) {
+          String slot = kv.key().c_str(); // z.B. "1", "2", ...
+          JsonObject slotData = kv.value().as<JsonObject>();
+    
+          // Serialisiere das Objekt wieder zu einem String
+          String jsonOut;
+          serializeJson(slotData, jsonOut);
+    
+          String fileName = "fire" + slot + ".json";
+          bool success = writeSettings(jsonOut, fileName);
+          
+          Serial.print("Saved slot ");
+          Serial.print(slot);
+          Serial.print(" → ");
+          Serial.print(fileName);
+          Serial.print(" → ");
+          Serial.println(success ? "OK" : "FAIL");
+        }
+      }
+    }
+    
     // Die Zeichenkette zurücksetzen, um eine neue zu empfangen
     receiveStr = "";
     receiveStrComplete = false;
