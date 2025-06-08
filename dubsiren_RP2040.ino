@@ -1138,12 +1138,14 @@ void readSerial(){
       JsonObject receiveDumpDataSet = dataSet1.createNestedObject("dump");
       for (int i = 1; i <= 16; i++) {
         String _fileName = "fire"+String(i)+".json";
+
         String _number = String(i);
         String _json = readSettings(_fileName);
         // Deserialisiere den JSON-String
         DeserializationError error = deserializeJson(dataSet2, _json);
         //Serial.println(_fileName);
-        receiveDumpDataSet[_fileName] = dataSet2;
+        // receiveDumpDataSet[_fileName] = dataSet2;
+        receiveDumpDataSet[_number] = dataSet2;
       }
       // Erstelle einen JSON-String
       String jsonString;
@@ -1220,7 +1222,7 @@ void readSerial(){
       Serial.print(jsonStr);
       Serial.print(",");
       Serial.print("\"state\":");
-      Serial.print(str(dataSaved));
+      Serial.print(String(dataSaved));
       Serial.print("}");
 
     }
