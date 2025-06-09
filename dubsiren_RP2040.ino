@@ -1153,7 +1153,7 @@ void readSerial(){
       Serial.println(jsonString);
     }
     
-    // Universelle FUnktion zum Empfangen separater Speicherbereiche 
+    // Universelle Funktion zum Empfangen separater Speicherbereiche 
     if (receiveStr.startsWith("receive_")) {
       int idx = receiveStr.substring(8).toInt();
       if (idx >= 1 && idx <= 16) {
@@ -1212,22 +1212,21 @@ void readSerial(){
 
       String fileName = "fire"+String(slotStr)+".json";
 
-      dataSaved = writeSettings(jsonStr,fileName);
+      bool success = writeSettings(jsonStr,fileName);
 
       int slot = slotStr.toInt();
-      Serial.print("{\"Slot\":");
+
+      Serial.println("");
+      Serial.print("Saved slot ");
       Serial.print(slot);
-      Serial.print(",");
-      Serial.print("\"JSON\":");
-      Serial.print(jsonStr);
-      Serial.print(",");
-      Serial.print("\"state\":");
-      Serial.print(String(dataSaved));
-      Serial.print("}");
+      Serial.print(" → ");
+      Serial.print(fileName);
+      Serial.print(" → ");
+      Serial.print(success ? "OK" : "FAIL");
 
     }
 
-    if (receiveStr.startsWith("loadDump")) {
+    if (receiveStr.startsWith("load_dump")) {
       String cmd = extractArgument(receiveStr);
     
       // Versuche, den JSON-Inhalt zu deserialisieren
@@ -1249,13 +1248,15 @@ void readSerial(){
     
           String fileName = "fire" + slot + ".json";
           bool success = writeSettings(jsonOut, fileName);
-          
+
+
+          Serial.println("");
           Serial.print("Saved slot ");
           Serial.print(slot);
           Serial.print(" → ");
           Serial.print(fileName);
           Serial.print(" → ");
-          Serial.println(success ? "OK" : "FAIL");
+          Serial.print(success ? "OK" : "FAIL");
         }
       }
     }

@@ -1,3 +1,24 @@
+# Helper to load or save memory dumps from DUB-IY
+#
+# usage: 
+# save single slots (firebutton)
+# COMMAND: python3 dataTransfer.py -save xx
+# xx = 0 - 16
+# File will saves as JSON File with prefix receive_xx with autoenumerating prefix and date_time (e.g. receive_15_20250609_220727.json)
+#
+# save all 16 slots as dump
+# COMMAND: python3 dataTransfer.py -save dump
+# File will saved as JSON File with prefix receiveDump_xx with autoenumerating prefix and date_time (e.g. receiveDump_20241130.json)
+# 
+# load single file to one slot
+# COMMAND: python3 dataTransfer.py -load xx receive_xx.json
+# Content of receive_xx.json will load and store it to slot xx
+# 
+# load complete DUmpfile to all 16 slots
+# COMMAND: python3 dataTransfer.py -load dump receiveDump_xxx.json
+# Content of receiveDump_xxx.json will load and store it to slot 1 - 16
+
+
 import serial
 import time
 import json
@@ -41,7 +62,7 @@ def read_json_from_serial(ser):
                 continue
 
     # Wenn kein gültiges JSON empfangen wurde, gib Rohinhalt aus
-    print("❌ Ungültige JSON-Antwort empfangen:")
+    print("❌ keine JSON-Antwort empfangen:")
     print("---- ROHDATEN BEGINN ----")
     print(buffer.strip())
     print("---- ROHDATEN ENDE ----")
@@ -95,8 +116,11 @@ def communicate(port, baudrate=115200, cmds=None):
 
                     json_string = json.dumps(daten, separators=(',', ':'))  # kompaktes JSON
                     slot = befehl.split("_")[1] if "_" in befehl else "?"   # z.B. "load_1" → "1"
-                    payload = f"load({slot}:{json_string})\n"
-
+                    print(f"slot: {slot}, command: {befehl}")
+                    if slot == "dump":
+                        payload = f"load({json_string})\n" 
+                    else: 
+                        payload = f"load({slot}:{json_string})\n"
                     ser.write(payload.encode('utf-8'))
                     print(f"Gesendet: {payload.strip()}")
 
@@ -144,7 +168,8 @@ if __name__ == "__main__":
     # LOAD (load_x + Datei)
     if args.load:
         slot, filename = args.load
-        cmd = "loadDump" if slot == "dump" else f"load_{slot}"
+        # cmd = "loadDump" if slot == "dump" else f"load_{slot}"
+        cmd = f"load_{slot}"
         befehle.append(("load", cmd, filename))   # (Typ, Befehl, Datei)
 
 
