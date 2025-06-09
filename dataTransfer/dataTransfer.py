@@ -35,18 +35,6 @@ def finde_arduino_port():
             return port.device
     return None
 
-# def read_json_from_serial(ser):
-#     buffer = ""
-#     start_time = time.time()
-#     while time.time() - start_time < 3:
-#         if ser.in_waiting:
-#             buffer += ser.read(ser.in_waiting).decode('utf-8', errors='ignore')
-#             try:
-#                 obj = json.loads(buffer.strip())
-#                 return obj
-#             except json.JSONDecodeError:
-#                 continue
-#     raise ValueError(f"Keine gültige JSON-Antwort erhalten")
 
 def read_json_from_serial(ser):
     buffer = ""
@@ -132,7 +120,26 @@ def communicate(port, baudrate=115200, cmds=None):
                     print("Response Geparst:", daten)
 
             if not cmds:
-                print("Verbindung steht – keine Aktion, da keine Parameter.")
+                print("Connection established but no Parameters.")
+                print("")
+                print("# usage: ")
+                print("# save single slots (firebutton)")
+                print("# COMMAND: python3 dataTransfer.py -save xx")
+                print("# xx = 0 - 16")
+                print("# File will saves as JSON File with prefix receive_xx with autoenumerating prefix and date_time (e.g. receive_15_20250609_220727.json)")
+                print("# ")
+                print("# save all 16 slots as dump")
+                print("# COMMAND: python3 dataTransfer.py -save dump")
+                print("# File will saved as JSON File with prefix receiveDump_xx with autoenumerating prefix and date_time (e.g. receiveDump_20241130.json)")
+                print("# ")
+                print("# load single file to one slot")
+                print("# COMMAND: python3 dataTransfer.py -load xx receive_xx.json")
+                print("# Content of receive_xx.json will load and store it to slot xx")
+                print("# ")
+                print("# load complete Dumpfile to all 16 slots")
+                print("# COMMAND: python3 dataTransfer.py -load dump receiveDump_xxx.json")
+                print("# Content of receiveDump_xxx.json will load and store it to slot 1 - 16")
+
     except Exception as e:
         print("Fehler:", e)
 
@@ -149,13 +156,6 @@ if __name__ == "__main__":
         help="Sendet 'load_<slot>' und überträgt <FILE> (z. B. 1 fire.json)"
     )
     args = parser.parse_args()
-
-
-
-    # parser = argparse.ArgumentParser(description="DUB-IY JSON-Dump-Receiver")
-    # parser.add_argument('-savedump', action='store_true', help="Sendet 'receiveDump' und speichert JSON")
-    # parser.add_argument('-save_1', action='store_true', help="Sendet 'receive_1' und speichert JSON")
-    # args = parser.parse_args()
 
     befehle = []
 
