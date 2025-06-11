@@ -5,9 +5,9 @@
    height="95.643997mm"
    version="1.1"
    id="svg258"
-   sodipodi:docname="Front_DUBIY_mit_Beschriftung_buisnesscard.svg"
+   sodipodi:docname="Front_DUBIY_mit_Beschriftung_buisnesscard_v3.svg"
    inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
-   inkscape:export-filename="Front_DUBIY_mit_Beschriftung_buisnesscard_v2.jpg"
+   inkscape:export-filename="Front_DUBIY_mit_Beschriftung_buisnesscard_v3.png"
    inkscape:export-xdpi="479.23999"
    inkscape:export-ydpi="479.23999"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -28,9 +28,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="1.6357523"
-     inkscape:cx="372.00009"
-     inkscape:cy="153.75188"
+     inkscape:zoom="0.57832577"
+     inkscape:cx="402.02255"
+     inkscape:cy="-185.88139"
      inkscape:window-width="1680"
      inkscape:window-height="979"
      inkscape:window-x="1672"
@@ -180,18 +180,10 @@
        xml:space="preserve"
        id="text1"
        style="text-align:start;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect1);display:inline;fill:#000000;stroke-width:1.13386;stroke-dasharray:none"
-       transform="matrix(1.7797532,0,0,1.8281673,230.68924,-146.88137)"><tspan
+       transform="matrix(2.1502747,0,0,2.4611417,213.90541,-328.87801)"><tspan
          x="-45.748047"
          y="275.45382"
-         id="tspan1">dub-iy@sdrum.elementfx.com</tspan></text>
-    <text
-       xml:space="preserve"
-       id="text2"
-       style="text-align:start;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect2);display:inline;fill:#000000;stroke-width:1.13386;stroke-dasharray:none"
-       transform="matrix(1.1119136,0,0,1.2379899,-296.80752,-194.15609)"><tspan
-         x="405.90625"
-         y="427.66867"
-         id="tspan2">https://github.com/sdrum01/dubsiren_rp2040</tspan></text>
+         id="tspan2">dub-iy@sdrum.elementfx.com</tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"

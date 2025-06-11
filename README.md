@@ -39,5 +39,10 @@ Only the combination of LFO 1+2 gets many Experimental Siren sounds, but  the Ti
    >
    >This is an non-profit project without the goal to make the big money.
    > its Just for Fun and we exclude any form of liability!
+   
+waiting list:
+to reserve one device or PCB pls write me an email: 
+dub-iy@sdrum.elementfx.com
+
 
 
