@@ -1,0 +1,13 @@
+{
+  "pitch": 1244,
+  "lfoFreq": 0.59725,
+  "lfoAmount": 72,
+  "lfo2Freq": 11.30108,
+  "lfo2Amount": 0,
+  "envTime": 1.274067,
+  "envAmount": 0,
+  "waveform": 1,
+  "waveform2": 2,
+  "dutyCycle": 50,
+  "optionFlags": 7
+}
