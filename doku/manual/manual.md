@@ -1,3 +1,0 @@
-#manual
-
-test
