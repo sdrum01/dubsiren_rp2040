@@ -4,9 +4,7 @@
 <img src="dubiy-front-manual.png">
 
 ## Global
---
-
-
+---
 **Firebutton 1-4 (F1 - F4):** Sound abfeuern
 Damit werden die abgespeicherten oder editierten Sounds abgespielt. Beim Loslassen des Buttons stoppt der Sound, es sei denn, die Nachbartaste wurde gedrückt.
 
@@ -38,7 +36,7 @@ Wenn keine Taste gedrückt wurde, blitzt der zuletzt benutzte Firebutton immer w
 **Shift-Button (S3)**: Umschalten vom normalen Sound-Edit mode in den Shift mode, damit bekommen P1,P2,P3 neue Funktionen:
 
 ## Sound Edit Shift Mode (Shift LED an -> S3)
---
+
 **Tune (P1):** Duty Cycle des Tons
 
 **Speed (P2):** Envelop-Timing-Generator Geschwindigkeit
@@ -66,7 +64,7 @@ Der Regler P3 hat beim LFO1 mit gewählter Wellenform "Rechteck" eine Besonderhe
 Jeder LFO hat einen unabhängigen abspeicherbaren Parametersatz, der über P1,P2,P3 eingestellt werden kann. Beide LFO beeinflussen sich gegenseitig.
 
 ## Spezialfunktionen
---
+
 **LFO-Button (S2) gedrückt + Firebutton 1-4:** 
 Hier können über 4 Flags verschiedene Sonderfunktionen eingeschaltet werden.
 Fire1 = Flag1 : LFO2 startet immer bei neu beim abfeuern von Sounds.
