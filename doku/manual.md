@@ -4,7 +4,7 @@
 <img src="dubiy-front-manual.png">
 
 ## Global
----
+
 **Firebutton 1-4 (F1 - F4):** Sound abfeuern
 Damit werden die abgespeicherten oder editierten Sounds abgespielt. Beim Loslassen des Buttons stoppt der Sound, es sei denn, die Nachbartaste wurde gedrückt.
 
