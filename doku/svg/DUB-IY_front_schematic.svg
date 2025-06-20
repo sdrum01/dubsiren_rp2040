@@ -23,22 +23,26 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="0.92300852"
-     inkscape:cx="362.94356"
-     inkscape:cy="496.74514"
+     inkscape:zoom="0.76414822"
+     inkscape:cx="333.70489"
+     inkscape:cy="436.43366"
      inkscape:window-width="1280"
      inkscape:window-height="709"
      inkscape:window-x="0"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
-     inkscape:current-layer="g255"
+     inkscape:current-layer="g237"
      showguides="true"
      inkscape:document-units="mm"
      inkscape:pageshadow="2"
      showgrid="false"
      inkscape:guide-bbox="true"
      inkscape:snap-to-guides="true"
-     inkscape:snap-object-midpoints="true">
+     inkscape:snap-object-midpoints="true"
+     inkscape:snap-others="false"
+     inkscape:object-nodes="false"
+     inkscape:snap-nodes="false"
+     inkscape:snap-global="false">
     <sodipodi:guide
        position="288.49036,896.0125"
        orientation="0,-1"
@@ -167,6 +171,10 @@
        position="190.22311,591.70071"
        orientation="0,-1"
        id="guide3352" />
+    <sodipodi:guide
+       position="670.75543,737.41644"
+       orientation="0,-1"
+       id="guide9065" />
   </sodipodi:namedview>
   <title
      id="title1">DUB-IY Fromtplatte</title>
@@ -2372,7 +2380,7 @@
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
+       style="fill:#9f5050;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none;fill-opacity:1"
        d="m 114.63213,572.33669 h 559.37"
        id="path213"
        inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY.png"
@@ -2700,6 +2708,50 @@
          x="315.62158"
          y="399.12863"
          style="font-size:17.3333px">P3</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:17.3333px;line-height:1.25;font-family:sans-serif;display:inline;fill:#000000;fill-opacity:1;stroke:none"
+       x="417.80688"
+       y="398.78671"
+       id="text32186-5-8"><tspan
+         sodipodi:role="line"
+         id="tspan32184-5-0"
+         x="417.80688"
+         y="398.78671"
+         style="font-size:17.3333px">S1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:17.3333px;line-height:1.25;font-family:sans-serif;display:inline;fill:#000000;fill-opacity:1;stroke:none"
+       x="485.45761"
+       y="398.83322"
+       id="text32186-5-8-9"><tspan
+         sodipodi:role="line"
+         id="tspan32184-5-0-0"
+         x="485.45761"
+         y="398.83322"
+         style="font-size:17.3333px">S2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:17.3333px;line-height:1.25;font-family:sans-serif;display:inline;fill:#000000;fill-opacity:1;stroke:none"
+       x="553.51562"
+       y="398.59357"
+       id="text32186-5-8-2"><tspan
+         sodipodi:role="line"
+         id="tspan32184-5-0-2"
+         x="553.51562"
+         y="398.59357"
+         style="font-size:17.3333px">S3</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:17.3333px;line-height:1.25;font-family:sans-serif;display:inline;fill:#000000;fill-opacity:1;stroke:none"
+       x="621.81342"
+       y="398.35391"
+       id="text32186-5-8-3"><tspan
+         sodipodi:role="line"
+         id="tspan32184-5-0-7"
+         x="621.81342"
+         y="398.35391"
+         style="font-size:17.3333px">S4</tspan></text>
   </g>
   <metadata
      id="metadata1">
