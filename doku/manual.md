@@ -26,7 +26,7 @@ Ein eventuell zuvor gespeicherter Sound auf dem selben Speicherplatz wird dabei 
 Wenn keine Taste gedrückt wurde, blitzt der zuletzt benutzte Firebutton immer wieder kurz. Damit hat man immer die Übersicht, welcher Sound gerade gewählt und editiert wird. Dies ist sehr hilfreich vor dem Speichern, um nicht versehentlich einen Sound zu überschreiben.
 
 ## Sound Edit (Shift LED aus)
---
+
 **Tune (P1):** Tonhöhe
 
 **Speed (P2):** Geschwindigkeit des gewählten LFO
@@ -37,7 +37,7 @@ Wenn keine Taste gedrückt wurde, blitzt der zuletzt benutzte Firebutton immer w
 
 ## Sound Edit Shift Mode (Shift LED an -> S3)
 
-**Tune (P1):** Duty Cycle des Tons
+**Tune (P1):** Duty Cycle (Pulsbreite) des Tons
 
 **Speed (P2):** Envelop-Timing-Generator Geschwindigkeit
 
