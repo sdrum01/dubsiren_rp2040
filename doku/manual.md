@@ -3,7 +3,7 @@
 
 <img src="dubiy-front-manual.png">
 
-Global
+## Global
 --
 
 
@@ -19,11 +19,15 @@ Damit werden die abgespeicherten oder editierten Sounds abgespielt. Beim Loslass
 - Bank3: 9 bis 12
 - Bank4: 13 bis 16
 
-**Save (S4) + Firebutton 1-4:** Sound abspeichern: Wenn ein neuer Sound editiert wurde, kann dieser auf einen Firebutton gespeichert werden. 
+**Save (S4) + Firebutton 1-4:** 
+Sound abspeichern: Jeder neue editierte Sound kann einfach auf einen Firebutton mit dieser Tastenkombination gespeichert werden. 
+Ein eventuell zuvor gespeicherter Sound auf dem selben Speicherplatz wird dabei überschrieben.
 
-Wenn keine Taste gedrückt wurde, blitzt der zuletzt benutzte Firebutton immer wieder kurz. Damit hat man die Übersicht, welcher Sound gerade gewählt und editiert wird. DIes ist sehr hilfreich z.B. vor dem Speichern, um nicht versehentlich einen Sound zu überschreiben.
+**Grundzustand**
 
-Sound Edit (Shift LED aus)
+Wenn keine Taste gedrückt wurde, blitzt der zuletzt benutzte Firebutton immer wieder kurz. Damit hat man immer die Übersicht, welcher Sound gerade gewählt und editiert wird. Dies ist sehr hilfreich vor dem Speichern, um nicht versehentlich einen Sound zu überschreiben.
+
+## Sound Edit (Shift LED aus)
 --
 **Tune (P1):** Tonhöhe
 
@@ -33,7 +37,7 @@ Sound Edit (Shift LED aus)
 
 **Shift-Button (S3)**: Umschalten vom normalen Sound-Edit mode in den Shift mode, damit bekommen P1,P2,P3 neue Funktionen:
 
-Sound Edit Shift Mode (S3) (Shift LED an)
+## Sound Edit Shift Mode (Shift LED an -> S3)
 --
 **Tune (P1):** Duty Cycle des Tons
 
@@ -45,12 +49,23 @@ Hinweis: der Timing-Generator beeinflusst die Geschwindigkeit des aktiven LFO
 
 Funktionsbuttons
 
-**Wave-Button (S1):** selektieren der Wellenform für den gewählten LFO
+**Wave-Button (S1):** selektieren der Wellenform für den gewählten LFO:
+Bei jedem LFO sind grundsätzlich 3 Wellenformen selektierbar
+- Rechteck 
+- Dreieck
+- Sägezahn 
+  
+Die Stärke und zum Teil die Art der Wellenform wird durch die Modulationsstärke (P3) positiv / negativ in Abhängigkeit des gewählten Wertes beeinflusst. Bei der Mittelstellung von P3 (0) hat der jeweilige LFO keinen Einfluss mehr.
+ 
+Der Regler P3 hat beim LFO1 mit gewählter Wellenform "Rechteck" eine Besonderheit, da die Wellenform "Rechteck" mit positver wie negativer Modulation gleich klingen würde:
+- positiver Wert: 2 Töne
+- negativer Wert: 3 Töne 
+- Minimaler Wert: Unterbrochener Ton
 
 **LFO-Button (S2):** LFO1 oder LFO2 wählen
-Jeder LFO hat einen unabhängigen abspeicherbaren Parametersatz, der über P1,P2,P3 eingestellt werden kann. 
+Jeder LFO hat einen unabhängigen abspeicherbaren Parametersatz, der über P1,P2,P3 eingestellt werden kann. Beide LFO beeinflussen sich gegenseitig.
 
-Spezialfunktionen
+## Spezialfunktionen
 --
 **LFO-Button (S2) gedrückt + Firebutton 1-4:** 
 Hier können über 4 Flags verschiedene Sonderfunktionen eingeschaltet werden.
@@ -63,6 +78,17 @@ Fire3 = Flag3 : Multiplikator der Modulation x 2
 Fire4 = Flag4 : Unbenutzt
 
 Flag 1 ist standardmäßig bei neuen Sounds gesetzt, damit LFO1 und LFO2 immer beim Drücken der Firebuttons zusammen gestartet werden. Wenn Flag 1 ausgeschaltet wird, läuft der LFO 2 weiter und startet nach dem drücken des Firebutton irgendwo zufällig.
+
+## Panik-Funktion (Reset LFO2 und Timing-Envelope)
+Sollte der Sound zu komplex geworden sein, und man möchte nur wieder den Grundsound hören, kann man den LFO2 und den Timing-Envelope einfach ausschalten, indem man die Taster S3 + S4 gleichzeitig drückt.
+
+## Echo / Delayeffekt
+
+**Delay (E1)**: Verzögerungszeit des Echo, von kurz nach lang
+
+**Feedback (E2)**: Stärke, wie sehr das Echo dem Ausgangssignal zugemischt wird und Rückkopplung (Feedback) des Echosignals. Bei maximalem Wert ist das Feedback unendlich lang.
+
+**Vol (E3)**: Ausgangslautstärke Master
 
 
 
