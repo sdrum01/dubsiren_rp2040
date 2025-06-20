@@ -80,13 +80,17 @@ Flag 1 ist standardmäßig bei neuen Sounds gesetzt, damit LFO1 und LFO2 immer b
 ## Panik-Funktion (Reset LFO2 und Timing-Envelope)
 Sollte der Sound zu komplex geworden sein, und man möchte nur wieder den Grundsound hören, kann man den LFO2 und den Timing-Envelope einfach ausschalten, indem man die Taster S3 + S4 gleichzeitig drückt.
 
-## Echo / Delayeffekt
+## Echo / Delayeffekt / Mastervolume
 
 **Delay (E1)**: Verzögerungszeit des Echo, von kurz nach lang
 
 **Feedback (E2)**: Stärke, wie sehr das Echo dem Ausgangssignal zugemischt wird und Rückkopplung (Feedback) des Echosignals. Bei maximalem Wert ist das Feedback unendlich lang.
 
 **Vol (E3)**: Ausgangslautstärke Master
+
+Echo und Mastervolume (Parameter E1 bis E3) sind nicht abspeicherbar! 
+
+Ich behalte mir vor, die Funktionalität bei Bedarf zu verbessern oder anzupassen. 
 
 
 
