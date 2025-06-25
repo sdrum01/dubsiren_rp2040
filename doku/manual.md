@@ -25,7 +25,8 @@ Ein eventuell zuvor gespeicherter Sound auf dem selben Speicherplatz wird dabei 
 
 Wenn keine Taste gedrückt wurde, blitzt der zuletzt benutzte Firebutton immer wieder kurz. Damit hat man immer die Übersicht, welcher Sound gerade gewählt und editiert wird. Dies ist sehr hilfreich vor dem Speichern, um nicht versehentlich einen Sound zu überschreiben.
 
-## Sound Edit (Shift LED aus)
+## Sound Edit 
+Die Sounds können durch folgende Parameter editiert werden:
 
 **Tune (P1):** Tonhöhe
 
@@ -33,15 +34,16 @@ Wenn keine Taste gedrückt wurde, blitzt der zuletzt benutzte Firebutton immer w
 
 **Mod (P3):** Modulationsstärke des gewählten LFO
 
-**Shift-Button (S3)**: Umschalten vom normalen Sound-Edit mode in den Shift mode, damit bekommen P1,P2,P3 neue Funktionen:
+**Shift-Button (S3)**: Umschalten vom normalen Sound-Edit mode in den Sound Edit "Shift Mode"
 
-## Sound Edit Shift Mode (Shift LED an -> S3)
+## Sound Edit "Shift Mode" (Shift LED an -> S3)
+Im "Shift Mode" bekommen die Potis P1,P2,P3 neue Funktionen:
 
-**Tune (P1):** Duty Cycle (Pulsbreite) des Tons
+**Tune (P1):** ist nun das Duty Cycle (Pulsbreite) des Tons
 
-**Speed (P2):** Envelop-Timing-Generator Geschwindigkeit
+**Speed (P2):** ist die Geschwindigkeit der LFO-Beeinflussung des Envelop-Timing-Generator
 
-**Mod (P3):** Envelop-Timing-Generator  Modulationsstärke positiv oder negativ
+**Mod (P3):** ist die Modulationsstärke des Envelop-Timing-Generator (positiv oder negativ)
 
 Hinweis: der Timing-Generator beeinflusst die Geschwindigkeit des aktiven LFO
 
