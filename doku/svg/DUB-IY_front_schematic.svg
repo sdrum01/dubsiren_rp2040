@@ -23,15 +23,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="0.76414822"
-     inkscape:cx="333.70489"
-     inkscape:cy="436.43366"
+     inkscape:zoom="2.8355736"
+     inkscape:cx="449.82081"
+     inkscape:cy="272.78432"
      inkscape:window-width="1280"
      inkscape:window-height="709"
      inkscape:window-x="0"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
-     inkscape:current-layer="g237"
+     inkscape:current-layer="layer1"
      showguides="true"
      inkscape:document-units="mm"
      inkscape:pageshadow="2"
@@ -42,7 +42,10 @@
      inkscape:snap-others="false"
      inkscape:object-nodes="false"
      inkscape:snap-nodes="false"
-     inkscape:snap-global="false">
+     inkscape:snap-global="true"
+     inkscape:snap-bbox="true"
+     inkscape:bbox-paths="false"
+     inkscape:bbox-nodes="false">
     <sodipodi:guide
        position="288.49036,896.0125"
        orientation="0,-1"
@@ -175,6 +178,22 @@
        position="670.75543,737.41644"
        orientation="0,-1"
        id="guide9065" />
+    <sodipodi:guide
+       position="117.50174,909.44099"
+       orientation="0,-1"
+       id="guide2467" />
+    <sodipodi:guide
+       position="95.534129,883.94099"
+       orientation="1,0"
+       id="guide2549" />
+    <sodipodi:guide
+       position="693.1001,870.81048"
+       orientation="1,0"
+       id="guide2551" />
+    <sodipodi:guide
+       position="638.68739,549.98302"
+       orientation="0,-1"
+       id="guide2553" />
   </sodipodi:namedview>
   <title
      id="title1">DUB-IY Fromtplatte</title>
@@ -230,6 +249,20 @@
     <symbol
        id="*Paper_Space" />
   </defs>
+  <g
+     inkscape:groupmode="layer"
+     id="layer1"
+     inkscape:label="Kontur"
+     style="display:inline">
+    <rect
+       style="display:inline;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.389291;stroke-miterlimit:4;stroke-dasharray:none"
+       id="rect2577"
+       width="597.17639"
+       height="359.06842"
+       x="95.728889"
+       y="213.27345"
+       rx="18.897638" />
+  </g>
   <g
      inkscape:groupmode="layer"
      inkscape:label="Gravur"
@@ -2254,20 +2287,6 @@
        inkscape:export-xdpi="192.82361"
        inkscape:export-ydpi="192.82361" />
     <path
-       d="m 95.734456,553.43629 a 18.897638,18.897638 0 0 0 18.897634,18.89764"
-       style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
-       id="path195"
-       inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
-       inkscape:export-xdpi="192.82361"
-       inkscape:export-ydpi="192.82361" />
-    <path
-       d="m 674.00217,572.33393 a 18.897638,18.897638 0 0 0 18.89764,-18.89764"
-       style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
-       id="path196"
-       inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
-       inkscape:export-xdpi="192.82361"
-       inkscape:export-ydpi="192.82361" />
-    <path
        d="m 639.04154,366.34968 a 6.614173,6.614173 0 0 0 -13.22834,0 6.614173,6.614173 0 0 0 13.22834,0 z"
        style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
        id="path197"
@@ -2289,23 +2308,9 @@
        inkscape:export-xdpi="192.82361"
        inkscape:export-ydpi="192.82361" />
     <path
-       d="M 114.63209,213.27881 A 18.897638,18.897638 0 0 0 95.734456,232.17645"
-       style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
-       id="path200"
-       inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
-       inkscape:export-xdpi="192.82361"
-       inkscape:export-ydpi="192.82361" />
-    <path
        style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
        d="m 222.34813,543.98669 v -90.71"
        id="path201"
-       inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
-       inkscape:export-xdpi="192.82361"
-       inkscape:export-ydpi="192.82361" />
-    <path
-       style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
-       d="m 692.90013,232.17669 v 321.26"
-       id="path202"
        inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
        inkscape:export-xdpi="192.82361"
        inkscape:export-ydpi="192.82361" />
@@ -2324,23 +2329,9 @@
        inkscape:export-xdpi="192.82361"
        inkscape:export-ydpi="192.82361" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
-       d="m 95.734133,232.17669 v 321.26"
-       id="path205"
-       inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
-       inkscape:export-xdpi="192.82361"
-       inkscape:export-ydpi="192.82361" />
-    <path
        d="m 514.31713,366.34968 a 6.614173,6.614173 0 0 0 -13.22834,0 6.614173,6.614173 0 0 0 13.22834,0 z"
        style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
        id="path206"
-       inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
-       inkscape:export-xdpi="192.82361"
-       inkscape:export-ydpi="192.82361" />
-    <path
-       d="M 692.89981,232.17645 A 18.897638,18.897638 0 0 0 674.00217,213.27881"
-       style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
-       id="path207"
        inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
        inkscape:export-xdpi="192.82361"
        inkscape:export-ydpi="192.82361" />
@@ -2380,13 +2371,6 @@
        inkscape:export-xdpi="192.82361"
        inkscape:export-ydpi="192.82361" />
     <path
-       style="fill:#9f5050;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none;fill-opacity:1"
-       d="m 114.63213,572.33669 h 559.37"
-       id="path213"
-       inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
-       inkscape:export-xdpi="192.82361"
-       inkscape:export-ydpi="192.82361" />
-    <path
        d="m 491.63997,366.34968 a 6.614175,6.614175 0 0 0 -13.22835,0 6.614175,6.614175 0 0 0 13.22835,0 z"
        style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
        id="path214"
@@ -2397,13 +2381,6 @@
        d="m 358.41162,453.27881 a 3.779528,3.779528 0 0 0 -3.77953,-3.77953"
        style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
        id="path215"
-       inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
-       inkscape:export-xdpi="192.82361"
-       inkscape:export-ydpi="192.82361" />
-    <path
-       style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:round;stroke-dasharray:none"
-       d="m 114.63213,213.27869 h 559.37"
-       id="path216"
        inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
        inkscape:export-xdpi="192.82361"
        inkscape:export-ydpi="192.82361" />
@@ -2641,16 +2618,16 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:17.3333px;line-height:1.25;font-family:sans-serif;display:inline;fill:#000000;fill-opacity:1;stroke:none"
-       x="588.58459"
-       y="285.92117"
+       x="587.64966"
+       y="285.85489"
        id="text32186-8-5"
        inkscape:export-filename="/Users/sdrum/Development/Arduino/dubsiren_RP2040/CAD/DXF/Frontplatte_DUBIY_.png"
        inkscape:export-xdpi="192.82361"
        inkscape:export-ydpi="192.82361"><tspan
          sodipodi:role="line"
          id="tspan32184-2-2"
-         x="588.58459"
-         y="285.92117"
+         x="587.64966"
+         y="285.85489"
          style="font-size:17.3333px">E3</tspan></text>
     <text
        xml:space="preserve"
