@@ -1,8 +1,7 @@
 # Short manual
 20.06.2025
 
-<img src="dubiy-front-manual.png">
-<img src="svg/DUB-IY_front_schematic.svg">
+<img src="svg/DUB-IY_front_schematic.svg" style="width:100%"/>
 
 ## Global
 
