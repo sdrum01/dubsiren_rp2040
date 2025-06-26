@@ -62,10 +62,14 @@ Der Regler P3 hat beim LFO1 mit gewählter Wellenform "Rechteck" eine Besonderhe
 - negativer Wert: 3 Töne 
 - Minimaler Wert: Unterbrochener Ton
 
-**LFO-Button (S2):** LFO1 oder LFO2 wählen
-Jeder LFO hat einen unabhängigen abspeicherbaren Parametersatz, der über P1,P2,P3 eingestellt werden kann. Beide LFO beeinflussen sich gegenseitig.
+**LFO-Button (S2):** 
+Selektieren von LFO1 oder LFO2 
 
-## Spezialfunktionen
+Jeder LFO hat einen unabhängigen abspeicherbaren Parametersatz, der über P1,P2,P3 eingestellt werden kann. 
+Beide LFO beeinflussen sich gegenseitig.
+
+## Spezialfunktionen / Flags
+ACHTUNG : Experimentelle Funktion
 
 **LFO-Button (S2) gedrückt + Firebutton 1-4:** 
 Hier können über 4 Flags verschiedene Sonderfunktionen eingeschaltet werden.
