@@ -66,7 +66,20 @@ Der Regler P3 hat beim LFO1 mit gewählter Wellenform "Rechteck" eine Besonderhe
 Selektieren von LFO1 oder LFO2 
 
 Jeder LFO hat einen unabhängigen abspeicherbaren Parametersatz, der über P1,P2,P3 eingestellt werden kann. 
-Beide LFO beeinflussen sich gegenseitig.
+Beide LFO beeinflussen (modulieren) sich gegenseitig.
+
+**Beispiele der Modulation**
+<img src="png/tri-x-tri_05.png" style="width:50%"/>
+Modulation einer Dreieckwelle von LFO1 mit eine schnellere Dreieckwelle LFO2 mit 5%
+Hier entsteht ein leichter "Vibrato-Effekt"
+
+<img src="png/tri-x-tri_50.png" style="width:50%"/>
+
+Modulation einer Dreieckwelle von LFO1 mit der Dreieckwelle LFO2, aber mit +50% Modulationsstärke
+
+<img src="png/saw-x-tri_50.png" style="width:50%"/>
+
+Modulation einer Sägezahnwelle von LFO1 mit einer Dreieckwelle doppelter Frequenz von LFO2 mit +50% Modulationsstärke
 
 ## Spezialfunktionen / Flags
 ACHTUNG : Experimentelle Funktion
