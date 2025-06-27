@@ -1,4 +1,4 @@
-# DUB-IY Short manual
+# DUB-IY Kurzanleitung 
 27.06.2025
 
 <img src="svg/DUB-IY_front_schematic.svg" style="width:100%"/>
