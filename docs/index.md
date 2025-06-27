@@ -73,16 +73,19 @@ Beide LFO beeinflussen (modulieren) sich gegenseitig.
 
 <img src="png/tri-x-tri_05.png" style="width:50%"/>
 
-Modulation einer Dreieckwelle von LFO1 mit eine schnellere Dreieckwelle LFO2 mit 5%
-Hier entsteht ein leichter "Vibrato-Effekt"
+_Modulation einer Dreieckwelle von LFO1 mit eine schnellere Dreieckwelle LFO2 mit 5%_
+_Hier entsteht ein leichter "Vibrato-Effekt"_
+
 
 <img src="png/tri-x-tri_50.png" style="width:50%"/>
 
-Modulation einer Dreieckwelle von LFO1 mit der Dreieckwelle LFO2, aber mit +50% Modulationsstärke
+_Modulation einer Dreieckwelle von LFO1 mit der Dreieckwelle LFO2, aber mit +50% Modulationsstärke_
+
 
 <img src="png/saw-x-tri_50.png" style="width:50%"/>
 
-Modulation einer Sägezahnwelle von LFO1 mit einer Dreieckwelle doppelter Frequenz von LFO2 mit +50% Modulationsstärke
+_Modulation einer Sägezahnwelle von LFO1 mit einer Dreieckwelle doppelter Frequenz von LFO2 mit +50% Modulationsstärke_
+
 
 ## Spezialfunktionen / Flags
 ACHTUNG : Experimentelle Funktion
