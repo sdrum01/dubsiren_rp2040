@@ -44,6 +44,9 @@ waiting list:
 to reserve one device or PCB pls write me an email: 
 dub-iy@sdrum.elementfx.com
 
+**short manual in german**
+<a href="/doku/manual.md">Manual Deutsch</a>
+
 Have a look into the short introduction on youtube:
 
 [DUB-IY INTRODUCTION]( https://youtu.be/Yc06HZqR8gg?si=ktLNwQYJj4XRiWYL) 
