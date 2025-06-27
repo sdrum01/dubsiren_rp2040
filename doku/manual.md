@@ -103,13 +103,13 @@ Sollte der Sound zu komplex geworden sein, und man möchte nur wieder den Grunds
 
 **Delay (E1)**: Verzögerungszeit des Echo, von kurz nach lang
 
-**Feedback (E2)**: Stärke, wie sehr das Echo dem Ausgangssignal zugemischt wird und Rückkopplung (Feedback) des Echosignals. Bei maximalem Wert ist das Feedback unendlich lang.
+**Feedback (E2)**: Stärke, wie sehr das Echo dem Ausgangssignal zugemischt wird und Stärke der Rückkopplung (Feedback) des Eingangssignals. Bei maximalem Wert ist das Feedback unendlich lang.
 
 **Vol (E3)**: Ausgangslautstärke Master
 
 Echo und Mastervolume (Parameter E1 bis E3) sind nicht abspeicherbar! 
 
-Ich behalte mir vor, die Funktionalität bei Bedarf zu verbessern oder anzupassen. 
+Wir behalten uns vor, die Funktionalität bei Bedarf zu verbessern oder anzupassen. 
 
 
 
