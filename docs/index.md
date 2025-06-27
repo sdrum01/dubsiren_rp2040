@@ -70,7 +70,9 @@ Beide LFO beeinflussen (modulieren) sich gegenseitig.
 
 
 ## Beispiele der Modulation
+
 <img src="png/tri-x-tri_05.png" style="width:50%"/>
+
 Modulation einer Dreieckwelle von LFO1 mit eine schnellere Dreieckwelle LFO2 mit 5%
 Hier entsteht ein leichter "Vibrato-Effekt"
 
