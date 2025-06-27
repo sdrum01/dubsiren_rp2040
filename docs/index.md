@@ -68,7 +68,8 @@ Selektieren von LFO1 oder LFO2
 Jeder LFO hat einen unabhängigen abspeicherbaren Parametersatz, der über P1,P2,P3 eingestellt werden kann. 
 Beide LFO beeinflussen (modulieren) sich gegenseitig.
 
-**Beispiele der Modulation**
+
+## Beispiele der Modulation
 <img src="png/tri-x-tri_05.png" style="width:50%"/>
 Modulation einer Dreieckwelle von LFO1 mit eine schnellere Dreieckwelle LFO2 mit 5%
 Hier entsteht ein leichter "Vibrato-Effekt"
