@@ -56,5 +56,7 @@ Have a look into the short introduction on youtube:
 
 [Kurzanleitung Deutsch](https://sdrum01.github.io/dubsiren_rp2040/doku/manual.md)
 
+<a href="https://sdrum01.github.io/dubsiren_rp2040/doku/manual.md">manual</a>
+
 
 
