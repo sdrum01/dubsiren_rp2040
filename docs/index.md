@@ -56,7 +56,7 @@ Im "Shift Mode" bekommen die Potentiometer (Drehregler) P1, P2, P3 neue Funktion
 **Mod (P3):** beeinflusst die Modulationsstärke des Envelop-Timing-Generator (positiv oder negativ)
 
 > [!TIP]
-> Hinweis: der Timing-Generator (P2) beeinflusst die Geschwindigkeit des aktiven LFO (siehe [Funktionsbuttons](#funktionsbuttons)).
+> Der Timing-Generator (P2) beeinflusst die Geschwindigkeit des aktiven LFO (siehe [Funktionsbuttons](#funktionsbuttons)).
 
 
 ## Funktionsbuttons
@@ -82,7 +82,7 @@ Der Regler P3 hat beim LFO1 mit gewählter Wellenform "Rechteck" eine Besonderhe
 
 **LFO-Button (S2):** 
 
-Selektieren von LFO1 oder LFO2 
+Selektieren von LFO1 oder LFO2.
 
 Jeder LFO hat einen unabhängigen, abspeicherbaren Parametersatz, der über P1, P2, P3 eingestellt werden kann. 
 Beide LFO beeinflussen (modulieren) sich gegenseitig.
@@ -108,7 +108,7 @@ _Modulation einer Sägezahnwelle von LFO1 mit einer Dreieckwelle doppelter Frequ
 ## Spezialfunktionen / Flags
 
 > [!CAUTION]
-> ACHTUNG : Experimentelle Funktion
+> Experimentelle Funktion
 
 **LFO-Button (S2) gedrückt + Firebutton 1-4:** 
 
@@ -138,6 +138,8 @@ Sollte der Sound zu komplex geworden sein, und man möchte nur wieder den Grunds
 
 > [!Important]
 > Echo und Mastervolume (Parameter E1 bis E3) sind nicht abspeicherbar! 
+
+---
 
 > [!Note]
 > Wir behalten uns vor, die Funktionalität bei Bedarf zu verbessern oder anzupassen. 
