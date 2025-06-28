@@ -5,12 +5,17 @@
 
 ## Global
 
-**Firebutton 1-4 (F1 - F4):** Sound abfeuern
-Damit werden die abgespeicherten oder editierten Sounds abgespielt. Beim Loslassen des Buttons stoppt der Sound, es sei denn, die Nachbartaste wurde gedrückt.
+**Firebutton 1-4 (F1 - F4):** 
 
-**Firebutton 1-4 + benachbarten Firebutton**: Sound halten bis Firebutton erneut gedrückt wurde.
+Sound abfeuern. Mit den Firebuttons 1-4 werden die abgespeicherten oder editierten Sounds abgespielt. Beim Loslassen der Buttons stoppt der Sound, es sei denn, eine der Nachbartasten wurde gedrückt.
 
-**Shift (S3) + Firebutton 1-4:** Speicherbank wählen: Auf den Firebuttons 1-4 werden die Sounds  der gewählten Bank aus dem Speicher geladen:
+**Firebutton 1-4 + benachbarter Firebutton**:
+
+Sound halten bis Firebutton erneut gedrückt wurde.
+
+**Shift (S3) + Firebutton 1-4:**
+
+Speicherbank wählen: Mit den Firebuttons 1-4 werden die Sounds der gewählten Bank aus dem Speicher geladen. Eine Bank besteht aus jeweils vier Buttons. Damit können bis zu 16 Sounds gespeichert werden:
 
 - Bank1: 1 bis 4
 - Bank2: 5 bis 8
@@ -18,15 +23,19 @@ Damit werden die abgespeicherten oder editierten Sounds abgespielt. Beim Loslass
 - Bank4: 13 bis 16
 
 **Save (S4) + Firebutton 1-4:** 
+
 Sound abspeichern: Jeder neue editierte Sound kann einfach auf einen Firebutton mit dieser Tastenkombination gespeichert werden. 
 Ein eventuell zuvor gespeicherter Sound auf dem selben Speicherplatz wird dabei überschrieben.
 
 **Grundzustand**
 
-Wenn keine Taste gedrückt wurde, blitzt der zuletzt benutzte Firebutton immer wieder kurz. Damit hat man immer die Übersicht, welcher Sound gerade gewählt und editiert wird. Dies ist sehr hilfreich vor dem Speichern, um nicht versehentlich einen Sound zu überschreiben.
+Wenn keine Taste gedrückt wurde, blitzt der zuletzt benutzte Firebutton immer wieder kurz. Dadurch ist ersichtlich, welcher Sound gerade gewählt und editiert wird. Dies ist sehr hilfreich vor dem Speichern, um nicht versehentlich einen Sound zu überschreiben.
+
 
 ## Sound Edit 
-Die Sounds können durch folgende Parameter editiert werden:
+
+Die Parameter der Sounds können durch folgende Potentiometer (Drehregler)
+beeinflusst werden:
 
 **Tune (P1):** Tonhöhe
 
@@ -34,22 +43,31 @@ Die Sounds können durch folgende Parameter editiert werden:
 
 **Mod (P3):** Modulationsstärke des gewählten LFO
 
-**Shift-Button (S3)**: Umschalten vom normalen Sound-Edit mode in den Sound Edit "Shift Mode"
-
 ## Sound Edit "Shift Mode" (Shift LED an -> S3)
-Im "Shift Mode" bekommen die Potis P1,P2,P3 neue Funktionen:
 
-**Tune (P1):** ist nun das Duty Cycle (Pulsbreite) des Tons
+**Shift-Button (S3)**: Umschalten vom normalen Sound-Edit mode in den Sound Edit "Shift Mode".
 
-**Speed (P2):** ist die Geschwindigkeit der LFO-Beeinflussung des Envelop-Timing-Generator
+Im "Shift Mode" bekommen die Potentiometer (Drehregler) P1, P2, P3 neue Funktionen:
 
-**Mod (P3):** ist die Modulationsstärke des Envelop-Timing-Generator (positiv oder negativ)
+**Tune (P1):** beeinflusst das Duty Cycle (Pulsbreite) des Tons
 
-Hinweis: der Timing-Generator beeinflusst die Geschwindigkeit des aktiven LFO
+**Speed (P2):** beeinflusst die Geschwindigkeit der LFO-Beeinflussung des Envelop-Timing-Generator
 
-Funktionsbuttons
+**Mod (P3):** beeinflusst die Modulationsstärke des Envelop-Timing-Generator (positiv oder negativ)
 
-**Wave-Button (S1):** selektieren der Wellenform für den gewählten LFO:
+> [!TIP]
+> Hinweis: der Timing-Generator (P2) beeinflusst die Geschwindigkeit des aktiven LFO (siehe [Funktionsbuttons](#funktionsbuttons)).
+
+
+## Funktionsbuttons
+
+Das DUB-YI verfügt über zwei LFO (Low-Frequency Oscillator), welche
+niederfrequente, selektierbare Wellenformen erzeugen.
+
+**Wave-Button (S1):** 
+
+Selektieren der Wellenform für den gewählten LFO:
+
 Bei jedem LFO sind grundsätzlich 3 Wellenformen selektierbar
 - Rechteck 
 - Dreieck
@@ -63,9 +81,10 @@ Der Regler P3 hat beim LFO1 mit gewählter Wellenform "Rechteck" eine Besonderhe
 - Minimaler Wert: Unterbrochener Ton
 
 **LFO-Button (S2):** 
+
 Selektieren von LFO1 oder LFO2 
 
-Jeder LFO hat einen unabhängigen abspeicherbaren Parametersatz, der über P1,P2,P3 eingestellt werden kann. 
+Jeder LFO hat einen unabhängigen, abspeicherbaren Parametersatz, der über P1, P2, P3 eingestellt werden kann. 
 Beide LFO beeinflussen (modulieren) sich gegenseitig.
 
 
@@ -73,49 +92,55 @@ Beide LFO beeinflussen (modulieren) sich gegenseitig.
 
 <img src="png/tri-x-tri_05.png" style="width:50%"/>
 
-_Modulation einer Dreieckwelle von LFO1 mit eine schnellere Dreieckwelle LFO2 mit 5%_
-_Hier entsteht ein leichter "Vibrato-Effekt"_
+_Modulation einer Dreieckwelle von LFO1 mit einer schnelleren Dreieckwelle LFO2 mit 5%_. _Es entsteht ein leichter "Vibrato-Effekt"_.
 
 
 <img src="png/tri-x-tri_50.png" style="width:50%"/>
 
-_Modulation einer Dreieckwelle von LFO1 mit der Dreieckwelle LFO2, aber mit +50% Modulationsstärke_
+_Modulation einer Dreieckwelle von LFO1 mit der Dreieckwelle LFO2, aber mit +50% Modulationsstärke_.
 
 
 <img src="png/saw-x-tri_50.png" style="width:50%"/>
 
-_Modulation einer Sägezahnwelle von LFO1 mit einer Dreieckwelle doppelter Frequenz von LFO2 mit +50% Modulationsstärke_
+_Modulation einer Sägezahnwelle von LFO1 mit einer Dreieckwelle doppelter Frequenz von LFO2 mit +50% Modulationsstärke_.
 
 
 ## Spezialfunktionen / Flags
-ACHTUNG : Experimentelle Funktion
+
+> [!CAUTION]
+> ACHTUNG : Experimentelle Funktion
 
 **LFO-Button (S2) gedrückt + Firebutton 1-4:** 
-Hier können über 4 Flags verschiedene Sonderfunktionen eingeschaltet werden.
-Fire1 = Flag1 : LFO2 startet immer bei neu beim abfeuern von Sounds.
 
-Fire2 = Flag2 : One Shot: Nach dem LFO1 eine vollständite Periode gespielt hat, wird der Sound gestoppt
+Über 4 Flags verschiedene Sonderfunktionen eingeschaltet werden.
 
-Fire3 = Flag3 : Multiplikator der Modulation x 2
+**Fire1 = Flag1**: LFO2 startet immer bei neu beim abfeuern von Sounds.
 
-Fire4 = Flag4 : Unbenutzt
+**Fire2 = Flag2**: One Shot: Nach dem LFO1 eine vollständite Periode gespielt hat, wird der Sound gestoppt
 
-Flag 1 ist standardmäßig bei neuen Sounds gesetzt, damit LFO1 und LFO2 immer beim Drücken der Firebuttons zusammen gestartet werden. Wenn Flag 1 ausgeschaltet wird, läuft der LFO 2 weiter und startet nach dem drücken des Firebutton irgendwo zufällig.
+**Fire3 = Flag3**: Multiplikator der Modulation x 2
+
+**Fire4 = Flag4**: Unbenutzt
+
+Flag 1 ist standardmäßig bei neuen Sounds gesetzt, damit LFO1 und LFO2 beim Drücken der Firebuttons immer zusammen gestartet werden. Wenn Flag 1 ausgeschaltet wird, läuft der LFO2 weiter und startet nach dem drücken des Firebutton irgendwo zufällig.
 
 ## Panik-Funktion (Reset LFO2 und Timing-Envelope)
+
 Sollte der Sound zu komplex geworden sein, und man möchte nur wieder den Grundsound hören, kann man den LFO2 und den Timing-Envelope einfach ausschalten, indem man die Taster S3 + S4 gleichzeitig drückt.
 
 ## Echo / Delayeffekt / Mastervolume
 
 **Delay (E1)**: Verzögerungszeit des Echo, von kurz nach lang
 
-**Feedback (E2)**: Stärke, wie sehr das Echo dem Ausgangssignal zugemischt wird und Stärke der Rückkopplung (Feedback) des Eingangssignals. Bei maximalem Wert ist das Feedback unendlich lang.
+**Feedback (E2)**: Stärke, mit der das Echo dem Ausgangssignal zugemischt wird und Stärke der Rückkopplung (Feedback) des Eingangssignals. Bei maximalem Wert ist das Feedback unendlich lang.
 
 **Vol (E3)**: Ausgangslautstärke Master
 
-Echo und Mastervolume (Parameter E1 bis E3) sind nicht abspeicherbar! 
+> [!Important]
+> Echo und Mastervolume (Parameter E1 bis E3) sind nicht abspeicherbar! 
 
-Wir behalten uns vor, die Funktionalität bei Bedarf zu verbessern oder anzupassen. 
+> [!Note]
+> Wir behalten uns vor, die Funktionalität bei Bedarf zu verbessern oder anzupassen. 
 
 
 
