@@ -62,7 +62,7 @@ Im "Shift Mode" bekommen die Potentiometer (Drehregler) P1, P2, P3 neue Funktion
 ## Funktionsbuttons
 
 Das DUB-YI verfügt über zwei LFO (Low-Frequency Oscillator), welche
-niederfrequente, selektierbare Wellenformen erzeugen.
+die Wellenformen erzeugen, mit dem der Ton moduliert wird.
 
 **Wave-Button (S1):** 
 
