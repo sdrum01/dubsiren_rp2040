@@ -53,7 +53,11 @@ Im "Shift Mode" bekommen die Potentiometer (Drehregler) P1, P2, P3 neue Funktion
 
 **Speed (P2):** beeinflusst die Geschwindigkeit der LFO-Beeinflussung des Envelop-Timing-Generator
 
-**Mod (P3):** beeinflusst die Modulationsstärke des Envelop-Timing-Generator (positiv oder negativ)
+**Mod (P3):** beeinflusst die Modulationsstärke des Envelop-Timing-Generator (langsam -> schnell oder schnell -> langsam)
+
+<img src="png/saw_timing_envelope.png" style="width:50%"/>
+
+_Beispiel einer Beeinflussung eines Sägezahhn-LFO durch den Timing-Envelope-Generator_.
 
 > [!TIP]
 > Der Timing-Generator (P2) beeinflusst die Geschwindigkeit des aktiven LFO (siehe [Funktionsbuttons](#funktionsbuttons)).
