@@ -43,6 +43,8 @@ beeinflusst werden:
 
 **Mod (P3):** Modulationsstärke des gewählten LFO
 
+<img src="png/saw_timing_envelope.png" style="width:50%"/>
+
 ## Sound Edit "Shift Mode" (Shift LED an -> S3)
 
 **Shift-Button (S3)**: Umschalten vom normalen Sound-Edit mode in den Sound Edit "Shift Mode".
