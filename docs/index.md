@@ -43,7 +43,9 @@ beeinflusst werden:
 
 **Mod (P3):** Modulationsstärke des gewählten LFO
 
-<img src="png/saw_timing_envelope.png" style="width:50%"/>
+<img src="png/saw_pos_simple.png" style="width:50%"/><img src="png/saw_neg_simple.png" style="width:50%"/>
+_Beispiel der positiven und negativen Modulationsstärke des LFO bei einer Sägezahnwelle_.
+
 
 ## Sound Edit "Shift Mode" (Shift LED an -> S3)
 
