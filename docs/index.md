@@ -29,7 +29,7 @@ Ein eventuell zuvor gespeicherter Sound auf dem selben Speicherplatz wird dabei 
 
 **Grundzustand**
 
-Wenn keine Taste gedrückt wurde, blitzt der zuletzt benutzte Firebutton immer wieder kurz. Dadurch ist ersichtlich, welcher Sound gerade gewählt und editiert wird. Dies ist sehr hilfreich vor dem Speichern, um nicht versehentlich einen Sound zu überschreiben.
+Wenn keine Taste gedrückt wurde, blinkt der zuletzt benutzte Firebutton immer wieder kurz. Dadurch ist ersichtlich, welcher Sound gerade gewählt und editiert wird. Dies ist sehr hilfreich vor dem Speichern, um nicht versehentlich einen Sound zu überschreiben.
 
 
 ## Sound Edit 
@@ -53,11 +53,22 @@ _Beispiel der positiven und negativen Modulationsstärke des LFO bei einer Säge
 
 Im "Shift Mode" bekommen die Potentiometer (Drehregler) P1, P2, P3 neue Funktionen:
 
-**Tune (P1):** beeinflusst das Duty Cycle (Pulsbreite) des Tons
+**Tune (P1):** beeinflusst das Duty Cycle (Pulsbreite) des Tons. Dadurch kann der Ton "dünner" gemacht werden.
 
-**Speed (P2):** beeinflusst die Geschwindigkeit der LFO-Beeinflussung des Envelop-Timing-Generator
+<img src="png/square_duty50.png" style="width:50%"/>
 
-**Mod (P3):** beeinflusst die Modulationsstärke des Envelop-Timing-Generator (langsam -> schnell oder schnell -> langsam)
+_Rechtecksignal des Tons mit Duty Cycle 50% (Standard)_.
+
+<img src="png/square_duty20.png" style="width:50%"/>
+
+_Rechteck mit Duty Cycle 20% nach dem Verändern des P1_.
+
+**Speed (P2):** beeinflusst die Geschwindigkeit des LFO mit einem Envelop-Generator (Hüllkurven-Generator)
+Dadurch kann der LFO dynamisch in seiner Geschwindigkeit geändert werden 
+
+**Mod (P3):** beeinflusst die Modulationsstärke des Envelop-Generator 
+negativ: langsam -> schnell 
+positic schnell -> langsam
 
 <img src="png/saw_timing_envelope.png" style="width:50%"/>
 
