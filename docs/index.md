@@ -43,8 +43,10 @@ beeinflusst werden:
 
 **Mod (P3):** Modulationsstärke des gewählten LFO
 
-<img src="png/saw_pos_simple.png" style="width:50%"/><img src="png/saw_neg_simple.png" style="width:50%"/>
-_Beispiel der positiven und negativen Modulationsstärke des LFO bei einer Sägezahnwelle_.
+<img src="png/saw_pos_simple.png" style="width:50%"/>
+<img src="png/saw_neg_simple.png" style="width:50%"/>
+
+_Beispiel der positiven und negativen Modulationsstärke des LFO bei einer Sägezahnwelle_
 
 
 ## Sound Edit "Shift Mode" (Shift LED an -> S3)
@@ -57,11 +59,11 @@ Im "Shift Mode" bekommen die Potentiometer (Drehregler) P1, P2, P3 neue Funktion
 
 <img src="png/square_duty50.png" style="width:50%"/>
 
-_Rechtecksignal des Tons mit Duty Cycle 50% (Standard)_.
+_Rechtecksignal des Tons mit Duty Cycle 50% (Standard)_
 
 <img src="png/square_duty20.png" style="width:50%"/>
 
-_Rechteck mit Duty Cycle 20% nach dem Verändern des P1_.
+_Rechteck mit Duty Cycle 20% nach dem Verändern des P1_
 
 **Speed (P2):** beeinflusst die Geschwindigkeit des LFO mit einem Envelop-Generator (Hüllkurven-Generator)
 Dadurch kann der LFO dynamisch in seiner Geschwindigkeit geändert werden 
