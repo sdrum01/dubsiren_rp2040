@@ -43,8 +43,8 @@ beeinflusst werden:
 
 **Mod (P3):** Modulationsstärke des gewählten LFO
 
-<img src="png/saw_pos_simple.png" style="width:50%"/>
-<img src="png/saw_neg_simple.png" style="width:50%"/>
+<img src="png/saw_pos_simple.png" style="width:50%"/><img src="svg/modulation_pos.svg" style="width:10%"/>
+<img src="png/saw_neg_simple.png" style="width:50%"/><img src="svg/modulation_neg.svg" style="width:10%"/>
 
 _Beispiel der positiven und negativen Modulationsstärke des LFO bei einer Sägezahnwelle_
 
@@ -55,15 +55,11 @@ _Beispiel der positiven und negativen Modulationsstärke des LFO bei einer Säge
 
 Im "Shift Mode" bekommen die Potentiometer (Drehregler) P1, P2, P3 neue Funktionen:
 
-**Tune (P1):** beeinflusst das Duty Cycle (Pulsbreite) des Tons. Dadurch kann der Ton "dünner" gemacht werden.
+**Tune (P1):** beeinflusst das Duty Cycle (Pulsbreite) des Tons. Standardmäßig ist die Pulsbreite des Tons 50%, und kann dadurch "dünner" gemacht werden.
 
-<img src="png/square_duty50.png" style="width:50%"/>
+<img src="png/square_duty50-10.png" style="width:50%"/>
 
-_Rechtecksignal des Tons mit Duty Cycle 50% (Standard)_
-
-<img src="png/square_duty20.png" style="width:50%"/>
-
-_Rechteck mit Duty Cycle 20% nach dem Verändern des P1_
+_Rechtecksignal des Tons mit Pulsbreite 50% bis 10%_
 
 **Speed (P2):** beeinflusst die Geschwindigkeit des LFO mit einem Envelop-Generator (Hüllkurven-Generator)
 Dadurch kann der LFO dynamisch in seiner Geschwindigkeit geändert werden 
