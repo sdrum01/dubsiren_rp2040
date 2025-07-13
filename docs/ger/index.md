@@ -1,12 +1,12 @@
 # DUB-IY Kurzanleitung 
 27.06.2025
-
+<p align="right"><a href="../eng">eng</a></p>
 
 Die Dubsirene DUB-IY ist ein elektronisches Soundgenerator, das in der Dub- und Reggae-Musik eingesetzt werden kann. Sie erzeugt modulierte, sirenenartige Töne oder Effekte, die rhythmisch oder improvisiert über einen Track gelegt werden kann.
 
-## Aufbau
+## Übersicht
 
-<img src="svg/DUB-IY_front_schematic.svg" style="width:100%"/>
+<img src="../svg/DUB-IY_front_schematic.svg" style="width:100%"/>
 
 **Firebutton 1-4 (F1 - F4):** 
 
@@ -40,14 +40,14 @@ Wenn keine Taste gedrückt wurde, blinkt der zuletzt benutzte Firebutton immer w
 Die Parameter der Sounds können durch folgende Potentiometer (Drehregler)
 beeinflusst werden:
 
-**Tune (P1):** Tonhöhe
+**Tune (P1):** Tonhöhe (Pitch) des Tons
 
 **Speed (P2):** Geschwindigkeit des gewählten LFO
 
 **Mod (P3):** Modulationsstärke des gewählten LFO
 
-<img src="png/saw_pos_simple.png" style="width:50%"/><img src="svg/modulation_pos.svg" style="width:10%"/>
-<img src="png/saw_neg_simple.png" style="width:50%"/><img src="svg/modulation_neg.svg" style="width:10%"/>
+<img src="../png/saw_pos_simple.png" style="width:50%"/><img src="../svg/modulation_pos.svg" style="width:10%"/>
+<img src="../png/saw_neg_simple.png" style="width:50%"/><img src="../svg/modulation_neg.svg" style="width:10%"/>
 
 _Beispiel der positiven und negativen Modulationsstärke des LFO bei einer Sägezahnwelle_
 
@@ -60,7 +60,7 @@ Im "Shift Mode" bekommen die Potentiometer (Drehregler) P1, P2, P3 neue Funktion
 
 **Tune (P1):** beeinflusst das Duty Cycle (Pulsbreite) des Tons. Standardmäßig ist die Pulsbreite des Tons 50%, und kann dadurch "dünner" gemacht werden.
 
-<img src="png/square_duty50-10.png" style="width:50%"/>
+<img src="../png/square_duty50-10.png" style="width:50%"/>
 
 _Rechtecksignal des Tons mit Pulsbreite 50% bis 10%_
 
@@ -71,7 +71,7 @@ Dadurch kann der LFO dynamisch in seiner Geschwindigkeit geändert werden
 negativ: langsam -> schnell 
 positic schnell -> langsam
 
-<img src="png/saw_timing_envelope.png" style="width:50%"/>
+<img src="../png/saw_timing_envelope.png" style="width:50%"/>
 
 _Beispiel einer Beeinflussung eines Sägezahhn-LFO durch den Timing-Envelope-Generator_.
 
@@ -89,16 +89,16 @@ die Wellenformen erzeugen, mit dem der Ton moduliert wird.
 Selektieren der Wellenform für den gewählten LFO:
 
 Bei jedem LFO sind grundsätzlich 3 Wellenformen selektierbar
-- Rechteck <img src="svg/rect.svg"/>
-- Dreieck <img src="svg/tri.svg"/>
-- Sägezahn <img src="svg/saw.svg"/>
+- Rechteck <img src="../svg/rect.svg"/>
+- Dreieck <img src="../svg/tri.svg"/>
+- Sägezahn <img src="../svg/saw.svg"/>
   
 Die Stärke und zum Teil die Art der Wellenform wird durch die Modulationsstärke (P3) positiv / negativ in Abhängigkeit des gewählten Wertes beeinflusst. Bei der Mittelstellung von P3 (0) hat der jeweilige LFO keinen Einfluss mehr.
  
 Beim LFO1 hat der Regler P3 mit gewählter Wellenform "Rechteck" eine Besonderheit:
-- positiver Wert: 2 Töne <img src="svg/rect.svg"/>
-- negativer Wert: 3 Töne <img src="svg/doublerect.svg"/>
-- Minimaler Wert: Unterbrochener Ton <img src="svg/rect_int.svg"/>
+- positiver Wert: 2 Töne <img src="../svg/rect.svg"/>
+- negativer Wert: 3 Töne <img src="../svg/doublerect.svg"/>
+- Minimaler Wert: Unterbrochener Ton <img src="../svg/rect_int.svg"/>
 
 **LFO-Button (S2):** 
 
@@ -110,19 +110,14 @@ Beide LFO beeinflussen (modulieren) sich gegenseitig.
 
 ## Beispiele der Modulation
 
-<img src="png/tri-x-tri_05.png" style="width:50%"/>
+<img src="../png/tri-x-tri_05.png" style="width:50%"/>
 
 _Modulation einer Dreieckwelle von LFO1 mit einer schnelleren Dreieckwelle LFO2 mit 5%_. _Es entsteht ein leichter "Vibrato-Effekt"_.
 
 
-<img src="png/tri-x-tri_50.png" style="width:50%"/>
+<img src="../png/tri-x-tri_50.png" style="width:50%"/>
 
 _Modulation einer Dreieckwelle von LFO1 mit der Dreieckwelle LFO2, aber mit +50% Modulationsstärke_.
-
-
-<img src="png/saw-x-tri_50.png" style="width:50%"/>
-
-_Modulation einer Sägezahnwelle von LFO1 mit einer Dreieckwelle doppelter Frequenz von LFO2 mit +50% Modulationsstärke_.
 
 
 ## Spezialfunktionen / Flags
