@@ -92,7 +92,7 @@ Bei jedem LFO sind grundsätzlich 3 Wellenformen selektierbar
   
 Die Stärke und zum Teil die Art der Wellenform wird durch die Modulationsstärke (P3) positiv / negativ in Abhängigkeit des gewählten Wertes beeinflusst. Bei der Mittelstellung von P3 (0) hat der jeweilige LFO keinen Einfluss mehr.
  
-Der Regler P3 hat beim LFO1 mit gewählter Wellenform "Rechteck" eine Besonderheit, da die Wellenform "Rechteck" mit positver wie negativer Modulation gleich klingen würde:
+Beim LFO1 hat der Regler P3 mit gewählter Wellenform "Rechteck" eine Besonderheit:
 - positiver Wert: 2 Töne <img src="svg/rect.svg"/>
 - negativer Wert: 3 Töne <img src="svg/doublerect.svg"/>
 - Minimaler Wert: Unterbrochener Ton <img src="svg/rect_int.svg"/>
