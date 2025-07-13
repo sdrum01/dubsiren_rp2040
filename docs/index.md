@@ -1,9 +1,12 @@
 # DUB-IY Kurzanleitung 
 27.06.2025
 
-<img src="svg/DUB-IY_front_schematic.svg" style="width:100%"/>
 
-## Global
+Die Dubsirene DUB-IY ist ein elektronisches Soundgenerator, das in der Dub- und Reggae-Musik eingesetzt werden kann. Sie erzeugt modulierte, sirenenartige Töne oder Effekte, die rhythmisch oder improvisiert über einen Track gelegt werden kann.
+
+## Aufbau
+
+<img src="svg/DUB-IY_front_schematic.svg" style="width:100%"/>
 
 **Firebutton 1-4 (F1 - F4):** 
 
