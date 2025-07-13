@@ -1,4 +1,4 @@
-# DUB-IY Kurzanleitung 
+# DUB-IY short manual 
 27.06.2025
 <p align="right"><a href="../ger">ger</a></p>
 
