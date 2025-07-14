@@ -1,8 +1,10 @@
 # DUB-IY Kurzanleitung 
-27.06.2025
-<p align="right"><a href="../eng">eng</a></p>
+
+14.07.2025
+<p align="right"><a href="../en">[Englische Version]</a></p>
 
 Die Dubsirene DUB-IY ist ein elektronisches Soundgenerator, das in der Dub- und Reggae-Musik eingesetzt werden kann. Sie erzeugt modulierte, sirenenartige Töne oder Effekte, die rhythmisch oder improvisiert über einen Track gelegt werden kann.
+
 
 ## Übersicht
 
@@ -67,9 +69,9 @@ _Rechtecksignal des Tons mit Pulsbreite 50% bis 10%_
 **Speed (P2):** beeinflusst die Geschwindigkeit des LFO mit einem Envelop-Generator (Hüllkurven-Generator)
 Dadurch kann der LFO dynamisch in seiner Geschwindigkeit geändert werden 
 
-**Mod (P3):** beeinflusst die Modulationsstärke des Envelop-Generator 
-negativ: langsam -> schnell 
-positic schnell -> langsam
+**Mod (P3):** beeinflusst die Modulationsstärke des Envelop-Generator:
+- negativer Wert: langsam -> schnell 
+- positiver Wert: schnell -> langsam
 
 <img src="../png/saw_timing_envelope.png" style="width:50%"/>
 
@@ -131,7 +133,7 @@ _Modulation einer Dreieckwelle von LFO1 mit der Dreieckwelle LFO2, aber mit +50%
 
 **Fire1 = Flag1**: LFO2 startet immer bei neu beim abfeuern von Sounds.
 
-**Fire2 = Flag2**: One Shot: Nach dem LFO1 eine vollständite Periode gespielt hat, wird der Sound gestoppt
+**Fire2 = Flag2**: One Shot: nach dem LFO1 eine vollständige Periode gespielt hat, wird der Sound gestoppt
 
 **Fire3 = Flag3**: Multiplikator der Modulation x 2
 
