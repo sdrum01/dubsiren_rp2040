@@ -27,7 +27,7 @@ The following values can be adjusted using potentiometers and switches:
 * Feedback (echo)
 * Overall volume
 
-The combination of LFOs 1 and 2 alone produces many experimental siren sounds,
+The combination of LFOs 1 and 2 already produces many experimental siren sounds,
 but the timing envelope adds significantly more dynamics to the sound.
 
 >[!NOTE]
