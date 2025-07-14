@@ -1,6 +1,7 @@
 # DUB-IY short manual 
-27.06.2025
-<p align="right"><a href="../ger">ger</a></p>
+
+14.07.2025
+<p align="right"><a href="../de">[German version]</a></p>
 
 The Dub Siren DUB-IY is an electronic sound generator that can be used in Dub and Reggae music. It produces modulated, siren-like sounds or effects that can be layered rhythmically or improvised over a track.
 
