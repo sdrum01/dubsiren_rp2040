@@ -77,7 +77,7 @@ This allows the LFO's speed to be changed dynamically.
 _Example of influencing a sawtooth LFO by the timing envelope generator_.
 
 > [!TIP]
-> The timing generator (P2) influences the speed of the active LFO (see [Functionbuttons](#functionbuttons)).
+> The timing generator (P2) influences the speed of the active LFO (see [Function Buttons](#function-buttons)).
 
 
 ## Function Buttons
