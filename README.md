@@ -1,60 +1,52 @@
-# DUB-IY Dubsiren with RP2040 
+# DUB-IY Dub Siren with RP2040 CPU
 
-DUBSIREN_rp2040 is a simple Project, which was initiated to emulate a analog Frequencygenerator, which is used to make some noises for Dub and Reggae.
-As result we was creating the Dubsiren "DUB-IY". 
+DUBSIREN_rp2040 is a simple project designed to emulate a analog frequency generator for dub and reggae music. The result is the "**DUB-IY**" dub siren. 
 
-Dubsirens are simple Synthesizers without VCA (Voltage Controlled Amplifier) and VCF (Voltage Controlled Filter), 
-but mostly with an VCO (Voltage Controlled Oscillator) which is modulated by an LFO (Low Frequency Generator).
+Dub sirens are simple synthesizers without VCA (Voltage Controlled Amplifier) or VCF (Voltage Controlled Filter), but usually with a VCO (Voltage Controlled Oscillator) modulated by an LFO (Low Frequency Generator).
 
+Such sirens are typically built with analog circuits. The challenge, however, was to optimize the parameter storage of digital solutions, simplify the electronics and to make it hackable.
 
-Normally such Sirens were build up with analog circuits, but the Challenge was to develop the same result as digital solution to store the parameters, simplifing the electronic and to make it hackable.
+**DUB-IY** is based on a Raspberry Pi Pico with an RP2040 CPU. It is fast enough to emulate VCOs and LFOs and offers sufficient options for internal data storage.
 
-DUB-IY is based on a Raspberry Pi Pico with the CPU RP2040. It is fast enough to emulate VCO and LFO and has enough possibilities to store the data internally.
-
-The Dubsiren creates an Rectangle Tone Signal with adjustable dutycycle.
-The Tone can be modulated by 2 LFO and an envelope-generator to modulate the timing parameter. 
+The Dub siren creates an square wave signal with an adjustable duty cycle. The sound can be modulated by two LFOs and an envelope generator to modulate the timing parameter. 
 
 Finally, the signal is perfected with an integrated echo effect. 
 
-On the  are following values can be adjusted with Potentiometer and Switches:
+The following values can be adjusted using potentiometers and switches:
 
-* Waveform LFO1 
-(Rectangle, Tri-Rectangle, Triangle, Sawtooth, Pulse) 
-* Waveform LFO2 (Rectangle, Triangle, Sawtooth) 
-* Oscillator Basic Frequency
-* Frequency LFO1 and LFO2
-* Amount LFO1 and LFO2 (neg.and pos)
-* Amount Timing Envelope
-* Duty Cycle of Osscillator Waveform
-* Retriggering of LFO-Start
-* Delay Time (Echo) 
-* Feedback (Echo) 
-* Master Volume
+* LFO1 waveform
+(square, triple square, triangle, sawtooth, pulse)
+* LFO2 waveform (square, triangle, sawtooth)
+* Oscillator base frequency
+* LFO1 and LFO2 frequency
+* LFO1 and LFO2 contribution (negative and positive)
+* Timing envelope contribution
+* Oscillator waveform duty cycle
+* LFO start retriggering
+* Delay time (echo)
+* Feedback (echo)
+* Overall volume
 
-Only the combination of LFO 1+2 gets many Experimental Siren sounds, but  the Timing Envelope makes the Sound much more dynamic. 
-
-
+The combination of LFOs 1 and 2 already produces many experimental siren sounds,
+but the timing envelope adds significantly more dynamics to the sound.
 
 >[!NOTE]
    >
-   >This is an non-profit project without the goal to make the big money.
-   > its Just for Fun and we exclude any form of liability!
+   >This is a non-profit project with no goal of making big money.
+   >It's purely for fun, and we assume no liability!
    
-waiting list:
-to reserve one device or PCB pls write me an email: 
-dub-iy@sdrum.elementfx.com
+## Waiting List
 
+To reserve one device or PCB pls write me an email: dub-iy@sdrum.elementfx.com
 
+## Documentation
 
+Have a look into the short introduction on YouTube:
 
+- [DUB-IY Introduction](https://youtu.be/Yc06HZqR8gg?si=ktLNwQYJj4XRiWYL) 
 
-Have a look into the short introduction on youtube:
+There is also a manual explaining the various functions:
 
-[DUB-IY INTRODUCTION]( https://youtu.be/Yc06HZqR8gg?si=ktLNwQYJj4XRiWYL) 
-
-**short manual in german**
-
-[Kurzanleitung Deutsch](https://sdrum01.github.io/dubsiren_rp2040)
-
-
+- [English Manual](docs/en/index.md)
+- [Kurzanleitung Deutsch](docs/de/index.md)
 
