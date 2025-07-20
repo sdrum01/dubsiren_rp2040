@@ -607,8 +607,6 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-
-
 float setFrequency(float freq){
   if(freq < minValMod){freq = minValMod;}
   if(freq > maxValMod){freq = maxValMod;}
@@ -617,7 +615,6 @@ float setFrequency(float freq){
   //return(1035 / (freq/1000));
 }
 
-
 // Tonerzeugung
 void playSound(float freqVal){
   // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
@@ -625,11 +622,13 @@ void playSound(float freqVal){
   float pwm_val = setFrequency(freqVal);
 
   //float scaledPercentage = ((optionFlags & 0b00000010) ? rasterpercentage / 100.0 : percentage / 100.0)   ;
+  
+  // AUSGANG ALS PWM AUSGANG DEFINIEREN, weil er vorher Input sein muss wegen dem Knacks
+  // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
 
   // Setze die PWM-Periode
+  
   uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
-
-  pwm_set_wrap(slice_num_wave, pwm_val);
 
   if(((optionFlags & 0b00000010))&&(lfo1PeriodenCounter > 1)){
     debug("Stop");
@@ -638,13 +637,30 @@ void playSound(float freqVal){
   
   if (runSound){
     dataSaved = false;
+    // Pin ist wieder PWM Ausgang
+    gpio_set_function(wave_outputPin, GPIO_FUNC_PWM);
+
+    // Setze den PWM-Teilungsverhältnis
+    pwm_set_clkdiv(slice_num_wave, 64.f);
+    pwm_set_wrap(slice_num_wave, pwm_val);
+    // Starte den PWM-Output
+    // pwm_set_enabled(slice_num_wave, true);
+
+    
+
     if(freqVal == -100) {
+      
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
+      pinMode(wave_outputPin, INPUT);
+      
     }else{
+      pwm_set_enabled(slice_num_wave, true);
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100));
     }
   }else{
+    
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
+    pinMode(wave_outputPin, INPUT);
     lfo1PeriodenCounter = 0;
   }
 }
@@ -1277,17 +1293,19 @@ void setup() {
   }
   
   // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
-  gpio_set_function(wave_outputPin, GPIO_FUNC_PWM);
-  uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
+  // gpio_set_function(wave_outputPin, GPIO_FUNC_PWM);
+  // uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
   
   // Setze den PWM-Teilungsverhältnis
-  pwm_set_clkdiv(slice_num_wave, 64.f);
+  // pwm_set_clkdiv(slice_num_wave, 64.f);
 
   // Starte den PWM-Output
-  pwm_set_enabled(slice_num_wave, true); 
+  // pwm_set_enabled(slice_num_wave, true); 
 
+  // wave-output as input, Hochohmig wegen knacks
+  pinMode(wave_outputPin, INPUT);
+  
   // LED
-
   uint slice_num_led_green = pwm_gpio_to_slice_num(LEDLfo2);
   uint slice_num_led_red = pwm_gpio_to_slice_num(LEDLfo2);
   
