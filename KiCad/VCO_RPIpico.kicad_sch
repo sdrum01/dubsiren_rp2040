@@ -6239,6 +6239,7 @@
 	)
 	(label "sw_fire3"
 		(at 111.76 134.62 0)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6249,6 +6250,7 @@
 	)
 	(label "led_fire2"
 		(at 49.53 147.32 0)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6259,6 +6261,7 @@
 	)
 	(label "sw_fire4"
 		(at 111.76 132.08 0)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6269,6 +6272,7 @@
 	)
 	(label "sw_fire2"
 		(at 111.76 137.16 0)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6300,6 +6304,7 @@
 	)
 	(label "Wave_out"
 		(at 176.53 25.4 180)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6310,6 +6315,7 @@
 	)
 	(label "Wave_out"
 		(at 55.88 114.3 180)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6320,6 +6326,7 @@
 	)
 	(label "led_fire1"
 		(at 49.53 139.7 0)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6330,6 +6337,7 @@
 	)
 	(label "led_fire4"
 		(at 49.53 162.56 0)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6340,6 +6348,7 @@
 	)
 	(label "led_fire3"
 		(at 49.53 154.94 0)
+		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -7034,7 +7043,7 @@
 		(dnp no)
 		(uuid "124feae5-8618-45eb-a4b7-3558aecb905b")
 		(property "Reference" "RV5"
-			(at 238.76 53.34 90)
+			(at 239.268 58.674 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7126,7 +7135,7 @@
 			)
 		)
 		(property "Value" "AudioJack3_Ground"
-			(at 269.24 68.58 0)
+			(at 264.922 58.928 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14038,7 +14047,7 @@
 		(dnp no)
 		(uuid "e2ac7492-0074-4b59-897d-1608619b221b")
 		(property "Reference" "R27"
-			(at 229.87 50.8 90)
+			(at 229.87 45.974 90)
 			(effects
 				(font
 					(size 1.27 1.27)
