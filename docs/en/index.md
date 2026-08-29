@@ -1,4 +1,4 @@
-# DUB-IY short manual 
+8# DUB-IY short manual 
 
 14.07.2025
 <p align="right"><a href="../de">[German version]</a></p>
@@ -163,4 +163,5 @@ If the sound has become too complex and you just want to hear the basic sound ag
 > We reserve the right to improve or adapt the functionality as needed.
 
 
+Contact dub-iy (at) sdrum.elementfx.com
 
