@@ -161,5 +161,7 @@ Sollte der Sound zu komplex geworden sein, und man möchte nur wieder den Grunds
 > [!Note]
 > Wir behalten uns vor, die Funktionalität bei Bedarf zu verbessern oder anzupassen. 
 
+Kontakt
+dub-iy (at) sdrum.elementfx.com
 
 
