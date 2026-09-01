@@ -18,6 +18,7 @@ const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
 
 
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
+const int wave_mutePin = 22; // Pin zum Muten des Ausgangssignals
 
 
 const int shiftPin1 = 6;  // shift-Button : Envelope / Bank Select (during hold)
@@ -615,6 +616,12 @@ float setFrequency(float freq){
   //return(1035 / (freq/1000));
 }
 
+void muteSound(bool mute){
+  digitalWrite(wave_mutePin, mute);
+  // test: always on
+  // digitalWrite(wave_mutePin, false);
+}
+
 // Tonerzeugung
 void playSound(float freqVal){
   // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
@@ -649,21 +656,28 @@ void playSound(float freqVal){
     
 
     if(freqVal == -100) {
-      
+      // Ton Stop
+      muteSound(true);
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
       pinMode(wave_outputPin, INPUT);
       
+      
     }else{
+      // Ton Start
       pwm_set_enabled(slice_num_wave, true);
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100));
+      muteSound(false);
     }
   }else{
-    
+    // Ton Stop
+    muteSound(true);
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
     pinMode(wave_outputPin, INPUT);
     lfo1PeriodenCounter = 0;
   }
 }
+
+
 
 void setChangeState(bool p1, bool p2, bool p3, bool s1){
   potiPitchChanged = p1;
@@ -1332,7 +1346,8 @@ void setup() {
   // Normale IO's
   pinMode(LED_BUILTIN, OUTPUT);
 
-
+  pinMode(wave_mutePin, OUTPUT);
+  digitalWrite(wave_mutePin,1);
 
   pinMode(LEDShift1, OUTPUT);
   pinMode(LEDSave, OUTPUT);
