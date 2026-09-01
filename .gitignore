@@ -8,5 +8,6 @@
 *.code-workspace
 *.bak
 .DS_Store
+/KiCad/*_autosave-*.kicad_pcb
 
 
