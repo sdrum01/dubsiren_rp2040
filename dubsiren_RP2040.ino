@@ -4,8 +4,11 @@
 #include "LittleFS.h"
 #include "Bounce2.h"
 #include "ArduinoJson.h"
+#include "Wire.h"
+#include "GyverOLED.h"
 
-
+// OLED Display
+GyverOLED<SSH1106_128x64> oled;
 
 // #define LONG_PRESS_DURATION 3000
 
@@ -1361,19 +1364,6 @@ void setup() {
   pinMode(LEDWaveTri, OUTPUT);
   pinMode(LEDWaveSaw, OUTPUT);
 
-/*
-  // LED Matrix initialisieren
-  for (int i = 0; i < 3; i++) {
-    pinMode(LEDrowPins[i], OUTPUT);
-    digitalWrite(LEDrowPins[i], LOW);   // Anfangszustand aus
-  }
-
-  // Spalten als Ausgang festlegen
-  for (int i = 0; i < 3; i++) {
-    pinMode(LEDcolPins[i], OUTPUT);
-    digitalWrite(LEDcolPins[i], HIGH);  // Anfangszustand aus (LOW schaltet die LED ein)
-  }
-*/
 
   pinMode(selectLFOPin, INPUT_PULLUP); 
   pinMode(shiftPin1, INPUT_PULLUP);  
@@ -1422,6 +1412,18 @@ void setup() {
   fire4.attach(firePin4);
   fire4.interval(10);  
 
+  
+  // Setup Oled Display
+
+  Wire.setSDA(0);
+  Wire.setSCL(1);
+  Wire.begin();
+
+  oled.init();
+  oled.clear();
+  oled.setCursor(0, 0);
+  oled.print("DUB-IY");
+  oled.update();
   
   
   
