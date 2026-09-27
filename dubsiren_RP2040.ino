@@ -8,9 +8,12 @@
 #include "GyverOLED.h"
 
 // OLED Display
-GyverOLED<SSH1106_128x64> oled;
+GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 
 // #define LONG_PRESS_DURATION 3000
+
+// Version
+#define VER "1.1"
 
 const byte LOGLEVEL = 1;
 
@@ -65,6 +68,18 @@ int ledState[3][3] = {
   {0, 0, 0}  // Wav1,Wav2,Wav3
 };
 */
+
+// Variablen/Konstanten for display
+unsigned long previousMillisDisplay = 0;
+
+const unsigned long OLED_UPDATE_INTERVAL = 100;  // 100 ms
+
+const int OLED_GRAPH_X_MIN = 1;
+const int OLED_GRAPH_X_MAX = 126;
+const int OLED_GRAPH_Y_MIN = 12;
+const int OLED_GRAPH_Y_MAX = 54;
+
+float waveformDisplay[128];
 
 byte activeLedRow = 0;
 byte activeLedCol = 0;
@@ -420,6 +435,311 @@ float linearToLogarithmic(float value,float min, float max) {
   return outputValue;
 }
 
+// Generators
+float calculateEnvelope(float envelopeDuration, float envelopeAmplitude) {
+
+  unsigned long currentMillis = millis();
+
+  // Tatsächlich vergangene Zeit
+  float elapsedMillis = currentMillis - previousMillisEnv;
+  previousMillisEnv = currentMillis;
+
+  // Geschwindigkeit des Envelope
+  float schrittweite_envelope =
+    envelopeDuration * elapsedMillis / 5000.0;
+
+
+  // Envelope-Wert verringern
+  envelopeValue -= schrittweite_envelope;
+
+  if (envelopeValue <= 0.0) {
+    envelopeValue = 0.0;
+  }
+
+
+  float envelopeValueLog =
+    linearToLogarithmic(envelopeValue, 0.0, 1.0);
+
+  float envelope =
+    ((envelopeValue - 0.5) * 1.9) *
+    (envelopeAmplitude / 100) + 1;
+
+  return envelope;
+}
+
+
+float calculateLFOWave1(float lfoFrequency, float amplitude) {
+
+  unsigned long currentMillis = millis();
+
+  // Tatsächlich vergangene Zeit seit dem letzten LFO-Update
+  float elapsedMillis = currentMillis - previousMillisLFO1;
+  previousMillisLFO1 = currentMillis;
+
+  // LFO-Schritt entsprechend der tatsächlich vergangenen Zeit
+  float schrittweite = lfoFrequency * elapsedMillis / 1000.0;
+
+  switch (lfo1Waveform) {
+
+    case SQUARE:
+
+      // LFO intern als Dreieck laufen lassen
+      lfo1Value += schrittweite * lfo1Direction;
+
+      // Auch bei größeren Zeitsprüngen korrekt über die Grenzen gehen
+      /*
+      while (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
+
+        if (lfo1Value >= 1.0) {
+          lfo1Value = 2.0 - lfo1Value;
+          lfo1Direction = -1;
+          lfo1PeriodenCounter++;
+        }
+
+        if (lfo1Value <= 0.0) {
+          lfo1Value = -lfo1Value;
+          lfo1Direction = 1;
+          lfo1PeriodenCounter++;
+        }
+      }
+      */
+     while (lfo1Value > 1.0 || lfo1Value < 0.0) {
+      if (lfo1Value > 1.0) {
+        lfo1Value = 2.0 - lfo1Value;
+        lfo1Direction = -1;
+        lfo1PeriodenCounter++;
+      }
+
+      if (lfo1Value < 0.0) {
+        lfo1Value = -lfo1Value;
+        lfo1Direction = 1;
+        lfo1PeriodenCounter++;
+      }
+    }
+      
+
+      if(amplitude == -100){
+        lfovalue_finalLFO1 = (lfo1Value <= 0.5) ? 0.5 : -100; // -100 = muting
+
+      } else {
+
+        if(amplitude < 0){
+
+          // 3-er Raster
+          if(lfo1Value < 0.25){
+            lfovalue_finalLFO1 = 0;
+          }else if(lfo1Value < 0.75){
+            lfovalue_finalLFO1 = 0.5;
+          }else {
+            lfovalue_finalLFO1 = 1;
+          }
+
+        }else{
+          lfovalue_finalLFO1 = (lfo1Value >= 0.5) ? 1 : 0;
+        }
+      }
+
+      break;
+
+
+    case TRIANGLE:
+
+      lfo1Value += schrittweite * lfo1Direction;
+
+      // Auch bei größeren Zeitsprüngen korrekt über die Grenzen gehen
+      /*
+      while (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
+
+        if (lfo1Value >= 1.0) {
+          lfo1Value = 2.0 - lfo1Value;
+          lfo1Direction = -1;
+          lfo1PeriodenCounter++;
+        }
+
+        if (lfo1Value <= 0.0) {
+          lfo1Value = -lfo1Value;
+          lfo1Direction = 1;
+          lfo1PeriodenCounter++;
+        }
+      }
+      */
+
+      while (lfo1Value > 1.0 || lfo1Value < 0.0) {
+          if (lfo1Value > 1.0) {
+              lfo1Value = 2.0 - lfo1Value;
+              lfo1Direction = -1;
+              lfo1PeriodenCounter++;
+          }
+
+          if (lfo1Value < 0.0) {
+              lfo1Value = -lfo1Value;
+              lfo1Direction = 1;
+              lfo1PeriodenCounter++;
+          }
+      }
+
+      lfovalue_finalLFO1 = lfo1Value;
+
+      break;
+
+
+    case SAWTOOTH:
+
+      lfo1Value -= schrittweite / 2;
+
+      // Auch bei größeren Zeitsprüngen korrekt über den Anfang springen
+      while (lfo1Value <= 0) {
+        lfo1Value += 1.0;
+        lfo1PeriodenCounter++;
+      }
+
+      lfovalue_finalLFO1 = lfo1Value;
+
+      break;
+  }
+
+
+  // lfovalue_finalLFO1 liegt zwischen 0..1:
+  // Verschieben der Mitte auf den Nullpunkt
+  // Skalierung mit der LFO-Amplitude
+  // Verschieben des Nullpunktes auf 1:
+  // Ergebnis kann als Frequenz-Multiplikator verwendet werden
+
+  float lfovalue_final1 = 0;
+
+  if(lfovalue_finalLFO1 == -100){
+
+    // negativ für Sonderfunktionen wie Muting
+    lfovalue_final1 = lfovalue_finalLFO1;
+
+  }else{
+
+    lfovalue_final1 =
+      ( ((lfovalue_finalLFO1 - 0.5) * 1.5) *
+        ((amplitude / 100) *
+        (optionFlags & 0b00000100 ? 2 : 1))
+      ) + 1.0;
+  }
+
+  return(lfovalue_final1);
+}
+
+float calculateLFOWave2(float frequency, float amplitude) {
+
+  unsigned long currentMillis = millis();
+
+  // Tatsächlich vergangene Zeit seit dem letzten LFO-Update
+  float elapsedMillis = currentMillis - previousMillisLFO2;
+  previousMillisLFO2 = currentMillis;
+
+  // LFO-Schritt entsprechend der tatsächlich vergangenen Zeit
+  float schrittweite = frequency * elapsedMillis / 1000.0;
+
+
+  switch (lfo2Waveform) {
+
+    case SQUARE:
+
+      lfo2Value += schrittweite * lfo2Direction;
+
+      // Grenzüberschreitung korrigieren
+      /*
+      while (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
+
+        if (lfo2Value >= 1.0) {
+          lfo2Value = 2.0 - lfo2Value;
+          lfo2Direction = -1;
+        }
+
+        if (lfo2Value <= 0.0) {
+          lfo2Value = -lfo2Value;
+          lfo2Direction = 1;
+        }
+      }
+      */
+      
+
+      while (lfo2Value > 1.0 || lfo2Value < 0.0) {
+        if (lfo2Value > 1.0) {
+          lfo2Value = 2.0 - lfo2Value;
+          lfo2Direction = -1;
+        }
+
+        if (lfo2Value < 0.0) {
+          lfo2Value = -lfo2Value;
+          lfo2Direction = 1;
+        }
+      }
+
+      lfovalue_finalLFO2 = (lfo2Value >= 0.5) ? 1 : 0;
+
+      break;
+
+
+    case TRIANGLE:
+
+      lfo2Value += schrittweite * lfo2Direction;
+
+      // Grenzüberschreitung korrigieren
+      
+      /*
+      while (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
+
+        if (lfo2Value >= 1.0) {
+          lfo2Value = 2.0 - lfo2Value;
+          lfo2Direction = -1;
+        }
+
+        if (lfo2Value <= 0.0) {
+          lfo2Value = -lfo2Value;
+          lfo2Direction = 1;
+        }
+      }
+      */
+      
+
+      while (lfo2Value > 1.0 || lfo2Value < 0.0) {
+        if (lfo2Value > 1.0) {
+          lfo2Value = 2.0 - lfo2Value;
+          lfo2Direction = -1;
+        }
+
+        if (lfo2Value < 0.0) {
+          lfo2Value = -lfo2Value;
+          lfo2Direction = 1;
+        }
+      }
+
+      lfovalue_finalLFO2 = lfo2Value;
+
+      break;
+
+
+    case SAWTOOTH:
+
+      lfo2Value -= schrittweite / 2;
+
+      while (lfo2Value <= 0) {
+        lfo2Value += 1.0;
+      }
+
+      lfovalue_finalLFO2 = lfo2Value;
+
+      break;
+  }
+
+
+  // LFO-Wert auf Frequenzmultiplikator umrechnen
+
+  float lfovalue_final1 =
+    (((lfovalue_finalLFO2 - 0.5) * 1.5) *
+     (amplitude / 100)) + 1.0;
+
+  return(lfovalue_final1);
+}
+
+/*
+
 // Envelope-Generator
 float calculateEnvelope(float envelopeDuration, float envelopeAmplitude) {
 
@@ -469,27 +789,27 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
           if(amplitude < 0){
             // Multitone
 
-            /*
+            
             // Sägezahn für nur 3 Töne
-            if (lfo1Value == 1) {
-              lfo1Value = 0;  // Zurücksetzen
+            // if (lfo1Value == 1) {
+            //  lfo1Value = 0;  // Zurücksetzen
             }
-            */
+            
            
-            /*
-            // 5-er Raster
-            if(lfo1Value < 0.125){
-              lfovalue_finalLFO1 = 0;
-            }else if(lfo1Value < 0.375){
-              lfovalue_finalLFO1 = 0.25;
-            }else if(lfo1Value < 0.625){
-              lfovalue_finalLFO1 = 0.5;
-            }else if(lfo1Value < 0.875){
-              lfovalue_finalLFO1 = 0.75;
-            }else {
-              lfovalue_finalLFO1 = 1;
-            }
-            */
+            
+            /// 5-er Raster
+            // if(lfo1Value < 0.125){
+            //  lfovalue_finalLFO1 = 0;
+            //}else if(lfo1Value < 0.375){
+            //  lfovalue_finalLFO1 = 0.25;
+            //}else if(lfo1Value < 0.625){
+            //  lfovalue_finalLFO1 = 0.5;
+            //}else if(lfo1Value < 0.875){
+            //  lfovalue_finalLFO1 = 0.75;
+            //}else {
+            //  lfovalue_finalLFO1 = 1;
+            //}
+            
            
             // 3-er Raster
             if(lfo1Value < 0.25){
@@ -607,6 +927,8 @@ float calculateLFOWave2(float frequency, float amplitude) {
   return(lfovalue_final1);
 }
 
+*/
+
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -621,6 +943,12 @@ float setFrequency(float freq){
 
 void muteSound(bool mute){
   digitalWrite(wave_mutePin, mute);
+  if (mute){
+    // Display aktualisieren
+    updateOLEDWaveform();
+  } else {
+    
+  }
   // test: always on
   // digitalWrite(wave_mutePin, false);
 }
@@ -663,13 +991,16 @@ void playSound(float freqVal){
       muteSound(true);
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
       pinMode(wave_outputPin, INPUT);
-      
+   
       
     }else{
       // Ton Start
       pwm_set_enabled(slice_num_wave, true);
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100));
       muteSound(false);
+      //previousMillisDisplay = 0;
+      //oled.clear();
+      //oled.update();
     }
   }else{
     // Ton Stop
@@ -677,8 +1008,11 @@ void playSound(float freqVal){
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
     pinMode(wave_outputPin, INPUT);
     lfo1PeriodenCounter = 0;
+    
   }
 }
+
+
 
 
 
@@ -1300,6 +1634,177 @@ void readSerial(){
   }
 }
 
+void setup_display(){
+  // Setup Oled Display
+
+  Wire.setSDA(0);
+  Wire.setSCL(1);
+  Wire.begin();
+  Wire.setClock(400000);
+
+  oled.init();
+  // init buffer
+  for (int i = 0; i < 128; i++) {
+    waveformDisplay[i] = 1.0;
+  }
+
+  oled.clear();
+  oled.setCursor(0, 0);
+
+// Außenrahmen
+  oled.rect(0, 0, 127, 63, OLED_STROKE);
+
+  // Hauptschrift
+  oled.setScale(2);
+  oled.setCursor(30, 2);
+  oled.print("DUB-IY");
+
+  // Versionsnummer
+  oled.setScale(1);
+  oled.setCursor(2, 6);
+  oled.print("V");
+  oled.print(VER);
+
+  oled.update();
+}
+
+// function to draw the waveform on the OLED display
+void updateOLEDWaveform() {
+
+  // Nur alle 30 ms aktualisieren
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillisDisplay < OLED_UPDATE_INTERVAL) {
+    return;
+  }
+
+  previousMillisDisplay = currentMillis;
+
+
+  // Aktuellen wirksamen LFO-Wert auswählen
+  float value;
+
+/*
+  if (modSelect == 0) {
+    value = lfo1ValueActual;
+  } else if (modSelect == 1) {
+    value = lfo2ValueActual;
+  } else {
+    // Bei Envelope-Auswahl weiterhin LFO1 anzeigen
+    value = lfo1ValueActual;
+  }
+*/
+  value = lfo1ValueActual * lfo2ValueActual;
+
+
+  // Wert begrenzen
+  // Für die Darstellung gehen wir von 0.25 ... 1.75 aus.
+  value = constrain(value, 0.25, 1.75);
+
+
+  // Alten Verlauf nach links schieben
+  for (int x = 0; x < 127; x++) {
+    waveformDisplay[x] = waveformDisplay[x + 1];
+  }
+
+  waveformDisplay[127] = value;
+
+
+  // Display löschen
+  oled.clear();
+
+
+  // Rahmen
+  // oled.rect(0, 0, 127, 63, OLED_STROKE);
+
+
+  // Überschrift
+  oled.setScale(1);
+  oled.setCursor(3, 0);
+
+  if (modSelect == 0) {
+    oled.print("LFO1");
+  } else if (modSelect == 1) {
+    oled.print("LFO2");
+  } else {
+    oled.print("LFO1");
+  }
+
+
+  // Frequenz anzeigen
+  oled.setCursor(45, 0);
+
+  if (modSelect == 0) {
+    oled.print(lfo1Frequency, 1);
+    oled.print("Hz");
+  } else if (modSelect == 1) {
+    oled.print(lfo2Frequency, 1);
+    oled.print("Hz");
+  }
+
+
+  // Mittellinie = Faktor 1.0
+  int centerY = 33;
+
+  oled.line(
+    OLED_GRAPH_X_MIN,
+    centerY,
+    OLED_GRAPH_X_MAX,
+    centerY
+  );
+
+
+  // Kurve zeichnen
+  for (int x = 1; x < 128; x++) {
+
+    // 0.25 ... 1.75
+    // wird auf 54 ... 12 Pixel abgebildet
+
+    int y1 = map(
+      (int)(waveformDisplay[x - 1] * 1000),
+      250,
+      1750,
+      OLED_GRAPH_Y_MAX,
+      OLED_GRAPH_Y_MIN
+    );
+
+    int y2 = map(
+      (int)(waveformDisplay[x] * 1000),
+      250,
+      1750,
+      OLED_GRAPH_Y_MAX,
+      OLED_GRAPH_Y_MIN
+    );
+
+    y1 = constrain(y1, OLED_GRAPH_Y_MIN, OLED_GRAPH_Y_MAX);
+    y2 = constrain(y2, OLED_GRAPH_Y_MIN, OLED_GRAPH_Y_MAX);
+
+    oled.line(x - 1, y1, x, y2);
+  }
+
+
+  // Aktuellen Wert unten anzeigen
+  oled.setCursor(3, 7);
+
+  oled.print("x");
+  oled.print(value, 2);
+
+
+  // Amplitude anzeigen
+  oled.setCursor(55, 7);
+
+  if (modSelect == 0) {
+    oled.print(lfo1Amplitude, 0);
+  } else {
+    oled.print(lfo2Amplitude, 0);
+  }
+
+  oled.print("%");
+
+
+  oled.update();
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1308,6 +1813,12 @@ void setup() {
   if(LOGLEVEL > 0){
     Serial.begin(38400);
   }
+
+  previousMillisLFO1 = millis();
+  previousMillisLFO2 = millis();
+  previousMillisEnv  = millis();
+
+  setup_display();
   
   // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
   // gpio_set_function(wave_outputPin, GPIO_FUNC_PWM);
@@ -1410,21 +1921,7 @@ void setup() {
   fire3.interval(10);  
 
   fire4.attach(firePin4);
-  fire4.interval(10);  
-
-  
-  // Setup Oled Display
-
-  Wire.setSDA(0);
-  Wire.setSCL(1);
-  Wire.begin();
-
-  oled.init();
-  oled.clear();
-  oled.setCursor(0, 0);
-  oled.print("DUB-IY");
-  oled.update();
-  
+  fire4.interval(10);
   
   
   // Initialisieren des Arrays für die Mittelwertbildung des Pitch
@@ -1579,8 +2076,12 @@ void loop() {
   blink(50);
   // Create Tone
   playSound(newModulatedFrequency);
-  // Control LED's
+  // Control LED's updaten
   updateLEDs();
+  
+
+  // Display aktualisieren
+  //updateOLEDWaveform();
 
   // Überwachung und Debugprits
   
