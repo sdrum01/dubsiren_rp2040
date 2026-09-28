@@ -72,7 +72,7 @@ int ledState[3][3] = {
 // Variablen/Konstanten for display
 unsigned long previousMillisDisplay = 0;
 
-const unsigned long OLED_UPDATE_INTERVAL = 100;  // 100 ms
+const unsigned long OLED_UPDATE_INTERVAL = 200;  // 200 ms
 
 const int OLED_GRAPH_X_MIN = 1;
 const int OLED_GRAPH_X_MAX = 126;
@@ -175,6 +175,8 @@ volatile int lfo1PeriodenCounter = 0;
 
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
+
+bool oledRefresedWhileRunSound = 0;
 
 // shiftToggle-taste
 bool lfoToggleState = 0;
@@ -945,7 +947,7 @@ void muteSound(bool mute){
   digitalWrite(wave_mutePin, mute);
   if (mute){
     // Display aktualisieren
-    updateOLEDWaveform();
+  //  updateOLEDWaveform();
   } else {
     
   }
@@ -995,6 +997,7 @@ void playSound(float freqVal){
       
     }else{
       // Ton Start
+      //updateOLEDWaveform();
       pwm_set_enabled(slice_num_wave, true);
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100));
       muteSound(false);
@@ -1008,7 +1011,8 @@ void playSound(float freqVal){
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
     pinMode(wave_outputPin, INPUT);
     lfo1PeriodenCounter = 0;
-    
+    oledRefresedWhileRunSound = false;
+    updateOLEDWaveform();
   }
 }
 
@@ -1669,6 +1673,7 @@ void setup_display(){
 }
 
 // function to draw the waveform on the OLED display
+/*
 void updateOLEDWaveform() {
 
   // Nur alle 30 ms aktualisieren
@@ -1684,16 +1689,16 @@ void updateOLEDWaveform() {
   // Aktuellen wirksamen LFO-Wert auswählen
   float value;
 
-/*
-  if (modSelect == 0) {
-    value = lfo1ValueActual;
-  } else if (modSelect == 1) {
-    value = lfo2ValueActual;
-  } else {
-    // Bei Envelope-Auswahl weiterhin LFO1 anzeigen
-    value = lfo1ValueActual;
-  }
-*/
+
+  // if (modSelect == 0) {
+  //   value = lfo1ValueActual;
+  // } else if (modSelect == 1) {
+  //   value = lfo2ValueActual;
+  // } else {
+  //   // Bei Envelope-Auswahl weiterhin LFO1 anzeigen
+  //   value = lfo1ValueActual;
+  // }
+
   value = lfo1ValueActual * lfo2ValueActual;
 
 
@@ -1800,6 +1805,476 @@ void updateOLEDWaveform() {
   }
 
   oled.print("%");
+
+
+  oled.update();
+}
+*/
+
+/*
+// function to draw the waveform on the OLED display
+void updateOLEDWaveform() {
+
+  // OLED nicht unnötig oft aktualisieren
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillisDisplay < OLED_UPDATE_INTERVAL) {
+    return;
+  }
+
+  previousMillisDisplay = currentMillis;
+
+
+  // Anzahl der dargestellten Perioden
+  const float displayCycles = 4.0;
+
+  // Display löschen
+  oled.clear();
+
+
+  // Rahmen
+  oled.rect(0, 0, 127, 63, OLED_STROKE);
+
+
+  // Überschrift
+  oled.setScale(1);
+  oled.setCursor(3, 0);
+
+  if (modSelect == 0) {
+    oled.print("LFO1");
+  } else if (modSelect == 1) {
+    oled.print("LFO2");
+  } else {
+    oled.print("LFO1");
+  }
+
+
+  // Frequenz anzeigen
+  oled.setCursor(45, 0);
+
+  if (modSelect == 0) {
+    oled.print(lfo1Frequency, 1);
+    oled.print("Hz");
+  } else if (modSelect == 1) {
+    oled.print(lfo2Frequency, 1);
+    oled.print("Hz");
+  }
+
+
+  // Mittellinie = Faktor 1.0
+  int centerY = 33;
+
+  oled.line(
+    OLED_GRAPH_X_MIN,
+    centerY,
+    OLED_GRAPH_X_MAX,
+    centerY
+  );
+
+
+  // ---------------------------------------------------------
+  // LFO-Wellenform als normierte Momentaufnahme zeichnen
+  // ---------------------------------------------------------
+
+  float amplitude;
+
+  if (modSelect == 0) {
+    amplitude = lfo1Amplitude;
+  } else {
+    amplitude = lfo2Amplitude;
+  }
+
+  // Amplitude begrenzen
+  amplitude = constrain(amplitude, -100, 100);
+
+
+  // Faktor für die Darstellung:
+  // 0.25 ... 1.75 entspricht dem bisherigen Anzeigebereich
+  float displayAmplitude = abs(amplitude) / 100.0;
+
+
+  // Waveform bestimmen
+  eLfoWaveform waveform;
+
+  if (modSelect == 0 || modSelect == 2) {
+    waveform = lfo1Waveform;
+  } else {
+    waveform = lfo2Waveform;
+  }
+
+
+  // Kurve zeichnen
+  int previousY = centerY;
+
+  for (int x = OLED_GRAPH_X_MIN; x <= OLED_GRAPH_X_MAX; x++) {
+
+    // Position innerhalb der vier Perioden: 0.0 ... 4.0
+    float phase =
+      ((float)(x - OLED_GRAPH_X_MIN) /
+       (float)(OLED_GRAPH_X_MAX - OLED_GRAPH_X_MIN))
+      * displayCycles;
+
+    // Nur den Anteil innerhalb einer Periode verwenden
+    float p = phase - floor(phase);
+
+    // Wellenformwert 0.0 ... 1.0
+    float waveformValue = 0.5;
+
+
+    switch (waveform) {
+
+      case SQUARE:
+
+        waveformValue = (p < 0.5) ? 1.0 : 0.0;
+
+        break;
+
+
+      case TRIANGLE:
+
+        if (p < 0.5) {
+          waveformValue = p * 2.0;
+        } else {
+          waveformValue = 2.0 - p * 2.0;
+        }
+
+        break;
+
+
+      case SAWTOOTH:
+
+        waveformValue = p;
+
+        break;
+    }
+
+
+    // Wellenform entsprechend der Amplitude um die Mittellinie skalieren
+    float displayValue =
+      1.0 + (waveformValue - 0.5) * 1.5 * displayAmplitude;
+
+
+    // In den bisherigen Anzeigebereich begrenzen
+    displayValue = constrain(displayValue, 0.25, 1.75);
+
+
+    // In Y-Koordinate umrechnen
+    int y = map(
+      (int)(displayValue * 1000),
+      250,
+      1750,
+      OLED_GRAPH_Y_MAX,
+      OLED_GRAPH_Y_MIN
+    );
+
+    y = constrain(
+      y,
+      OLED_GRAPH_Y_MIN,
+      OLED_GRAPH_Y_MAX
+    );
+
+
+    // Linie vom vorherigen Punkt zum aktuellen Punkt
+    if (x > OLED_GRAPH_X_MIN) {
+      oled.line(
+        x - 1,
+        previousY,
+        x,
+        y
+      );
+    }
+
+    previousY = y;
+  }
+
+
+  // // Aktuellen effektiven Wert unten anzeigen
+  // oled.setCursor(3, 7);
+
+  // oled.print("x");
+
+  // if (modSelect == 0) {
+  //   oled.print(lfo1ValueActual, 2);
+  // } else if (modSelect == 1) {
+  //   oled.print(lfo2ValueActual, 2);
+  // } else {
+  //   oled.print(lfo1ValueActual, 2);
+  // }
+
+
+  // Amplitude anzeigen
+  oled.setCursor(55, 7);
+
+  if (modSelect == 0 || modSelect == 2) {
+    oled.print(lfo1Amplitude, 0);
+  } else {
+    oled.print(lfo2Amplitude, 0);
+  }
+
+  oled.print("%");
+
+
+  oled.update();
+}
+
+*/
+
+void updateOLEDWaveform()
+{
+  const int graphLeft   = 0;
+  const int graphRight  = 127;
+  const int graphTop    = 15;
+  const int graphBottom = 60;
+
+  const float displayCyclesLFO1 = 5.5;
+
+  // Nur alle 30 ms aktualisieren
+  unsigned long currentMillis = millis();
+
+  if ((currentMillis - previousMillisDisplay < OLED_UPDATE_INTERVAL)or(oledRefresedWhileRunSound)) {
+    return;
+  }
+
+  if (playSound){
+    oledRefresedWhileRunSound = true;
+  } 
+
+  previousMillisDisplay = currentMillis;
+
+  // ------------------------------------------------------------
+  // Effektiven Wert eines LFO-Waveforms für die Anzeige berechnen
+  // phase: 0.0 ... 1.0
+  // ------------------------------------------------------------
+  auto getWaveformValue = [](eLfoWaveform waveform, float phase) -> float
+  {
+    phase -= floor(phase);
+
+    switch (waveform)
+    {
+      case SQUARE:
+        return (phase < 0.5) ? 1.0 : 0.0;
+
+      case TRIANGLE:
+        if (phase < 0.5)
+          return phase * 2.0;
+        else
+          return 2.0 - phase * 2.0;
+
+      case SAWTOOTH:
+        return phase;
+    }
+
+    return 0.0;
+  };
+
+
+  // ------------------------------------------------------------
+  // Effektiven Frequenz-Multiplikator von LFO1 berechnen
+  // Entspricht calculateLFOWave1()
+  // ------------------------------------------------------------
+  auto getLFO1Multiplier = [&](float phase) -> float
+  {
+    float rawValue = getWaveformValue(lfo1Waveform, phase);
+
+    float amplitudeFactor = (lfo1Amplitude / 100.0);
+
+    if (optionFlags & 0b00000100)
+      amplitudeFactor *= 2.0;
+
+    return
+      (((rawValue - 0.5) * 1.5) * amplitudeFactor) + 1.0;
+  };
+
+
+  // ------------------------------------------------------------
+  // Effektiven Frequenz-Multiplikator von LFO2 berechnen
+  // Entspricht calculateLFOWave2()
+  // ------------------------------------------------------------
+  auto getLFO2Multiplier = [&](float phase) -> float
+  {
+    float rawValue = getWaveformValue(lfo2Waveform, phase);
+
+    float amplitudeFactor = (lfo2Amplitude / 100.0);
+
+    return
+      (((rawValue - 0.5) * 1.5) * amplitudeFactor) + 1.0;
+  };
+
+
+  // ------------------------------------------------------------
+  // Frequenzverhältnis LFO2 zu LFO1
+  //
+  // Damit LFO1 genau 5 Perioden darstellt, wird LFO2
+  // entsprechend seiner Frequenz mitgeführt.
+  //
+  // Beim SAWTOOTH wird in deinen LFO-Funktionen mit
+  // schrittweite / 2 gearbeitet. Deshalb berücksichtigen
+  // wir das hier ebenfalls.
+  // ------------------------------------------------------------
+  float effectiveLFO1Frequency = lfo1Frequency;
+  float effectiveLFO2Frequency = lfo2Frequency;
+
+  if (lfo1Waveform == SAWTOOTH)
+    effectiveLFO1Frequency *= 0.5;
+
+  if (lfo2Waveform == SAWTOOTH)
+    effectiveLFO2Frequency *= 0.5;
+
+  float frequencyRatio = 0.0;
+
+  if (effectiveLFO1Frequency > 0.0)
+    frequencyRatio =
+      effectiveLFO2Frequency / effectiveLFO1Frequency;
+
+
+  // ------------------------------------------------------------
+  // Zuerst alle Werte berechnen, damit die Darstellung
+  // automatisch auf den tatsächlichen Wertebereich skaliert
+  // werden kann.
+  // ------------------------------------------------------------
+  float waveformValues[128];
+
+  float minValue =  1000000.0;
+  float maxValue = -1000000.0;
+
+  for (int x = graphLeft; x <= graphRight; x++)
+  {
+    float normalizedX = (float)(x - graphLeft) /
+      (float)(graphRight - graphLeft);
+
+    // LFO1 läuft exakt 5 Perioden über die Anzeige
+    float phaseLFO1 = normalizedX * displayCyclesLFO1;
+
+    // LFO2 läuft entsprechend seines Frequenzverhältnisses
+    float phaseLFO2 = phaseLFO1 * frequencyRatio;
+
+    float lfo1Multiplier = getLFO1Multiplier(phaseLFO1);
+
+    float lfo2Multiplier = getLFO2Multiplier(phaseLFO2);
+
+    // Genau das Produkt, das auch den Frequenzgenerator beeinflusst
+    float combinedValue = lfo1Multiplier * lfo2Multiplier;
+
+    waveformValues[x] = combinedValue;
+
+    if (combinedValue < minValue) minValue = combinedValue;
+
+    if (combinedValue > maxValue) maxValue = combinedValue;
+  }
+
+
+  // ------------------------------------------------------------
+  // Display löschen
+  // ------------------------------------------------------------
+  oled.clear();
+
+
+  // ------------------------------------------------------------
+  // Kopfzeile
+  // ------------------------------------------------------------
+  oled.setCursor(0, 0);
+  oled.print("LFO1 * LFO2");
+
+  oled.setCursor(76, 0);
+  oled.print(lfo1Frequency, 1);
+  oled.print("/");
+
+  oled.print(lfo2Frequency, 1);
+
+
+  // ------------------------------------------------------------
+  // Einen gewissen Rand um den Wertebereich lassen
+  // ------------------------------------------------------------
+  // float valueRange = maxValue - minValue;
+
+  float displayMin = 0.0;
+  float displayMax = 2.0;
+
+  float valueRange = displayMax - displayMin;
+
+
+  // ------------------------------------------------------------
+  // Nulllinie / Faktor-1-Linie
+  //
+  // Faktor 1.0 bedeutet:
+  // keine Änderung der Grundfrequenz
+  // ------------------------------------------------------------
+  if (1.0 >= displayMin && 1.0 <= displayMax)
+  {
+    int yOne =
+      graphBottom -
+      (int)(
+        ((1.0 - displayMin) / valueRange) *
+        (graphBottom - graphTop)
+      );
+
+    // oled.line(
+    //   graphLeft,
+    //   yOne,
+    //   graphRight,
+    //   yOne
+    // );
+  }
+
+
+  // ------------------------------------------------------------
+  // Kombinierte Wellenform zeichnen
+  // ------------------------------------------------------------
+  int previousY = 0;
+
+  for (int x = graphLeft; x <= graphRight; x++)
+  {
+    float normalizedValue =
+      (waveformValues[x] - displayMin) /
+      valueRange;
+
+    int y =
+      graphBottom -
+      (int)(
+        normalizedValue *
+        (graphBottom - graphTop)
+      );
+
+    // Sicherheit gegen Überlauf
+    if (y < graphTop)
+      y = graphTop;
+
+    if (y > graphBottom)
+      y = graphBottom;
+
+
+    if (x > graphLeft)
+    {
+      oled.line(
+        x - 1,
+        previousY,
+        x,
+        y
+      );
+    }
+
+    previousY = y;
+  }
+
+
+  // ------------------------------------------------------------
+  // Aktuellen tatsächlichen Multiplikator anzeigen
+  // ------------------------------------------------------------
+  float currentCombinedValue = lfo1ValueActual * lfo2ValueActual;
+
+  oled.setCursor(0, 56);
+  oled.print("x");
+
+  oled.print(currentCombinedValue, 2);
+
+  oled.setCursor(75, 56);
+  oled.print("A:");
+
+  oled.print(lfo1Amplitude);
+
+  oled.print("/");
+
+  oled.print(lfo2Amplitude);
 
 
   oled.update();
