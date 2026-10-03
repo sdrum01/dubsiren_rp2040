@@ -226,7 +226,9 @@ unsigned long lastPotiChangeTime = 0;
 // Timeout für die Aktualisierung des OLED-Displays nach einer Potibewegung
 const unsigned long oledUpdateTimeout = 500;  // 500 ms
 // Updateintervall des Displays in Millisekunden
-const unsigned long OLED_UPDATE_INTERVAL = 100;
+const unsigned long OLED_UPDATE_INTERVAL = 200;
+// global, damit man das von außen beeinflussen kann und das Display sich aktualisieren darf
+bool oledPotiChanged = false;
 
 bool lfo1WaveformChanged = false;
 
@@ -1020,7 +1022,10 @@ void setChangeState(bool p1, bool p2, bool p3, bool s1){
   potiFreqLFOChanged = p2;
   potiAmpLFOChanged = p3;
   lfo1WaveformChanged = s1;
-  debug("State Reset");
+  //debug("State Reset");
+  // so tun, als wenn ein Poti geändert wurde, damit das Oled Display aktualisiert werden darf.
+
+  oledPotiChanged = true;
 }
 
 bool chkLoop(int endCount){
@@ -1440,7 +1445,7 @@ void updatePotis(){
   // Hat sich irgendein Poti bewegt?
   // --------------------------------------------------
 
-  bool oledPotiChanged = false;
+  
 
   if (abs(valPotiPitch - oledPotiPitchBak) > potiTolerance) {
     oledPotiChanged = true;
@@ -1475,8 +1480,9 @@ void updatePotis(){
   if (oledUpdateActive &&
       millis() - lastPotiChangeTime >= oledUpdateTimeout) {
     oledUpdateActive = false;
+    
   }
-
+  oledPotiChanged = false;
 
   // --------------------------------------------------
   // Deine bisherige Poti-Erkennung für die Parameter
@@ -1790,6 +1796,7 @@ void setup_display(){
   oled.print(VER);
 
   oled.update();
+  delay(1000);
 }
 
 
