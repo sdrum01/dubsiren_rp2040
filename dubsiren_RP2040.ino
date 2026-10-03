@@ -22,7 +22,6 @@ const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
 const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
 
-
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 const int wave_mutePin = 22; // Pin zum Muten des Ausgangssignals
 
@@ -54,25 +53,9 @@ const int LEDWaveSquare = 2;
 const int LEDWaveTri = 3;
 const int LEDWaveSaw = 4;
 
-// LED Matrix
-// Pins für die Zeilen und Spalten definieren
-/*
-const int LEDrowPins[3] = {10, 11, 12};     // Zeilenpins (Anode)
-const int LEDcolPins[3] = {13, 14, 15};     // Spaltenpins (Kathode)
-
-
-// Array zum Speichern des Zustands jeder LED (1 = an, 0 = aus)
-int ledState[3][3] = {
-  {0, 0, 0}, // Fire1,Fire2,Fire3
-  {0, 0, 0}, // Fire4, Shift1, Shift2
-  {0, 0, 0}  // Wav1,Wav2,Wav3
-};
-*/
 
 // Variablen/Konstanten for display
-unsigned long previousMillisDisplay = 0;
-
-const unsigned long OLED_UPDATE_INTERVAL = 200;  // 200 ms
+unsigned long previousMillisDisplay = 0;  
 
 const int OLED_GRAPH_X_MIN = 1;
 const int OLED_GRAPH_X_MAX = 126;
@@ -230,6 +213,20 @@ const int potiTolerance = 10;
 bool potiPitchChanged = false;
 bool potiFreqLFOChanged = false;
 bool potiAmpLFOChanged = false;
+
+// Letzte Werte ausschließlich für die OLED-Bewegungserkennung
+int oledPotiPitchBak = 0;
+int oledPotiFreqLFOBak = 0;
+int oledPotiAmpLFOBak = 0;
+
+// Flag, ob der OLED-Display aktualisiert werden soll
+bool oledUpdateActive = false;
+// Zeitstempel für die letzte Änderung eines Potis
+unsigned long lastPotiChangeTime = 0;
+// Timeout für die Aktualisierung des OLED-Displays nach einer Potibewegung
+const unsigned long oledUpdateTimeout = 500;  // 500 ms
+// Updateintervall des Displays in Millisekunden
+const unsigned long OLED_UPDATE_INTERVAL = 100;
 
 bool lfo1WaveformChanged = false;
 
@@ -997,13 +994,9 @@ void playSound(float freqVal){
       
     }else{
       // Ton Start
-      //updateOLEDWaveform();
       pwm_set_enabled(slice_num_wave, true);
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100));
       muteSound(false);
-      //previousMillisDisplay = 0;
-      //oled.clear();
-      //oled.update();
     }
   }else{
     // Ton Stop
@@ -1011,8 +1004,10 @@ void playSound(float freqVal){
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
     pinMode(wave_outputPin, INPUT);
     lfo1PeriodenCounter = 0;
-    oledRefresedWhileRunSound = false;
-    updateOLEDWaveform();
+    //oledRefresedWhileRunSound = false;
+    if (oledUpdateActive){
+      updateOLEDWaveform();
+    }
   }
 }
 
@@ -1280,10 +1275,6 @@ void updateKeys(){
       enumWaveForm();
   }
 
-  
-
-  
-
   selectedFireLedState = 0;
   shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),!selectLFO.read(),0,0,0,0,0);
   //Shiftstate ist > 0 wenn irgendeine Shift-taste gedrückt ist, die eine 2.FUnktion während des Drückens haben soll
@@ -1363,22 +1354,148 @@ void updateKeys(){
   selectedFireLedState = runSound | selectedFireLedState;
 }
 
+/*
+
 void updatePotis(){
+  // --------------------------------------------------
+  // OLED-Aktivierung:
+  // Hat sich irgendein Poti bewegt?
+  // --------------------------------------------------
+  bool potiChanged = false;
+
   // Abfrage der 3 Potis
   valPotiPitch = analogRead(freqPotPin);
   valPotiFreqLFO = analogRead(lfoFreqPotPin);
   valPotiAmpLFO = analogRead(lfoAmpPotPin);
 
   // Wenns gewackelt hat innerhalb einer Toleranz, wird ein Flag gesetzt
-  if((valPotiPitch < valPotiPitchBak - potiTolerance)||(valPotiPitch > valPotiPitchBak + potiTolerance)){
+  // if((valPotiPitch < valPotiPitchBak - potiTolerance)||(valPotiPitch > valPotiPitchBak + potiTolerance)){
+  //   potiPitchChanged = true;
+  // }
+
+  // Pitch
+
+  if((valPotiPitch < valPotiPitchBak - potiTolerance) ||
+     (valPotiPitch > valPotiPitchBak + potiTolerance)){
+
+    potiPitchChanged = true;
+    potiChanged = true;
+  }
+
+  // if((valPotiFreqLFO < valPotiFreqLFOBak - potiTolerance)||(valPotiFreqLFO > valPotiFreqLFOBak + potiTolerance)){
+  //   potiFreqLFOChanged = true;
+  // }
+
+  // LFO Frequenz
+
+  if((valPotiFreqLFO < valPotiFreqLFOBak - potiTolerance) ||
+     (valPotiFreqLFO > valPotiFreqLFOBak + potiTolerance)){
+
+    potiFreqLFOChanged = true;
+    potiChanged = true;
+  }
+
+  // if((valPotiAmpLFO < valPotiAmpLFOBak - potiTolerance)||(valPotiAmpLFO > valPotiAmpLFOBak + potiTolerance)){
+  //   potiAmpLFOChanged = true;
+  // }
+
+  // LFO Amplitude
+
+  if((valPotiAmpLFO < valPotiAmpLFOBak - potiTolerance) ||
+     (valPotiAmpLFO > valPotiAmpLFOBak + potiTolerance)){
+
+    potiAmpLFOChanged = true;
+    potiChanged = true;
+  }
+
+  // Wenn irgendein Poti bewegt wurde:
+  if(potiChanged){
+
+    oledUpdateActive = true;
+    lastPotiChangeTime = millis();
+  }
+
+  // Seit 500 ms kein Poti mehr bewegt
+  if (oledUpdateActive &&
+      millis() - lastPotiChangeTime >= oledUpdateTimeout) {
+
+    oledUpdateActive = false;
+  }
+}
+*/
+
+void updatePotis(){
+
+  // --------------------------------------------------
+  // Potis einlesen
+  // --------------------------------------------------
+
+  valPotiPitch   = analogRead(freqPotPin);
+  valPotiFreqLFO = analogRead(lfoFreqPotPin);
+  valPotiAmpLFO  = analogRead(lfoAmpPotPin);
+
+
+  // --------------------------------------------------
+  // OLED-Aktivierung:
+  // Hat sich irgendein Poti bewegt?
+  // --------------------------------------------------
+
+  bool oledPotiChanged = false;
+
+  if (abs(valPotiPitch - oledPotiPitchBak) > potiTolerance) {
+    oledPotiChanged = true;
+  }
+
+  if (abs(valPotiFreqLFO - oledPotiFreqLFOBak) > potiTolerance) {
+    oledPotiChanged = true;
+  }
+
+  if (abs(valPotiAmpLFO - oledPotiAmpLFOBak) > potiTolerance) {
+    oledPotiChanged = true;
+  }
+
+
+  // Wenn sich ein Poti bewegt hat:
+  if (oledPotiChanged) {
+
+    oledUpdateActive = true;
+    lastPotiChangeTime = millis();
+
+    // Aktuelle Werte als neue Vergleichswerte speichern
+    oledPotiPitchBak   = valPotiPitch;
+    oledPotiFreqLFOBak = valPotiFreqLFO;
+    oledPotiAmpLFOBak  = valPotiAmpLFO;
+  }
+
+
+  // --------------------------------------------------
+  // OLED nach 500 ms ohne Bewegung abschalten
+  // --------------------------------------------------
+
+  if (oledUpdateActive &&
+      millis() - lastPotiChangeTime >= oledUpdateTimeout) {
+    oledUpdateActive = false;
+  }
+
+
+  // --------------------------------------------------
+  // Deine bisherige Poti-Erkennung für die Parameter
+  // --------------------------------------------------
+
+  if ((valPotiPitch < valPotiPitchBak - potiTolerance) ||
+      (valPotiPitch > valPotiPitchBak + potiTolerance)) {
     potiPitchChanged = true;
   }
 
-  if((valPotiFreqLFO < valPotiFreqLFOBak - potiTolerance)||(valPotiFreqLFO > valPotiFreqLFOBak + potiTolerance)){
+
+  if ((valPotiFreqLFO < valPotiFreqLFOBak - potiTolerance) ||
+      (valPotiFreqLFO > valPotiFreqLFOBak + potiTolerance)) {
     potiFreqLFOChanged = true;
   }
 
-  if((valPotiAmpLFO < valPotiAmpLFOBak - potiTolerance)||(valPotiAmpLFO > valPotiAmpLFOBak + potiTolerance)){
+
+  if ((valPotiAmpLFO < valPotiAmpLFOBak - potiTolerance) ||
+      (valPotiAmpLFO > valPotiAmpLFOBak + potiTolerance)) {
     potiAmpLFOChanged = true;
   }
 }
@@ -1435,6 +1552,9 @@ void updateLEDs(){
 
   digitalWrite(LEDShift1,modSelect == 2);
   digitalWrite(LEDSave,shiftState == 2 && blinkState);
+
+  // Debug
+  //digitalWrite(LEDSave,oledUpdateActive);
   
   digitalWrite(LEDWaveSquare,valLfoWaveformSwitch == 0);
   digitalWrite(LEDWaveTri,valLfoWaveformSwitch == 1);
@@ -1672,352 +1792,6 @@ void setup_display(){
   oled.update();
 }
 
-// function to draw the waveform on the OLED display
-/*
-void updateOLEDWaveform() {
-
-  // Nur alle 30 ms aktualisieren
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - previousMillisDisplay < OLED_UPDATE_INTERVAL) {
-    return;
-  }
-
-  previousMillisDisplay = currentMillis;
-
-
-  // Aktuellen wirksamen LFO-Wert auswählen
-  float value;
-
-
-  // if (modSelect == 0) {
-  //   value = lfo1ValueActual;
-  // } else if (modSelect == 1) {
-  //   value = lfo2ValueActual;
-  // } else {
-  //   // Bei Envelope-Auswahl weiterhin LFO1 anzeigen
-  //   value = lfo1ValueActual;
-  // }
-
-  value = lfo1ValueActual * lfo2ValueActual;
-
-
-  // Wert begrenzen
-  // Für die Darstellung gehen wir von 0.25 ... 1.75 aus.
-  value = constrain(value, 0.25, 1.75);
-
-
-  // Alten Verlauf nach links schieben
-  for (int x = 0; x < 127; x++) {
-    waveformDisplay[x] = waveformDisplay[x + 1];
-  }
-
-  waveformDisplay[127] = value;
-
-
-  // Display löschen
-  oled.clear();
-
-
-  // Rahmen
-  // oled.rect(0, 0, 127, 63, OLED_STROKE);
-
-
-  // Überschrift
-  oled.setScale(1);
-  oled.setCursor(3, 0);
-
-  if (modSelect == 0) {
-    oled.print("LFO1");
-  } else if (modSelect == 1) {
-    oled.print("LFO2");
-  } else {
-    oled.print("LFO1");
-  }
-
-
-  // Frequenz anzeigen
-  oled.setCursor(45, 0);
-
-  if (modSelect == 0) {
-    oled.print(lfo1Frequency, 1);
-    oled.print("Hz");
-  } else if (modSelect == 1) {
-    oled.print(lfo2Frequency, 1);
-    oled.print("Hz");
-  }
-
-
-  // Mittellinie = Faktor 1.0
-  int centerY = 33;
-
-  oled.line(
-    OLED_GRAPH_X_MIN,
-    centerY,
-    OLED_GRAPH_X_MAX,
-    centerY
-  );
-
-
-  // Kurve zeichnen
-  for (int x = 1; x < 128; x++) {
-
-    // 0.25 ... 1.75
-    // wird auf 54 ... 12 Pixel abgebildet
-
-    int y1 = map(
-      (int)(waveformDisplay[x - 1] * 1000),
-      250,
-      1750,
-      OLED_GRAPH_Y_MAX,
-      OLED_GRAPH_Y_MIN
-    );
-
-    int y2 = map(
-      (int)(waveformDisplay[x] * 1000),
-      250,
-      1750,
-      OLED_GRAPH_Y_MAX,
-      OLED_GRAPH_Y_MIN
-    );
-
-    y1 = constrain(y1, OLED_GRAPH_Y_MIN, OLED_GRAPH_Y_MAX);
-    y2 = constrain(y2, OLED_GRAPH_Y_MIN, OLED_GRAPH_Y_MAX);
-
-    oled.line(x - 1, y1, x, y2);
-  }
-
-
-  // Aktuellen Wert unten anzeigen
-  oled.setCursor(3, 7);
-
-  oled.print("x");
-  oled.print(value, 2);
-
-
-  // Amplitude anzeigen
-  oled.setCursor(55, 7);
-
-  if (modSelect == 0) {
-    oled.print(lfo1Amplitude, 0);
-  } else {
-    oled.print(lfo2Amplitude, 0);
-  }
-
-  oled.print("%");
-
-
-  oled.update();
-}
-*/
-
-/*
-// function to draw the waveform on the OLED display
-void updateOLEDWaveform() {
-
-  // OLED nicht unnötig oft aktualisieren
-  unsigned long currentMillis = millis();
-
-  if (currentMillis - previousMillisDisplay < OLED_UPDATE_INTERVAL) {
-    return;
-  }
-
-  previousMillisDisplay = currentMillis;
-
-
-  // Anzahl der dargestellten Perioden
-  const float displayCycles = 4.0;
-
-  // Display löschen
-  oled.clear();
-
-
-  // Rahmen
-  oled.rect(0, 0, 127, 63, OLED_STROKE);
-
-
-  // Überschrift
-  oled.setScale(1);
-  oled.setCursor(3, 0);
-
-  if (modSelect == 0) {
-    oled.print("LFO1");
-  } else if (modSelect == 1) {
-    oled.print("LFO2");
-  } else {
-    oled.print("LFO1");
-  }
-
-
-  // Frequenz anzeigen
-  oled.setCursor(45, 0);
-
-  if (modSelect == 0) {
-    oled.print(lfo1Frequency, 1);
-    oled.print("Hz");
-  } else if (modSelect == 1) {
-    oled.print(lfo2Frequency, 1);
-    oled.print("Hz");
-  }
-
-
-  // Mittellinie = Faktor 1.0
-  int centerY = 33;
-
-  oled.line(
-    OLED_GRAPH_X_MIN,
-    centerY,
-    OLED_GRAPH_X_MAX,
-    centerY
-  );
-
-
-  // ---------------------------------------------------------
-  // LFO-Wellenform als normierte Momentaufnahme zeichnen
-  // ---------------------------------------------------------
-
-  float amplitude;
-
-  if (modSelect == 0) {
-    amplitude = lfo1Amplitude;
-  } else {
-    amplitude = lfo2Amplitude;
-  }
-
-  // Amplitude begrenzen
-  amplitude = constrain(amplitude, -100, 100);
-
-
-  // Faktor für die Darstellung:
-  // 0.25 ... 1.75 entspricht dem bisherigen Anzeigebereich
-  float displayAmplitude = abs(amplitude) / 100.0;
-
-
-  // Waveform bestimmen
-  eLfoWaveform waveform;
-
-  if (modSelect == 0 || modSelect == 2) {
-    waveform = lfo1Waveform;
-  } else {
-    waveform = lfo2Waveform;
-  }
-
-
-  // Kurve zeichnen
-  int previousY = centerY;
-
-  for (int x = OLED_GRAPH_X_MIN; x <= OLED_GRAPH_X_MAX; x++) {
-
-    // Position innerhalb der vier Perioden: 0.0 ... 4.0
-    float phase =
-      ((float)(x - OLED_GRAPH_X_MIN) /
-       (float)(OLED_GRAPH_X_MAX - OLED_GRAPH_X_MIN))
-      * displayCycles;
-
-    // Nur den Anteil innerhalb einer Periode verwenden
-    float p = phase - floor(phase);
-
-    // Wellenformwert 0.0 ... 1.0
-    float waveformValue = 0.5;
-
-
-    switch (waveform) {
-
-      case SQUARE:
-
-        waveformValue = (p < 0.5) ? 1.0 : 0.0;
-
-        break;
-
-
-      case TRIANGLE:
-
-        if (p < 0.5) {
-          waveformValue = p * 2.0;
-        } else {
-          waveformValue = 2.0 - p * 2.0;
-        }
-
-        break;
-
-
-      case SAWTOOTH:
-
-        waveformValue = p;
-
-        break;
-    }
-
-
-    // Wellenform entsprechend der Amplitude um die Mittellinie skalieren
-    float displayValue =
-      1.0 + (waveformValue - 0.5) * 1.5 * displayAmplitude;
-
-
-    // In den bisherigen Anzeigebereich begrenzen
-    displayValue = constrain(displayValue, 0.25, 1.75);
-
-
-    // In Y-Koordinate umrechnen
-    int y = map(
-      (int)(displayValue * 1000),
-      250,
-      1750,
-      OLED_GRAPH_Y_MAX,
-      OLED_GRAPH_Y_MIN
-    );
-
-    y = constrain(
-      y,
-      OLED_GRAPH_Y_MIN,
-      OLED_GRAPH_Y_MAX
-    );
-
-
-    // Linie vom vorherigen Punkt zum aktuellen Punkt
-    if (x > OLED_GRAPH_X_MIN) {
-      oled.line(
-        x - 1,
-        previousY,
-        x,
-        y
-      );
-    }
-
-    previousY = y;
-  }
-
-
-  // // Aktuellen effektiven Wert unten anzeigen
-  // oled.setCursor(3, 7);
-
-  // oled.print("x");
-
-  // if (modSelect == 0) {
-  //   oled.print(lfo1ValueActual, 2);
-  // } else if (modSelect == 1) {
-  //   oled.print(lfo2ValueActual, 2);
-  // } else {
-  //   oled.print(lfo1ValueActual, 2);
-  // }
-
-
-  // Amplitude anzeigen
-  oled.setCursor(55, 7);
-
-  if (modSelect == 0 || modSelect == 2) {
-    oled.print(lfo1Amplitude, 0);
-  } else {
-    oled.print(lfo2Amplitude, 0);
-  }
-
-  oled.print("%");
-
-
-  oled.update();
-}
-
-*/
 
 void updateOLEDWaveform()
 {
@@ -2028,16 +1802,21 @@ void updateOLEDWaveform()
 
   const float displayCyclesLFO1 = 5.5;
 
-  // Nur alle 30 ms aktualisieren
+  // Nur alle x ms aktualisieren
   unsigned long currentMillis = millis();
 
-  if ((currentMillis - previousMillisDisplay < OLED_UPDATE_INTERVAL)or(oledRefresedWhileRunSound)) {
+  // if ((currentMillis - previousMillisDisplay < OLED_UPDATE_INTERVAL)or(oledRefresedWhileRunSound)) {
+  //   return;
+  // }
+
+  // if (runSound){
+  //   oledRefresedWhileRunSound = true;
+  // } 
+
+  // Nur alle x ms aktualisieren
+  if (currentMillis - previousMillisDisplay < OLED_UPDATE_INTERVAL) {
     return;
   }
-
-  if (playSound){
-    oledRefresedWhileRunSound = true;
-  } 
 
   previousMillisDisplay = currentMillis;
 
@@ -2560,9 +2339,9 @@ void loop() {
 
   // Überwachung und Debugprits
   
-   //if(chkLoop(1000)){
-    //debug("WaveForm1: "+String(lfo1Waveform)+" Amplitude1: "+String(lfo1Amplitude)+" WaveForm2: "+String(lfo1Waveform)+" Amplitude2: "+String(lfo2Amplitude)+" PeriodeLFO1: "+String(lfo1PeriodenCounter));
-  //}
+  // if(chkLoop(1000)){
+  //   debug(oledUpdateActive?"OLED-Update ON":"OLED-Update OFF");
+  // }
   
   
  
