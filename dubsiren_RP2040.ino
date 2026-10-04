@@ -315,17 +315,6 @@ void JSON2values(String jsonString) {
     return;
   }
 
-  /*
-  // Jetzt können wir die Werte aus dem JSON-Dokument extrahieren
-  JsonObject actualDataset = doc["fire1"];
-  // Variablen aus dem JSON extrahieren und den globalen Variablen zuweisen
-  baseFrequency = actualDataset["pitch"];
-  lfo1Frequency = actualDataset["lfoFreq"];
-  lfoAmplitude = actualDataset["lfoAmount"];
-  envelopeDuration = actualDataset["envTime"];
-  envelopeAmplitude = actualDataset["envAmount"];
-  lfoWaveform = actualDataset["waveform"];
-  */
 
   baseFrequency = dataSet["pitch"];
   lfo1Frequency = dataSet["lfoFreq"];
@@ -362,15 +351,12 @@ bool writeSettings(String _json, String configFile){
   // Daten schreiben
   File file = LittleFS.open(configFile, "w");
   if (file) {
-      //file.write(s);  // Schreibe eine Zahl
       // String in die Datei schreiben
       
       file.println(_json);  // Schreibt den String und fügt einen Zeilenumbruch hinzu
       file.close();
       return(true);
-      //Serial.println("write file "+configFile+": "+s);
   } else {
-    //Serial.println("Error during writing of file "+configFile);
     return(false);
   }
 }
@@ -488,22 +474,6 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
       lfo1Value += schrittweite * lfo1Direction;
 
       // Auch bei größeren Zeitsprüngen korrekt über die Grenzen gehen
-      /*
-      while (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
-
-        if (lfo1Value >= 1.0) {
-          lfo1Value = 2.0 - lfo1Value;
-          lfo1Direction = -1;
-          lfo1PeriodenCounter++;
-        }
-
-        if (lfo1Value <= 0.0) {
-          lfo1Value = -lfo1Value;
-          lfo1Direction = 1;
-          lfo1PeriodenCounter++;
-        }
-      }
-      */
      while (lfo1Value > 1.0 || lfo1Value < 0.0) {
       if (lfo1Value > 1.0) {
         lfo1Value = 2.0 - lfo1Value;
@@ -548,22 +518,6 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
       lfo1Value += schrittweite * lfo1Direction;
 
       // Auch bei größeren Zeitsprüngen korrekt über die Grenzen gehen
-      /*
-      while (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
-
-        if (lfo1Value >= 1.0) {
-          lfo1Value = 2.0 - lfo1Value;
-          lfo1Direction = -1;
-          lfo1PeriodenCounter++;
-        }
-
-        if (lfo1Value <= 0.0) {
-          lfo1Value = -lfo1Value;
-          lfo1Direction = 1;
-          lfo1PeriodenCounter++;
-        }
-      }
-      */
 
       while (lfo1Value > 1.0 || lfo1Value < 0.0) {
           if (lfo1Value > 1.0) {
@@ -1582,6 +1536,7 @@ void updateLEDs(){
   
 
 }
+ 
 
 void setWaveFormSwitch(){
   // Übertragen des aktuellen LFO auf den LFO-Selekt-LED's, aber nur wenn der Schalter nicht geändert wurde
@@ -2339,10 +2294,10 @@ void loop() {
   playSound(newModulatedFrequency);
   // Control LED's updaten
   updateLEDs();
+
   
 
   // Display aktualisieren
-  //updateOLEDWaveform();
 
   // Überwachung und Debugprits
   
