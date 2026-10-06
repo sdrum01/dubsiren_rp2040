@@ -1905,15 +1905,6 @@ void drawOLEDWaveform()
       if (combinedValue > maxValue) maxValue = combinedValue;
     }
 
-
-    // original
-    //float combinedValue = lfo1Multiplier * lfo2Multiplier;
-
-    // waveformValues[x] = combinedValue;
-
-    // if (combinedValue < minValue) minValue = combinedValue;
-
-    // if (combinedValue > maxValue) maxValue = combinedValue;
   }
 
 
@@ -1961,13 +1952,6 @@ void drawOLEDWaveform()
         ((1.0 - displayMin) / valueRange) *
         (graphBottom - graphTop)
       );
-
-    // oled.line(
-    //   graphLeft,
-    //   yOne,
-    //   graphRight,
-    //   yOne
-    // );
   }
 
 
