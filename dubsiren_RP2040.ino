@@ -153,7 +153,7 @@ volatile float lfovalue_finalLFO1 = 0;
 volatile float lfovalue_finalLFO2 = 0;
 
 //volatile int lfo2Stop = 0;
-volatile int lfo1PeriodenCounter = 0;
+//volatile int lfo1PeriodenCounter = 0;
 
 
 // Wenn Ton abgefeuert werden soll:
@@ -197,7 +197,11 @@ int valPotiPitchBak = 0;
 int valPotiFreqLFOBak = 0;
 int valPotiAmpLFOBak = 0;
 
-// bool retriggerLFO2 = false;
+// Soft-Start gegen Knacken beim Tonbeginn
+const float SOFT_START_DUTY = 2.0;            // Start-Duty in %
+const unsigned long SOFT_START_US = 15000;    // Dauer der Rampe in µs (xx ms)
+bool toneActive = false;                      // läuft der Ton gerade?
+unsigned long toneStartMicros = 0;
 
 //  Flags zum ein/Ausschalten von diversen Optionen
 
@@ -219,20 +223,6 @@ int oledPotiPitchBak = 0;
 int oledPotiFreqLFOBak = 0;
 int oledPotiAmpLFOBak = 0;
 
-// Flag, ob der OLED-Display aktualisiert werden soll
-// bool oledUpdateActive = false;
-
-// Zeitstempel für die letzte Änderung eines Potis
-// unsigned long lastPotiChangeTime = 0;
-
-// Timeout für die Aktualisierung des OLED-Displays nach einer Potibewegung
-// const unsigned long oledUpdateTimeout = 500;  // 500 ms
-
-// Updateintervall des Displays in Millisekunden
-// const unsigned long OLED_UPDATE_INTERVAL = 200;
-
-// global, damit man das von außen beeinflussen kann und das Display sich aktualisieren darf
-// bool oledPotiChanged = false;
 
 // Display-Refresh
 bool displayDirty = true;                         // true = beim Start einmal zeichnen
@@ -415,8 +405,6 @@ float linearToLogarithmic(float value,float min, float max) {
   // Skaliere den Prozentwert auf den Bereich [0, 1]
   float scaledPercentage = percentage / 100.0;
 
-  //float scaledPercentage = ((optionFlags & 0b00000010) ? rasterpercentage / 100.0 : percentage / 100.0)   ;
-
   // Berechne die logarithmische Ausgabe
   // logarithmischer Bereich mit Basis 10
   float logMin = log10(min);
@@ -489,13 +477,13 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
       if (lfo1Value > 1.0) {
         lfo1Value = 2.0 - lfo1Value;
         lfo1Direction = -1;
-        lfo1PeriodenCounter++;
+        //lfo1PeriodenCounter++;
       }
 
       if (lfo1Value < 0.0) {
         lfo1Value = -lfo1Value;
         lfo1Direction = 1;
-        lfo1PeriodenCounter++;
+        //lfo1PeriodenCounter++;
       }
     }
       
@@ -534,13 +522,13 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
           if (lfo1Value > 1.0) {
               lfo1Value = 2.0 - lfo1Value;
               lfo1Direction = -1;
-              lfo1PeriodenCounter++;
+              //lfo1PeriodenCounter++;
           }
 
           if (lfo1Value < 0.0) {
               lfo1Value = -lfo1Value;
               lfo1Direction = 1;
-              lfo1PeriodenCounter++;
+              //lfo1PeriodenCounter++;
           }
       }
 
@@ -556,7 +544,7 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
       // Auch bei größeren Zeitsprüngen korrekt über den Anfang springen
       while (lfo1Value <= 0) {
         lfo1Value += 1.0;
-        lfo1PeriodenCounter++;
+        //lfo1PeriodenCounter++;
       }
 
       lfovalue_finalLFO1 = lfo1Value;
@@ -704,196 +692,15 @@ float calculateLFOWave2(float frequency, float amplitude) {
   return(lfovalue_final1);
 }
 
-/*
+// LFO2-Frequenz: bei Flag 2 auf das nächste ganzzahlige Vielfache von LFO1 einrasten
+float getLfo2Frequency() {
+  if (!(optionFlags & 0b00000010)) return lfo2Frequency;   // Flag aus: freie Frequenz
+  if (lfo1Frequency <= 0.0) return lfo2Frequency;          // Schutz gegen Division durch 0
 
-// Envelope-Generator
-float calculateEnvelope(float envelopeDuration, float envelopeAmplitude) {
-
-  float schrittweite_envelope = envelopeDuration / 5000;
-  unsigned long currentMillis = millis();
-  const int envelopePeriod = 100;
-  
-  // Envelope-Generator
-  if (currentMillis - previousMillisEnv >= envelopePeriod / 100.0) {
-    previousMillisEnv += envelopePeriod / 100.0;
-    envelopeValue -= schrittweite_envelope;  // 
-    if (envelopeValue <= 0.0){
-      envelopeValue = 0.0;  // Unten begrenzen
-    }
-  }
-  float envelopeValueLog = linearToLogarithmic(envelopeValue,0.0,1.0);
-  float envelope = ((envelopeValue -0.5)*1.9)  * (envelopeAmplitude / 100) +1;
-  return envelope;
+  float n = roundf(lfo2Frequency / lfo1Frequency);         // nächstes Vielfaches
+  if (n < 1.0) n = 1.0;                                    // mindestens 1x LFO1
+  return n * lfo1Frequency;
 }
-
-// LFO-1 mit Dreieck, abgeleiteten Rechteck und Sägezahn
-float calculateLFOWave1(float lfoFrequency, float amplitude) {
-
-  float schrittweite = lfoFrequency / 1000 ;
-  unsigned long currentMillis = millis();
-  const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
-  
-
-  if (currentMillis - previousMillisLFO1 >= lfoPeriod / 100.0) {
-    previousMillisLFO1 += lfoPeriod / 100.0;
-    
-    switch (lfo1Waveform) {
-      case SQUARE:
-        // ist die volle Periode erreicht, zähler eins hoch
-        //if(lfo1Value <= 0.0){lfo1PeriodenCounter++;}
-        // Dreieck ausrechnen 
-        lfo1Value += schrittweite * lfo1Direction;  // 
-        if (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
-          
-          lfo1Direction = -lfo1Direction;  // Richtung umkehren
-          lfo1PeriodenCounter++;
-        }
-        
-        if(amplitude == -100){
-          lfovalue_finalLFO1 = (lfo1Value <= 0.5) ? 0.5 : -100; // -100 = muting;
-        } else {
-          if(amplitude < 0){
-            // Multitone
-
-            
-            // Sägezahn für nur 3 Töne
-            // if (lfo1Value == 1) {
-            //  lfo1Value = 0;  // Zurücksetzen
-            }
-            
-           
-            
-            /// 5-er Raster
-            // if(lfo1Value < 0.125){
-            //  lfovalue_finalLFO1 = 0;
-            //}else if(lfo1Value < 0.375){
-            //  lfovalue_finalLFO1 = 0.25;
-            //}else if(lfo1Value < 0.625){
-            //  lfovalue_finalLFO1 = 0.5;
-            //}else if(lfo1Value < 0.875){
-            //  lfovalue_finalLFO1 = 0.75;
-            //}else {
-            //  lfovalue_finalLFO1 = 1;
-            //}
-            
-           
-            // 3-er Raster
-            if(lfo1Value < 0.25){
-              lfovalue_finalLFO1 = 0;
-            }else if(lfo1Value < 0.75){
-              lfovalue_finalLFO1 = 0.5;
-            }else {
-              lfovalue_finalLFO1 = 1;
-            }
-            
-            //lfovalue_finalLFO1 = round(lfo1Value * 10000) / 10000;
-          }else{
-            lfovalue_finalLFO1 = (lfo1Value >= 0.5) ? 1 : 0;
-          }
-          
-        }
-        break;
-        
-      case TRIANGLE:
-        lfo1Value += schrittweite * lfo1Direction;  // 
-
-        // ist die volle Periode erreicht, zähler eins hoch
-        //if(lfo1Value <= 0.0){lfo1PeriodenCounter++;}
-
-        if (lfo1Value >= 1.0 || lfo1Value <= 0.0) {
-          lfo1Direction = -lfo1Direction;  // Richtung umkehren
-          lfo1PeriodenCounter++;
-        }
-        lfovalue_finalLFO1 = lfo1Value;
-        break;
-        
-      case SAWTOOTH:
-        lfo1Value -= schrittweite / 2;  // Schrittweite für den LFO 
-        if (lfo1Value <= 0) {
-          lfo1Value = 1;  // Zurücksetzen
-          lfo1PeriodenCounter++;
-        }
-        lfovalue_finalLFO1 = lfo1Value;
-        break;
-    }
-  }
-
-  // lfovalue_finalLFO1 liegt zwischen 0..1: verschieben der Mitte auf den NullPunkt
-  // Skalierung des LFO-Wertes mit der LFO-Amplitude 
-  // verschieben des Nullpunktes auf 1: damit kann der Wert als Multiplikator genutzt werden
-
-  float lfovalue_final1 = 0;
-  if(lfovalue_finalLFO1 == -100){
-    lfovalue_final1 = lfovalue_finalLFO1; // negativ für Sonderfunktionen wie Muting (-99)
-   
-  }else{
-    //lfovalue_final1 = ( ((lfovalue_finalLFO1 -0.5)*1.5) * (amplitude/100) + 1.0);
-    //unsigned int verstaerkungsfaktor = 1;
-    //if(optionFlags & 0b00000100){verstaerkungsfaktor = 2;}
-    lfovalue_final1 = ( ((lfovalue_finalLFO1 -0.5)*1.5) * ((amplitude/100)*(optionFlags & 0b00000100 ? 2 : 1)) + 1.0);
-  }
-  return(lfovalue_final1);
-}
-
-// LFO-2 
-float calculateLFOWave2(float frequency, float amplitude) {
-  //uint slice_num_led_red = pwm_gpio_to_slice_num(LEDLfo1);
-  float schrittweite = frequency / 1000 ;
-  
-  unsigned long currentMillis = millis();
-
-  const int lfoPeriod = 100;  // LFO-Periode in Millisekunden (5000 / 50)
-  
-  if (currentMillis - previousMillisLFO2 >= lfoPeriod / 100.0) {
-    previousMillisLFO2 += lfoPeriod / 100.0;
-    switch (lfo2Waveform) {
-      case SQUARE:
-        // Dreieck ausrechnen 
-        lfo2Value += schrittweite * lfo2Direction;  // 
-        if (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
-          lfo2Direction = -lfo2Direction;  // Richtung umkehren
-        }
-        lfovalue_finalLFO2 = (lfo2Value >= 0.5) ? 1 : 0;
-        break;
-        
-      case TRIANGLE:
-
-
-          lfo2Value += schrittweite * lfo2Direction;  // 
-
-        if (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
-          lfo2Direction = -lfo2Direction;  // Richtung umkehren
-
-        }
-        
-
-        lfovalue_finalLFO2 = lfo2Value;
-        break;
-        
-      case SAWTOOTH:
-
-          lfo2Value -= schrittweite / 2;  // Schrittweite für den LFO
-
-        if (lfo2Value <= 0) {
-          lfo2Value = 1;  // Zurücksetzen
-
-          // if((optionFlags & 0b00000010) == true){
-          //   lfo2Stop++;
-          //   debug("STOP");
-          // }
-        }
-        lfovalue_finalLFO2 = lfo2Value;
-        break;
-    }
-
-  }
-
-  float lfovalue_final1 = 0;
-  lfovalue_final1 = ( ((lfovalue_finalLFO2 -0.5)*1.5) * (amplitude/100) + 1.0);
-  return(lfovalue_final1);
-}
-
-*/
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -919,14 +726,29 @@ void muteSound(bool mute){
   // digitalWrite(wave_mutePin, false);
 }
 
+// Hilfsfunktion für Rampe beim Tonstart, um Knacksen zu vermeiden
+float getSoftStartDuty() {
+  if (!toneActive) {              // erster Aufruf nach einer Pause = Tonbeginn
+    toneActive = true;
+    toneStartMicros = micros();
+  }
+
+  unsigned long elapsed = micros() - toneStartMicros;
+  if (elapsed >= SOFT_START_US) return duty;      // Rampe fertig: Zielwert
+
+  // Ist der gespeicherte Duty kleiner als der Startwert, nimm den kleineren
+  float startDuty = (duty < SOFT_START_DUTY) ? duty : SOFT_START_DUTY;
+
+  // Lineare Rampe von startDuty bis duty
+  return startDuty + (duty - startDuty) * (float)elapsed / (float)SOFT_START_US;
+}
+
 // Tonerzeugung
 void playSound(float freqVal){
   // 4140 = 500hz; 2070 = 1khz; 1035 = 2khz; 
  
   float pwm_val = setFrequency(freqVal);
 
-  //float scaledPercentage = ((optionFlags & 0b00000010) ? rasterpercentage / 100.0 : percentage / 100.0)   ;
-  
   // AUSGANG ALS PWM AUSGANG DEFINIEREN, weil er vorher Input sein muss wegen dem Knacks
   // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
 
@@ -934,10 +756,9 @@ void playSound(float freqVal){
   
   uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
 
-  if(((optionFlags & 0b00000010))&&(lfo1PeriodenCounter > 1)){
-    debug("Stop");
-    freqVal = -100;
-  }
+  // if(((optionFlags & 0b00000010))&&(lfo1PeriodenCounter > 1)){
+  //   freqVal = -100;
+  // }
   
   if (runSound){
     dataSaved = false;
@@ -957,12 +778,13 @@ void playSound(float freqVal){
       muteSound(true);
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
       pinMode(wave_outputPin, INPUT);
-   
+      toneActive = false;          // Rücksetzen, damit beim nächsten Tonstart die Rampe wieder beginnt
       
     }else{
       // Ton Start
       pwm_set_enabled(slice_num_wave, true);
-      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100));
+      //pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100));
+      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (getSoftStartDuty() / 100));
       muteSound(false);
     }
   }else{
@@ -970,11 +792,10 @@ void playSound(float freqVal){
     muteSound(true);
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
     pinMode(wave_outputPin, INPUT);
-    lfo1PeriodenCounter = 0;
-    //oledRefresedWhileRunSound = false;
-    // if (oledUpdateActive){
-    //   updateOLEDWaveform();
-    // }
+    toneActive = false;          // Rücksetzen, damit beim nächsten Tonstart die Rampe wieder beginnt
+    
+    //lfo1PeriodenCounter = 0;
+    
 
   }
 }
@@ -1010,14 +831,10 @@ void resetLFOParams(){
   unsigned long currentMillis = millis();
   lfo1Value = 0;
   lfo1Direction = 1;
-  //lfo2Value = 0;
-  // if(optionFlags & 0b00000001){
-  //   lfo1Value = 0;
-  //   lfo1Direction = 1;
-  // }
+ 
 
   // Bit1: Sync LFO2
-  if(optionFlags & 0b00000001){
+  if(optionFlags & 0b00000011){
     lfo2Value = 0;
     lfo2Direction = 1;
   }
@@ -1282,6 +1099,8 @@ void updateKeys(){
 
   updateFireKeys();
 
+  bool soundWasRunning = runSound;
+
   // AnyfireButton = Tonerzeugung
   // Bedingungen: 
   // Firebutton gedrückt
@@ -1294,7 +1113,8 @@ void updateKeys(){
       (fire3.read() == LOW)||
       (fire4.read() == LOW)
     )&&(
-      shiftState == 0
+      shiftState == 0 ||
+      (shiftState == 4 && soundWasRunning)   // LFO-Taste gehalten: laufenden Ton nicht abbrechen
     )&&(
       bankBak == bank
     )
@@ -1860,10 +1680,12 @@ void drawOLEDWaveform()
   
 
   float frequencyRatio = 0.0;
-
+  // synchronisierter LFO2-Frequenzwert für die Anzeige, damit die Darstellung passt
+  float effectiveLFO2Frequency = getLfo2Frequency();
 
   if (lfo1Frequency > 0.0)
-    frequencyRatio = lfo2Frequency / lfo1Frequency;
+    //frequencyRatio = lfo2Frequency / lfo1Frequency;
+    frequencyRatio = effectiveLFO2Frequency / lfo1Frequency;
 
 
   // ------------------------------------------------------------
@@ -1905,15 +1727,6 @@ void drawOLEDWaveform()
       if (combinedValue > maxValue) maxValue = combinedValue;
     }
 
-
-    // original
-    //float combinedValue = lfo1Multiplier * lfo2Multiplier;
-
-    // waveformValues[x] = combinedValue;
-
-    // if (combinedValue < minValue) minValue = combinedValue;
-
-    // if (combinedValue > maxValue) maxValue = combinedValue;
   }
 
 
@@ -1933,7 +1746,7 @@ void drawOLEDWaveform()
   oled.print(lfo1Frequency, 1);
   oled.print("/");
 
-  oled.print(lfo2Frequency, 1);
+  oled.print(effectiveLFO2Frequency, 1);
 
 
   // ------------------------------------------------------------
@@ -1961,13 +1774,6 @@ void drawOLEDWaveform()
         ((1.0 - displayMin) / valueRange) *
         (graphBottom - graphTop)
       );
-
-    // oled.line(
-    //   graphLeft,
-    //   yOne,
-    //   graphRight,
-    //   yOne
-    // );
   }
 
 
@@ -2007,6 +1813,7 @@ void drawOLEDWaveform()
   // Aktuellen tatsächlichen Multiplikator anzeigen
   // ------------------------------------------------------------
   float currentCombinedValue = lfo1ValueActual * lfo2ValueActual;
+  
 
   oled.setCursor(0, 56);
   oled.print("x");
@@ -2286,7 +2093,8 @@ void loop() {
 
   envelope = calculateEnvelope(envelopeDuration,envelopeAmplitude);
   lfo1ValueActual = calculateLFOWave1(lfo1Frequency * (envelope), lfo1Amplitude);
-  lfo2ValueActual = calculateLFOWave2(lfo2Frequency * (envelope), lfo2Amplitude);
+  //lfo2ValueActual = calculateLFOWave2(lfo2Frequency * (envelope), lfo2Amplitude);
+    lfo2ValueActual = calculateLFOWave2(getLfo2Frequency() * (envelope), lfo2Amplitude);
    
    float newModulatedFrequency = 0;
    if(lfo1ValueActual == -100){
