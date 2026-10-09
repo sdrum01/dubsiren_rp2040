@@ -13,7 +13,7 @@ GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 // #define LONG_PRESS_DURATION 3000
 
 // Version
-#define VER "1.2"
+#define VER "1.2.1"
 
 const byte LOGLEVEL = 1;
 
@@ -801,6 +801,8 @@ void loadOrSave(byte fireButton){
     uint8_t mask = 1 << fireButton -1; // weil es bei 0 losgeht und nicht bei 1
     // Bit toggeln mit XOR
     optionFlags ^= mask;
+    dataSaved = true;          // neu: LFO-Taste wurde als Modifier benutzt, kein LFO-Wechsel beim Loslassen
+    requestDisplayUpdate();    // falls noch nicht vorhanden
   }else{
     // virtuelle Taste ausrechnen 1..16
     byte buttonName = (bank * 4) - 4 + fireButton;
@@ -934,13 +936,17 @@ void updateKeys(){
   fire3.update();
   fire4.update();
 
-    if (shift1.fell()) {
-      dataSaved = false;
-      //selectedFireLed = bank;
-    }
-    if (shift2.fell()) {
-      dataSaved = false;
-    }
+  if (shift1.fell()) {
+    dataSaved = false;
+    //selectedFireLed = bank;
+  }
+  if (shift2.fell()) {
+    dataSaved = false;
+  }
+
+  if (selectLFO.fell()) {
+    dataSaved = false;       // neu: jeder Druck der LFO-Taste macht das Umschalten wieder scharf
+  }
 
 
  
@@ -1430,6 +1436,37 @@ void updateDisplay() {
 }
 
 
+
+// Rundet W auf die 1-2-5-Reihe (1, 2, 5, 10, 20, 50, ...) auf oder ab
+float snap125(float W, bool up) {
+  //const float steps[] = {1.0, 10.0, 20.0};
+  const float steps[] = {1.0, 2.0, 5.0, 10.0};
+  float decade = powf(10.0, floorf(log10f(W)));
+  float m = W / decade;                              // 1 .. <10
+  if (up) {
+    for (int i = 0; i < 4; i++) if (m <= steps[i] * 1.0001) return steps[i] * decade;
+  } else {
+    for (int i = 3; i >= 0; i--) if (m >= steps[i] * 0.9999) return steps[i] * decade;
+  }
+  return W;
+}
+
+float computeDisplayWindow(float f1) {
+  const float N_MIN  = 1.0;             // mindestens so viele LFO1-Perioden sichtbar
+  const float N_MAX  = 10.0;            // ab so vielen Perioden springt der Zoom zur nächsten Stufe
+  const float W0     = 0.1;             // kleinste Fensterlänge in Sekunden
+  const float FACTOR = N_MAX / N_MIN;   // Abstand der Zoomstufen
+
+  if (f1 < 0.01) f1 = 0.01;             // Schutz gegen Division durch 0
+
+  float limit = N_MAX * 2.0 / f1;       // N_MAX Perioden von LFO1 in Sekunden (Periode = 2 / f1)
+
+  float W = W0;
+  while (W * FACTOR < limit) W *= FACTOR;
+  return W;
+}
+
+
 void drawOLEDWaveform()
 {
   const int graphLeft   = 0;
@@ -1437,7 +1474,7 @@ void drawOLEDWaveform()
   const int graphTop    = 15;
   const int graphBottom = 60;
 
-  const float displayCyclesLFO1 = 5.5;
+  // const float displayCyclesLFO1 = 5.5;
 
   // ------------------------------------------------------------
   // Effektiven Wert eines LFO-Waveforms für die Anzeige berechnen
@@ -1538,13 +1575,14 @@ void drawOLEDWaveform()
   // ------------------------------------------------------------
   
 
-  float frequencyRatio = 0.0;
+  //float frequencyRatio = 0.0;
   // synchronisierter LFO2-Frequenzwert für die Anzeige, damit die Darstellung passt
   float effectiveLFO2Frequency = getLfo2Frequency();
 
-  if (lfo1Frequency > 0.0)
+  // if (lfo1Frequency > 0.0)
     //frequencyRatio = lfo2Frequency / lfo1Frequency;
-    frequencyRatio = effectiveLFO2Frequency / lfo1Frequency;
+    
+    //frequencyRatio = effectiveLFO2Frequency / lfo1Frequency;
 
 
   // ------------------------------------------------------------
@@ -1557,16 +1595,23 @@ void drawOLEDWaveform()
   float minValue =  1000000.0;
   float maxValue = -1000000.0;
 
+  // Phasen aus der Zeit berechnen, damit die Darstellung synchron zu den LFOs ist
+  //float W = computeDisplayWindow(lfo1Frequency, lfo1Amplitude, effectiveLFO2Frequency, lfo2Amplitude);
+  float W = computeDisplayWindow(lfo1Frequency);
+
   for (int x = graphLeft; x <= graphRight; x++)
   {
-    float normalizedX = (float)(x - graphLeft) /
-      (float)(graphRight - graphLeft);
+    float normalizedX = (float)(x - graphLeft) / (float)(graphRight - graphLeft);
+
+    float t = normalizedX * W;                          // Zeit in Sekunden
+    float phaseLFO1 = t * lfo1Frequency / 2.0;          // 1.0 = eine volle Periode
+    float phaseLFO2 = t * effectiveLFO2Frequency / 2.0;
 
     // LFO1 läuft exakt 5 Perioden über die Anzeige
-    float phaseLFO1 = normalizedX * displayCyclesLFO1;
+    // float phaseLFO1 = normalizedX * displayCyclesLFO1;
 
     // LFO2 läuft entsprechend seines Frequenzverhältnisses
-    float phaseLFO2 = phaseLFO1 * frequencyRatio;
+    // float phaseLFO2 = phaseLFO1 * frequencyRatio;
 
     float lfo1Multiplier = getLFO1Multiplier(phaseLFO1);
 
