@@ -13,7 +13,7 @@ GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 // #define LONG_PRESS_DURATION 3000
 
 // Version
-#define VER "1.1"
+#define VER "1.2"
 
 const byte LOGLEVEL = 1;
 
