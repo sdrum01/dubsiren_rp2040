@@ -152,14 +152,9 @@ volatile unsigned long previousMillisLED = 0;
 volatile float lfovalue_finalLFO1 = 0;
 volatile float lfovalue_finalLFO2 = 0;
 
-//volatile int lfo2Stop = 0;
-//volatile int lfo1PeriodenCounter = 0;
-
 
 // Wenn Ton abgefeuert werden soll:
 bool runSound = 1;
-
-// bool oledRefresedWhileRunSound = 0;
 
 // shiftToggle-taste
 bool lfoToggleState = 0;
@@ -207,7 +202,7 @@ unsigned long toneStartMicros = 0;
 
 byte optionFlags = 0b0000000;  // binär x,x,x,x,x,x,x,Retrigger LFO2
 // 0b00000001 : Restart LFO2 on Firepress
-// 0b00000010 : One-Time Shot (LFO1)
+// 0b00000010 : Synchronize LFO1 + LFO2
 // 0b00000100 : LFO1 Factor Double Amp
 
 // wie viel Prozent darf sich das Poti ändern, bis ein wert als geändert gilt?
@@ -269,16 +264,7 @@ void setDefaultDataSet(){
 String values2JSON(){
   // Erstelle einen JSON-Dokument Puffer mit genügend Speicher
   StaticJsonDocument<200> dataSet;
-/*
-  // Verschachtelt
-  JsonObject actualDataset = doc.createNestedObject(fireButton);
-  actualDataset["pitch"]     = baseFrequency;
-  actualDataset["lfoFreq"]   = lfo1Frequency;
-  actualDataset["lfoAmount"] = lfoAmplitude;
-  actualDataset["envTime"]   = envelopeDuration;
-  actualDataset["envAmount"] = envelopeAmplitude;
-  actualDataset["waveform"] = lfoWaveform;
-*/
+
   // Plain
   dataSet["pitch"]     = baseFrequency;
   dataSet["lfoFreq"]   = lfo1Frequency;
@@ -296,9 +282,7 @@ String values2JSON(){
   String jsonString;
   serializeJson(dataSet, jsonString);
 
-  // String fileName = fireButton+".json";
   // JSON-String ausgeben
-  // return(writeSettings(fileName, jsonString));
   return jsonString;
 }
 
@@ -335,7 +319,6 @@ String readSettings(String configFile){
     String value;
     File file = LittleFS.open(configFile, "r");
     if (file) {
-        //String value = file.read();  // Lese die gespeicherte Zahl
         value = file.readStringUntil('\n');
         //Serial.println("read file "+configFile+": "+value);
         file.close();
@@ -353,7 +336,6 @@ bool writeSettings(String _json, String configFile){
   File file = LittleFS.open(configFile, "w");
   if (file) {
       // String in die Datei schreiben
-      
       file.println(_json);  // Schreibt den String und fügt einen Zeilenumbruch hinzu
       file.close();
       return(true);
@@ -415,8 +397,6 @@ float linearToLogarithmic(float value,float min, float max) {
   
   // Rückkonvertieren in den linearen Raum
   float outputValue = pow(10, logValue);
-
-  
   //debug(String(value)+';'+String(percentage)+';'+String(outputValue));
   return outputValue;
 }
@@ -468,7 +448,6 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
   switch (lfo1Waveform) {
 
     case SQUARE:
-
       // LFO intern als Dreieck laufen lassen
       lfo1Value += schrittweite * lfo1Direction;
 
@@ -477,17 +456,14 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
       if (lfo1Value > 1.0) {
         lfo1Value = 2.0 - lfo1Value;
         lfo1Direction = -1;
-        //lfo1PeriodenCounter++;
       }
 
       if (lfo1Value < 0.0) {
         lfo1Value = -lfo1Value;
         lfo1Direction = 1;
-        //lfo1PeriodenCounter++;
       }
     }
       
-
       if(amplitude == -100){
         lfovalue_finalLFO1 = (lfo1Value <= 0.5) ? 0.5 : -100; // -100 = muting
 
@@ -510,8 +486,6 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
       }
 
       break;
-
-
     case TRIANGLE:
 
       lfo1Value += schrittweite * lfo1Direction;
@@ -533,9 +507,7 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
       }
 
       lfovalue_finalLFO1 = lfo1Value;
-
       break;
-
 
     case SAWTOOTH:
 
@@ -544,7 +516,6 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
       // Auch bei größeren Zeitsprüngen korrekt über den Anfang springen
       while (lfo1Value <= 0) {
         lfo1Value += 1.0;
-        //lfo1PeriodenCounter++;
       }
 
       lfovalue_finalLFO1 = lfo1Value;
@@ -597,22 +568,6 @@ float calculateLFOWave2(float frequency, float amplitude) {
       lfo2Value += schrittweite * lfo2Direction;
 
       // Grenzüberschreitung korrigieren
-      /*
-      while (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
-
-        if (lfo2Value >= 1.0) {
-          lfo2Value = 2.0 - lfo2Value;
-          lfo2Direction = -1;
-        }
-
-        if (lfo2Value <= 0.0) {
-          lfo2Value = -lfo2Value;
-          lfo2Direction = 1;
-        }
-      }
-      */
-      
-
       while (lfo2Value > 1.0 || lfo2Value < 0.0) {
         if (lfo2Value > 1.0) {
           lfo2Value = 2.0 - lfo2Value;
@@ -626,32 +581,13 @@ float calculateLFOWave2(float frequency, float amplitude) {
       }
 
       lfovalue_finalLFO2 = (lfo2Value >= 0.5) ? 1 : 0;
-
       break;
-
 
     case TRIANGLE:
 
       lfo2Value += schrittweite * lfo2Direction;
 
       // Grenzüberschreitung korrigieren
-      
-      /*
-      while (lfo2Value >= 1.0 || lfo2Value <= 0.0) {
-
-        if (lfo2Value >= 1.0) {
-          lfo2Value = 2.0 - lfo2Value;
-          lfo2Direction = -1;
-        }
-
-        if (lfo2Value <= 0.0) {
-          lfo2Value = -lfo2Value;
-          lfo2Direction = 1;
-        }
-      }
-      */
-      
-
       while (lfo2Value > 1.0 || lfo2Value < 0.0) {
         if (lfo2Value > 1.0) {
           lfo2Value = 2.0 - lfo2Value;
@@ -716,14 +652,6 @@ float setFrequency(float freq){
 
 void muteSound(bool mute){
   digitalWrite(wave_mutePin, mute);
-  if (mute){
-    // Display aktualisieren
-  //  updateOLEDWaveform();
-  } else {
-    
-  }
-  // test: always on
-  // digitalWrite(wave_mutePin, false);
 }
 
 // Hilfsfunktion für Rampe beim Tonstart, um Knacksen zu vermeiden
@@ -755,10 +683,6 @@ void playSound(float freqVal){
   // Setze die PWM-Periode
   
   uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
-
-  // if(((optionFlags & 0b00000010))&&(lfo1PeriodenCounter > 1)){
-  //   freqVal = -100;
-  // }
   
   if (runSound){
     dataSaved = false;
@@ -783,7 +707,6 @@ void playSound(float freqVal){
     }else{
       // Ton Start
       pwm_set_enabled(slice_num_wave, true);
-      //pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100));
       pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (getSoftStartDuty() / 100));
       muteSound(false);
     }
@@ -792,11 +715,7 @@ void playSound(float freqVal){
     muteSound(true);
     pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), 0);
     pinMode(wave_outputPin, INPUT);
-    toneActive = false;          // Rücksetzen, damit beim nächsten Tonstart die Rampe wieder beginnt
-    
-    //lfo1PeriodenCounter = 0;
-    
-
+    toneActive = false; // Rücksetzen, damit beim nächsten Tonstart die Rampe wieder beginnt
   }
 }
 
@@ -810,9 +729,6 @@ void setChangeState(bool p1, bool p2, bool p3, bool s1){
   potiAmpLFOChanged = p3;
   lfo1WaveformChanged = s1;
   //debug("State Reset");
-  // so tun, als wenn ein Poti geändert wurde, damit das Oled Display aktualisiert werden darf.
-
-  // oledPotiChanged = true;
   requestDisplayUpdate();
 }
 
@@ -871,7 +787,6 @@ byte combineBoolsToByte(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bo
 
 // läd oder speichert einen Datensatz oder macht bei Shiftstate Spezialfunktionen
 void loadOrSave(byte fireButton){
-  //selectedFireLed = fireButton; // LED ansteuern
   // kein LFO-Taster gedrückt
 
   // Shifttaste 1 gedrückt : Bank wechseln, aber nicht sofort JSON laden
@@ -1019,10 +934,6 @@ void updateKeys(){
   fire3.update();
   fire4.update();
 
-  // selectWaveformLFO1.update();
-  // selectWaveformLFO2.update();
-
-
     if (shift1.fell()) {
       dataSaved = false;
       //selectedFireLed = bank;
@@ -1120,17 +1031,6 @@ void updateKeys(){
     )
   );
 
-  // if (anyFireButtonPressed && !longPressDetected) {
-      // if (millis() - firePressedTime >= LONG_PRESS_DURATION) {
-      // longPressDetected = true;  // Markiere, dass der lange Druck erkannt wurde
-      // Serial.println("LongPress detected!");}
-      
-  //}
-
- 
-  
-
-  
   // globale Variable rundsound = wenn high, wird ein Ton abgespielt
   runSound = (anyFireButtonPressed || longPressDetected);
   
@@ -1177,45 +1077,8 @@ void updatePotis(){
   }
   
 
-  // if (abs(valPotiPitch - oledPotiPitchBak) > potiTolerance) {
-  //   oledPotiChanged = true;
-  // }
-
-  // if (abs(valPotiFreqLFO - oledPotiFreqLFOBak) > potiTolerance) {
-  //   oledPotiChanged = true;
-  // }
-
-  // if (abs(valPotiAmpLFO - oledPotiAmpLFOBak) > potiTolerance) {
-  //   oledPotiChanged = true;
-  // }
-
-
-  // // Wenn sich ein Poti bewegt hat:
-  // if (oledPotiChanged) {
-
-  //   oledUpdateActive = true;
-  //   lastPotiChangeTime = millis();
-
-  //   // Aktuelle Werte als neue Vergleichswerte speichern
-  //   oledPotiPitchBak   = valPotiPitch;
-  //   oledPotiFreqLFOBak = valPotiFreqLFO;
-  //   oledPotiAmpLFOBak  = valPotiAmpLFO;
-  // }
-
-
-  // // --------------------------------------------------
-  // // OLED nach 500 ms ohne Bewegung abschalten
-  // // --------------------------------------------------
-
-  // if (oledUpdateActive &&
-  //     millis() - lastPotiChangeTime >= oledUpdateTimeout) {
-  //   oledUpdateActive = false;
-    
-  // }
-  // oledPotiChanged = false;
-
   // --------------------------------------------------
-  // Deine bisherige Poti-Erkennung für die Parameter
+  // Poti-Erkennung für die Parameter
   // --------------------------------------------------
 
   if ((valPotiPitch < valPotiPitchBak - potiTolerance) ||
@@ -1263,8 +1126,6 @@ void updateLEDs(){
   uint slice_num_led_green = pwm_gpio_to_slice_num(LEDLfo2);
   uint slice_num_led_red = pwm_gpio_to_slice_num(LEDLfo1);
 
-  // uint slice_num_led2_green = pwm_gpio_to_slice_num(LED2_green);
-  // uint slice_num_led2_red = pwm_gpio_to_slice_num(LED2_red);
 
   // LED Grün
   
@@ -1550,15 +1411,13 @@ void updateDisplay() {
 
   if (!displayDirty) return;                                       // nichts zu tun
 
+  // beim Ton nicht zeichnen (I2C blockiert ca. 25 ms) ausser beim ersten Refresh nach dem Tonstart
   if (!displayForce) {
     if (runSound) return;
     if (now - previousMillisDisplay < OLED_UPDATE_INTERVAL) return;
   }
 
   bool wasForced = displayForce;
-
-  //if (runSound) return;                                            // beim Ton nicht zeichnen (I2C blockiert ca. 25 ms)
-  //if (now - previousMillisDisplay < OLED_UPDATE_INTERVAL) return;  // Drosselung
 
   displayDirty = false;
   displayForce = false;
@@ -1750,7 +1609,7 @@ void drawOLEDWaveform()
 
 
   // ------------------------------------------------------------
-  // Einen gewissen Rand um den Wertebereich lassen
+  // Einen Rand um den Wertebereich lassen
   // ------------------------------------------------------------
   // float valueRange = maxValue - minValue;
 
@@ -1846,19 +1705,10 @@ void setup() {
   previousMillisLFO2 = millis();
   previousMillisEnv  = millis();
 
+  // Initialize the display
   setup_display();
-  
-  // Initialisiere die GPIO-Pin-Funktion für PWM Wave-Output
-  // gpio_set_function(wave_outputPin, GPIO_FUNC_PWM);
-  // uint slice_num_wave = pwm_gpio_to_slice_num(wave_outputPin);
-  
-  // Setze den PWM-Teilungsverhältnis
-  // pwm_set_clkdiv(slice_num_wave, 64.f);
 
-  // Starte den PWM-Output
-  // pwm_set_enabled(slice_num_wave, true); 
-
-  // wave-output as input, Hochohmig wegen knacks
+  // wave-output defaultmäßig as input, da Hochohmig schalten wegen dem knacks
   pinMode(wave_outputPin, INPUT);
   
   // LED
@@ -1868,7 +1718,7 @@ void setup() {
   gpio_set_function(LEDLfo2, GPIO_FUNC_PWM);
   gpio_set_function(LEDLfo1, GPIO_FUNC_PWM);
 
-  
+  // Setze den PWM-Teilungsverhältnis
   pwm_set_clkdiv(slice_num_led_green, 128.f);
   pwm_set_clkdiv(slice_num_led_red, 128.f);
 
@@ -1908,24 +1758,13 @@ void setup() {
   pinMode(shiftPin1, INPUT_PULLUP);  
   pinMode(shiftPin2, INPUT_PULLUP);
   pinMode(selectWaveFormPin, INPUT_PULLUP);  
-  // pinMode(waveFormPin_0, INPUT_PULLUP);  
-  // pinMode(waveFormPin_1, INPUT_PULLUP);
-  // pinMode(selectWaveFormLFO1Pin, INPUT_PULLUP);  
-  // pinMode(selectWaveFormLFO2Pin, INPUT_PULLUP);
+
   pinMode(firePin1, INPUT_PULLUP); 
   pinMode(firePin2, INPUT_PULLUP); 
   pinMode(firePin3, INPUT_PULLUP); 
   pinMode(firePin4, INPUT_PULLUP); 
 
-  // Bounce-Objekt initialisieren
-  //shiftToggle.attach(shiftPin1);
-  //shiftToggle.interval(50);  // Entprellintervall in Millisekunden (50 ms)
-
-  // selectWaveformLFO1.attach(selectWaveFormLFO1Pin);
-  // selectWaveformLFO1.interval(50);
-
-  // selectWaveformLFO2.attach(selectWaveFormLFO2Pin);
-  // selectWaveformLFO2.interval(50);
+  // Bounce-Objekte initialisieren
 
   selectLFO.attach(selectLFOPin);
   selectLFO.interval(50);
@@ -1951,13 +1790,7 @@ void setup() {
   fire4.attach(firePin4);
   fire4.interval(10);
   
-  
-  // Initialisieren des Arrays für die Mittelwertbildung des Pitch
-  /*
-  for (int i = 0; i < numReadings; i++) {
-    pitchReadings[i] = 0;
-  }
- */ 
+  // LittleFS initialisieren und mounten
   if (!LittleFS.begin()) {
       debug("LittleFS mount failed");
       return;
@@ -1989,8 +1822,6 @@ void loop() {
           lfo1Waveform = SAWTOOTH;
           break;
       }
-      
-      //lfo1Waveform = valLfoWaveformSwitch;
     }
     
     // Pitch
@@ -2024,8 +1855,6 @@ void loop() {
           lfo2Waveform = SAWTOOTH;
           break;
       }
-      
-     //lfo2Waveform = valLfoWaveformSwitch;
     }
 
     // Pitch
@@ -2059,8 +1888,6 @@ void loop() {
           lfo1Waveform = SAWTOOTH;
           break;
       }
-      
-      // lfo1Waveform = valLfoWaveformSwitch;
     }
     
     // Pitch-Poti = Duty-Cycle 
@@ -2113,19 +1940,9 @@ void loop() {
   updateLEDs();
   // Normales Zeichnen NACH dem Ton: beim Loslassen ist er dann schon gestoppt
   updateDisplay();
-  
-
-  
-
-  // Display aktualisieren
 
   // Überwachung und Debugprits
-  
   // if(chkLoop(1000)){
   //   debug(oledUpdateActive?"OLED-Update ON":"OLED-Update OFF");
   // }
-  
-  
- 
-
 }
