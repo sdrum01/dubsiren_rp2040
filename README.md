@@ -1,6 +1,6 @@
 # DUB-IY Dub Siren with RP2040 CPU
 
-DUBSIREN_rp2040 is a simple project designed to emulate a analog frequency generator for dub and reggae music. The result is the "**DUB-IY**" dub siren. 
+DUBSIREN_rp2040 is a project designed to emulate a analog frequency generator for dub and reggae music. The result is the "**DUB-IY**" dub siren. 
 
 Dub sirens are simple synthesizers without VCA (Voltage Controlled Amplifier) or VCF (Voltage Controlled Filter), but usually with a VCO (Voltage Controlled Oscillator) modulated by an LFO (Low Frequency Generator).
 
