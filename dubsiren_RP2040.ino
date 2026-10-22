@@ -263,7 +263,8 @@ void setDefaultDataSet(){
 // Werte von den Potis und Schaltern in eine JSON datei speicher
 String values2JSON(){
   // Erstelle einen JSON-Dokument Puffer mit genügend Speicher
-  StaticJsonDocument<200> dataSet;
+  // StaticJsonDocument<200> dataSet;
+   JsonDocument dataSet;
 
   // Plain
   dataSet["pitch"]     = baseFrequency;
@@ -288,7 +289,8 @@ String values2JSON(){
 
 void JSON2values(String jsonString) {
   // Erstelle ein JSON-Dokument für das Parsen
-  StaticJsonDocument<200> dataSet;
+  // StaticJsonDocument<200> dataSet;
+  JsonDocument dataSet;
 
   // Deserialisiere den JSON-String
   DeserializationError error = deserializeJson(dataSet, jsonString);
@@ -1225,12 +1227,16 @@ void readSerial(){
   // Wenn die Zeichenkette vollständig empfangen wurde, diese anzeigen
   if (receiveStrComplete) {
 
-    StaticJsonDocument<200> dataSet1;
-    StaticJsonDocument<200> dataSet2;
+    // StaticJsonDocument<200> dataSet1;
+    // StaticJsonDocument<200> dataSet2;
+
+    JsonDocument dataSet1;
+    JsonDocument dataSet2;
 
     if(receiveStr == "receiveDump"){
         // Verschachtelt
-      JsonObject receiveDumpDataSet = dataSet1.createNestedObject("dump");
+      // JsonObject receiveDumpDataSet = dataSet1.createNestedObject("dump");
+      JsonObject receiveDumpDataSet = dataSet1["dump"].to<JsonObject>();   // war: dataSet1.createNestedObject("dump")
       for (int i = 1; i <= 16; i++) {
         String _fileName = "fire"+String(i)+".json";
 
@@ -1325,7 +1331,8 @@ void readSerial(){
       String cmd = extractArgument(receiveStr);
     
       // Versuche, den JSON-Inhalt zu deserialisieren
-      StaticJsonDocument<4096> doc; // Größe ggf. anpassen
+      // StaticJsonDocument<4096> doc; // Größe ggf. anpassen
+      JsonDocument doc;
       DeserializationError error = deserializeJson(doc, cmd);
     
       if (error) {
@@ -1466,13 +1473,102 @@ float computeDisplayWindow(float f1) {
   return W;
 }
 
+// Kleines Wellenform-Symbol (2 Perioden) in das Rechteck x..x+w, y..y+h-1
+void drawWaveIcon(int x, int y, int w, int h, eLfoWaveform wf) {
+  const float periods = 2.0;
+  float perW = (float)w / periods;
+  int prevY = 0;
+
+  for (int px = 0; px < w; px++) {
+    float phase = fmodf(px / perW, 1.0);
+
+    float v = 0.0;
+    switch (wf) {
+      case SQUARE:   v = (phase >= 0.25 && phase < 0.75) ? 1.0 : 0.0; break;   // wie im LFO: erst low
+      case TRIANGLE: v = (phase < 0.5) ? phase * 2.0 : 2.0 - phase * 2.0; break;
+      case SAWTOOTH: v = 1.0 - phase; break;                                   // fallend wie im LFO
+    }
+
+    int py = y + (h - 1) - (int)(v * (h - 1) + 0.5);
+
+    if (px > 0) oled.line(x + px - 1, prevY, x + px, py);
+    else        oled.dot(x + px, py);
+
+    prevY = py;
+  }
+}
+
+// Kleines Rechtecksymbol (2 Perioden) mit der Pulsbreite dutyPercent
+void drawDutyIcon(int x, int y, int w, int h, float dutyPercent) {
+  const float periods = 2.0;
+  float perW = (float)w / periods;
+  int prevY = 0;
+
+  for (int px = 0; px < w; px++) {
+    float phase = fmodf(px / perW, 1.0);
+    int py = (phase < dutyPercent / 100.0) ? y : y + h - 1;     // high = oben
+
+    if (px > 0) oled.line(x + px - 1, prevY, x + px, py);
+    else        oled.dot(x + px, py);
+
+    prevY = py;
+  }
+}
+
+// Hüllkurve für die LFO-Geschwindigkeit: Faktor (0..2) über der Zeit
+void drawEnvelopeGraph(int left, int right, int top, int bottom) {
+  const float windowSec = 6.0;                         // feste Zeitachse: Hüllkurve dauert 0.5 .. 5 s
+  const float vMin = 0.0, vMax = 2.0;
+
+  float dur = (envelopeDuration < 0.1) ? 0.1 : envelopeDuration;
+  float tEnv   = 5.0 / dur;                            // Dauer bis zum Endwert in Sekunden
+  float a      = envelopeAmplitude / 100.0;
+  float vStart = 1.0 + 0.95 * a;                       // Faktor beim Tastendruck
+  float vEnd   = 1.0 - 0.95 * a;                       // Faktor am Ende
+
+  auto yOf = [&](float v) -> int {
+    float n = (v - vMin) / (vMax - vMin);
+    int y = bottom - (int)(n * (bottom - top));
+    if (y < top)    y = top;
+    if (y > bottom) y = bottom;
+    return y;
+  };
+
+  // Neutrallinie (Faktor 1.0), gepunktet
+  int yOne = yOf(1.0);
+  for (int x = left; x <= right; x += 4) oled.dot(x, yOne);
+
+  // Hüllkurve, exakt wie in calculateEnvelope()
+  int prevY = 0;
+  for (int x = left; x <= right; x++) {
+    float t  = (float)(x - left) / (float)(right - left) * windowSec;
+    float ev = 1.0 - t / tEnv;                         // entspricht envelopeValue
+    if (ev < 0.0) ev = 0.0;
+    float v = ((ev - 0.5) * 1.9) * a + 1.0;
+
+    int y = yOf(v);
+    if (x > left) oled.line(x - 1, prevY, x, y);
+    else          oled.dot(x, y);
+    prevY = y;
+  }
+
+  // Textzeile direkt unter der Kopfzeile
+  oled.setCursor(0, 1);
+  oled.print("x");
+  oled.print(vStart, 2);
+  oled.print(">");
+  oled.print(vEnd, 2);
+  oled.print(" ");
+  oled.print(tEnv, 1);
+  oled.print("s");
+}
 
 void drawOLEDWaveform()
 {
   const int graphLeft   = 0;
   const int graphRight  = 127;
-  const int graphTop    = 15;
-  const int graphBottom = 60;
+  const int graphTop    = 17;
+  const int graphBottom = 52;
 
   // const float displayCyclesLFO1 = 5.5;
 
@@ -1563,6 +1659,10 @@ void drawOLEDWaveform()
   };
 
 
+   
+
+  
+
   // ------------------------------------------------------------
   // Frequenzverhältnis LFO2 zu LFO1
   //
@@ -1643,16 +1743,37 @@ void drawOLEDWaveform()
   // ------------------------------------------------------------
   // Kopfzeile
   // ------------------------------------------------------------
+  // oled.setCursor(0, 0);
+  // oled.print("LFO1 * LFO2");
+
+  // oled.setCursor(76, 0);
+  // oled.print(lfo1Frequency, 1);
+  // oled.print("/");
+
+  // oled.print(effectiveLFO2Frequency, 1);
+
+  //Kopfzeile: Frequenz des Basistons
+  // oled.setScale(2);
+  // oled.setCursor(0, 0);
+  // oled.print((int)baseFrequency);
+  // oled.print(" Hz");
+  // oled.setScale(1);              // danach wieder normale Schriftgröße
+
+  // Kopfzeile: Frequenz des Basistons, daneben die Pulsbreite als Symbol
   oled.setCursor(0, 0);
-  oled.print("LFO1 * LFO2");
+  oled.print((int)baseFrequency);
+  oled.print(" Hz");
 
-  oled.setCursor(76, 0);
-  oled.print(lfo1Frequency, 1);
-  oled.print("/");
-
-  oled.print(effectiveLFO2Frequency, 1);
+  drawDutyIcon(70, 2, 48, 5, duty);              // 2 Perioden mit je 24 Pixel Breite
+  
+  oled.setScale(1);              // danach wieder normale Schriftgröße
 
 
+
+
+  if (modSelect == 2) {
+    drawEnvelopeGraph(graphLeft, graphRight, 20, graphBottom);   // oben Platz für die Textzeile lassen
+  } else {
   // ------------------------------------------------------------
   // Einen Rand um den Wertebereich lassen
   // ------------------------------------------------------------
@@ -1711,28 +1832,49 @@ void drawOLEDWaveform()
     previousY = y;
     previousValid = true;
   }
+  }
+
 
 
   // ------------------------------------------------------------
   // Aktuellen tatsächlichen Multiplikator anzeigen
   // ------------------------------------------------------------
-  float currentCombinedValue = lfo1ValueActual * lfo2ValueActual;
+  // float currentCombinedValue = lfo1ValueActual * lfo2ValueActual;
   
 
-  oled.setCursor(0, 56);
-  oled.print("x");
+  // oled.setCursor(0, 56);
+  // oled.print("x");
 
-  oled.print(currentCombinedValue, 2);
+  // oled.print(currentCombinedValue, 2);
 
-  oled.setCursor(75, 56);
-  oled.print("A:");
+  // oled.setCursor(75, 56);
+  // oled.print("A:");
 
-  oled.print(lfo1Amplitude);
+  // oled.print(lfo1Amplitude);
 
-  oled.print("/");
+  // oled.print("/");
 
-  oled.print(lfo2Amplitude);
+  // oled.print(lfo2Amplitude);
 
+  // Unten: Wellenform-Symbole mit Amplitude, links LFO1, rechts LFO2
+  oled.setCursor(0, 7);
+  oled.invertText(modSelect == 0);        // aktuell mit den Potis bearbeiteter LFO: Label invertiert
+  oled.print("1");
+  oled.invertText(false);
+  drawWaveIcon(9, 56, 24, 7, lfo1Waveform);
+  oled.setCursor(36, 7);
+  oled.print((int)lfo1Amplitude);
+
+  oled.setCursor(66, 7);
+  oled.invertText(modSelect == 1);
+  oled.print("2");
+  oled.invertText(false);
+  drawWaveIcon(75, 56, 24, 7, lfo2Waveform);
+  oled.setCursor(102, 7);
+  oled.print((int)lfo2Amplitude);
+
+
+  
 
   oled.update();
 }
@@ -1834,15 +1976,32 @@ void setup() {
 
   fire4.attach(firePin4);
   fire4.interval(10);
+
+  // Ausgangsstellung der Potis merken, damit sie beim Start nicht als "bewegt" gelten
+  valPotiPitchBak   = analogRead(freqPotPin);
+  valPotiFreqLFOBak = analogRead(lfoFreqPotPin);
+  valPotiAmpLFOBak  = analogRead(lfoAmpPotPin);
   
   // LittleFS initialisieren und mounten
   if (!LittleFS.begin()) {
       debug("LittleFS mount failed");
       return;
-   }
+  }
 
+  // Speicherplatz 1 (Bank 1, Fire 1) laden und als aktuell markieren
   String _json1 = readSettings("fire1.json");
   JSON2values(_json1);
+  setWaveFormSwitch();            // Wellenform-LEDs passend zum geladenen Preset
+  setChangeState(0,0,0,0);        // Poti-Übernahme zurücksetzen, löst auch den ersten Display-Redraw aus
+
+  bank = 1;
+  bankBak = 1;
+  actualFireButton = 1;
+  actualFireButtonBak = 1;
+  lastFireButtonPressed = 1;      // die LED von Fire 1 zeigt den aktuellen Speicherplatz
+
+  resetLFOParams();               // LFOs und Hüllkurve starten wie nach einem Fire-Druck bei Phase 0
+  requestDisplayUpdateNow();      // erstes Bild sofort zeichnen
 }
 
 void loop() {
