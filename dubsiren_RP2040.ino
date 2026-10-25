@@ -17,6 +17,9 @@ GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 
 const byte LOGLEVEL = 1;
 
+
+
+
 // Definition der IO's
 const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
@@ -151,7 +154,10 @@ volatile float lfovalue_finalLFO2 = 0;
 
 
 // Wenn Ton abgefeuert werden soll:
-bool runSound = 1;
+volatile bool runSound = 1;
+
+volatile float liveLfo1Phase = 0;  // Phase von LFO1 seit dem Tonstart, in Perioden (1.0 = eine volle Periode)
+volatile float liveModFreq = 0;    // aktuelle Tonfrequenz in Hz (-100 = Ton aus)
 
 // shiftToggle-taste
 bool lfoToggleState = 0;
@@ -212,13 +218,15 @@ int oledPotiPitchBak = 0;
 int oledPotiFreqLFOBak = 0;
 int oledPotiAmpLFOBak = 0;
 
-
+// Volatile Variablen für die Displaydarstellung, die von beiden Kernen genutzt werden, 
+// weil CORE0 und CORE1 auf diese Variablen zugreifen dürfen
+volatile bool coreReady = false;        // Core 0 meldet: setup() ist fertig
 // Display-Refresh
-bool displayDirty = true;                         // true = beim Start einmal zeichnen
-bool displayForce = false;                        // Erzwingen des Display-refresh
-unsigned long displaySettleTime = 0;              // Zeitpunkt für den "Nachlauf"-Refresh
-const unsigned long OLED_UPDATE_INTERVAL = 100;   // Mindestabstand zwischen zwei Redraws
-const unsigned long OLED_SETTLE_DELAY    = 200;   // Nachlauf nach der letzten Potibewegung
+volatile bool displayDirty = true;               // true = beim Start einmal zeichnen
+//bool displayForce = false;                     // Erzwingen des Display-refresh, brauchen wir angelblich nicht mehr wegen CORE1
+volatile unsigned long displaySettleTime = 0;    // Zeitpunkt für den "Nachlauf"-Refresh
+const unsigned long OLED_UPDATE_INTERVAL = 50;   // Mindestabstand zwischen zwei Redraws
+const unsigned long OLED_SETTLE_DELAY    = 200;  // Nachlauf nach der letzten Potibewegung
 
 bool lfo1WaveformChanged = false;
 
@@ -237,6 +245,13 @@ bool receiveStrComplete = false;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Vorab Deklaration von Funktionen, falls der Kompiler keine Prototyp erzeugt
+void drawOLEDWaveform();
+void drawLfoPreview(int left, int right, int top, int bottom);
+void drawFreqBar(int xLeft, int xRight, int yTop, int yBottom);
+
+////////////////////////////////////////////////////////////////////////////////
 
 void setDefaultDataSet(){
   baseFrequency     = 1000;
@@ -438,6 +453,8 @@ float calculateLFOWave1(float lfoFrequency, float amplitude) {
 
   // LFO-Schritt entsprechend der tatsächlich vergangenen Zeit
   float schrittweite = lfoFrequency * elapsedMillis / 1000.0;
+  // Dreieck, Rechteck und Sägezahn: pro Schritt eine halbe Periode
+  liveLfo1Phase += schrittweite / 2.0;   
 
   switch (lfo1Waveform) {
 
@@ -623,13 +640,26 @@ float calculateLFOWave2(float frequency, float amplitude) {
 }
 
 // LFO2-Frequenz: bei Flag 2 auf das nächste ganzzahlige Vielfache von LFO1 einrasten
-float getLfo2Frequency() {
-  if (!(optionFlags & 0b00000010)) return lfo2Frequency;   // Flag aus: freie Frequenz
-  if (lfo1Frequency <= 0.0) return lfo2Frequency;          // Schutz gegen Division durch 0
+// float getLfo2Frequency() {
+//   if (!(optionFlags & 0b00000010)) return lfo2Frequency;   // Flag aus: freie Frequenz
+//   if (lfo1Frequency <= 0.0) return lfo2Frequency;          // Schutz gegen Division durch 0
 
-  float n = roundf(lfo2Frequency / lfo1Frequency);         // nächstes Vielfaches
-  if (n < 1.0) n = 1.0;                                    // mindestens 1x LFO1
-  return n * lfo1Frequency;
+//   float n = roundf(lfo2Frequency / lfo1Frequency);         // nächstes Vielfaches
+//   if (n < 1.0) n = 1.0;                                    // mindestens 1x LFO1
+//   return n * lfo1Frequency;
+// }
+
+// LFO2-Frequenz, bei Flag 2 auf ein ganzzahliges Vielfaches von LFO1 eingerastet (mit übergebenen Werten)
+float syncedLfo2Frequency(float f1, float f2, byte flags) {
+  if (!(flags & 0b00000010)) return f2;
+  if (f1 <= 0.0) return f2;
+  float n = roundf(f2 / f1);
+  if (n < 1.0) n = 1.0;
+  return n * f1;
+}
+
+float getLfo2Frequency() {
+  return syncedLfo2Frequency(lfo1Frequency, lfo2Frequency, optionFlags);
 }
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
@@ -749,6 +779,7 @@ void resetLFOParams(){
     lfo2Direction = 1;
   }
   envelopeValue = 1;
+  liveLfo1Phase = 0;
   
   //lfo2Direction = 1;
   // mit dem aktualisieren der millisekunden wird die Hüllkurve und LFO neu gestartet
@@ -837,7 +868,7 @@ void loadOrSave(byte fireButton){
         JSON2values(_json);
         setChangeState(0,0,0,0);
         setWaveFormSwitch();
-        requestDisplayUpdateNow();   // Display sofort aktualisieren, damit die Werte sofort sichtbar sind
+        // requestDisplayUpdateNow();   // Display sofort aktualisieren, damit die Werte sofort sichtbar sind
 
         // Merker, welcher Firebutton als letztes gedrückt wurde
         
@@ -1400,39 +1431,45 @@ void requestDisplayUpdate() {
   displayDirty = true;
 }
 
-void requestDisplayUpdateNow() {                  // neu, eigene Funktion
-  displayDirty = true;
-  displayForce = true;
-}
-
+// Neue Version läuft nur noch auf CORE1
 void updateDisplay() {
   unsigned long now = millis();
 
-  // Ein letzter Refresh, kurz nachdem ein Poti stillsteht
   if (displaySettleTime && now >= displaySettleTime) {
     displaySettleTime = 0;
     displayDirty = true;
   }
 
-  if (!displayDirty) return;                                       // nichts zu tun
+  static bool wasLive = false;
+  bool live = runSound;                         // während des Tons laufend neu zeichnen
+  if (wasLive && !live) displayDirty = true;    // ein letztes Bild ohne Punkt und Balken
+  wasLive = live;
 
-  // beim Ton nicht zeichnen (I2C blockiert ca. 25 ms) ausser beim ersten Refresh nach dem Tonstart
-  if (!displayForce) {
-    if (runSound) return;
-    if (now - previousMillisDisplay < OLED_UPDATE_INTERVAL) return;
-  }
-
-  bool wasForced = displayForce;
+  if (!displayDirty && !live) return;
+  if (now - previousMillisDisplay < OLED_UPDATE_INTERVAL) return;
 
   displayDirty = false;
-  displayForce = false;
   previousMillisDisplay = now;
   drawOLEDWaveform();
-  if (wasForced) {
-    unsigned long t = millis();
-    previousMillisLFO1 = previousMillisLFO2 = previousMillisEnv = t;
-  }
 }
+
+/*
+void updateDisplay() {
+  unsigned long now = millis();
+
+  if (displaySettleTime && now >= displaySettleTime) {
+    displaySettleTime = 0;
+    displayDirty = true;
+  }
+
+  if (!displayDirty) return;
+  if (now - previousMillisDisplay < OLED_UPDATE_INTERVAL) return;
+
+  displayDirty = false;            // vor dem Zeichnen löschen: Änderungen währenddessen lösen einen weiteren Redraw aus
+  previousMillisDisplay = now;
+  drawOLEDWaveform();
+}
+*/
 
 
 float computeDisplayWindow(float f1) {
@@ -1492,31 +1529,38 @@ void drawDutyIcon(int x, int y, int w, int h, float dutyPercent) {
   }
 }
 
+
+
+
+
 // Vorschau des Produkts LFO1 * LFO2 (Frequenz-Multiplikator über der Zeit)
 void drawLfoPreview(int left, int right, int top, int bottom)
 {
-  const float displayMin  = 0.0;
-  const float displayMax  = 2.0;
-  const float valueRange  = displayMax - displayMin;
-  const float MUTE_MARK   = -100.0;   // Marker für "Ton aus"
+  const float displayMin = 0.0;
+  const float displayMax = 2.0;
+  const float valueRange = displayMax - displayMin;
+  const float MUTE_MARK  = -100.0;
 
-  // Verlauf eines LFO-Waveforms, phase: 1.0 = eine volle Periode
+  // Schnappschuss: Core 0 ändert die Parameter laufend, während hier gezeichnet wird
+  const float f1         = lfo1Frequency;
+  const float a1         = lfo1Amplitude;
+  const float a2         = lfo2Amplitude;
+  const eLfoWaveform wf1 = lfo1Waveform;
+  const eLfoWaveform wf2 = lfo2Waveform;
+  const byte flags       = optionFlags;
+  const float f2         = syncedLfo2Frequency(f1, lfo2Frequency, flags);
+  const float livePhase  = liveLfo1Phase;
+  const bool playing     = runSound;
+
   auto getWaveformValue = [](eLfoWaveform waveform, float phase) -> float
   {
     phase -= floor(phase);
-
     switch (waveform)
     {
-      case SQUARE:
-        return (phase >= 0.25 && phase < 0.75) ? 1.0 : 0.0;
-
-      case TRIANGLE:
-        return (phase < 0.5) ? phase * 2.0 : 2.0 - phase * 2.0;
-
-      case SAWTOOTH:
-        return 1.0 - phase;
+      case SQUARE:   return (phase >= 0.25 && phase < 0.75) ? 1.0 : 0.0;
+      case TRIANGLE: return (phase < 0.5) ? phase * 2.0 : 2.0 - phase * 2.0;
+      case SAWTOOTH: return 1.0 - phase;
     }
-
     return 0.0;
   };
 
@@ -1529,29 +1573,25 @@ void drawLfoPreview(int left, int right, int top, int bottom)
   // Frequenz-Multiplikator von LFO1, entspricht calculateLFOWave1()
   auto getLFO1Multiplier = [&](float phase) -> float
   {
-    float amplitudeFactor = lfo1Amplitude / 100.0;
-
-    if (optionFlags & 0b00000100)
-      amplitudeFactor *= 2.0;
+    float amplitudeFactor = a1 / 100.0;
+    if (flags & 0b00000100) amplitudeFactor *= 2.0;
 
     float rawValue;
 
-    if (lfo1Waveform == SQUARE && lfo1Amplitude < 0)
+    if (wf1 == SQUARE && a1 < 0)
     {
       float tri = triangleValue(phase);
 
-      // Maximal negativ: Zerhacker, zweite Hälfte der Dreieck-Rampe = Ton aus
-      if (lfo1Amplitude <= -100.0)
+      if (a1 <= -100.0)                       // Zerhacker: zweite Hälfte der Dreieck-Rampe = Ton aus
         return (tri <= 0.5) ? 1.0 : MUTE_MARK;
 
-      // 3-Stufen-Raster
-      if (tri < 0.25)      rawValue = 0.0;
+      if (tri < 0.25)      rawValue = 0.0;    // 3-Stufen-Raster
       else if (tri < 0.75) rawValue = 0.5;
       else                 rawValue = 1.0;
     }
     else
     {
-      rawValue = getWaveformValue(lfo1Waveform, phase);
+      rawValue = getWaveformValue(wf1, phase);
     }
 
     return (((rawValue - 0.5) * 1.5) * amplitudeFactor) + 1.0;
@@ -1560,48 +1600,62 @@ void drawLfoPreview(int left, int right, int top, int bottom)
   // Frequenz-Multiplikator von LFO2, entspricht calculateLFOWave2()
   auto getLFO2Multiplier = [&](float phase) -> float
   {
-    float rawValue = getWaveformValue(lfo2Waveform, phase);
-    return (((rawValue - 0.5) * 1.5) * (lfo2Amplitude / 100.0)) + 1.0;
+    return (((getWaveformValue(wf2, phase) - 0.5) * 1.5) * (a2 / 100.0)) + 1.0;
   };
 
-  float effectiveLFO2Frequency = getLfo2Frequency();   // bei Sync-Flag auf Vielfaches eingerastet
-  float W = computeDisplayWindow(lfo1Frequency);       // Zeitfenster in Sekunden
+  float W = computeDisplayWindow(f1);
 
-  bool previousValid = false;   // gibt es einen Vorgängerpunkt, mit dem verbunden wird?
+  // Produkt der Multiplikatoren an der Position xNorm (0..1) im Fenster; MUTE_MARK = Ton aus
+  auto combinedAt = [&](float xNorm) -> float
+  {
+    float t = xNorm * W;
+    float m1 = getLFO1Multiplier(t * f1 / 2.0);
+    if (m1 == MUTE_MARK) return MUTE_MARK;
+    return m1 * getLFO2Multiplier(t * f2 / 2.0);
+  };
+
+  auto yOf = [&](float v) -> int
+  {
+    int y = bottom - (int)(((v - displayMin) / valueRange) * (bottom - top));
+    if (y < top)    y = top;
+    if (y > bottom) y = bottom;
+    return y;
+  };
+
+  // Kurve
+  bool previousValid = false;
   int previousY = 0;
 
   for (int x = left; x <= right; x++)
   {
-    float normalizedX = (float)(x - left) / (float)(right - left);
+    float v = combinedAt((float)(x - left) / (float)(right - left));
 
-    float t = normalizedX * W;                          // Zeit in Sekunden
-    float phaseLFO1 = t * lfo1Frequency / 2.0;
-    float phaseLFO2 = t * effectiveLFO2Frequency / 2.0;
+    if (v == MUTE_MARK) { previousValid = false; continue; }
 
-    float lfo1Multiplier = getLFO1Multiplier(phaseLFO1);
-
-    // Mute-Phase: nichts zeichnen, Linie unterbrechen
-    if (lfo1Multiplier == MUTE_MARK)
-    {
-      previousValid = false;
-      continue;
-    }
-
-    float combinedValue = lfo1Multiplier * getLFO2Multiplier(phaseLFO2);
-
-    float normalizedValue = (combinedValue - displayMin) / valueRange;
-    int y = bottom - (int)(normalizedValue * (bottom - top));
-
-    if (y < top)    y = top;
-    if (y > bottom) y = bottom;
-
-    if (previousValid)
-      oled.line(x - 1, previousY, x, y);
-    else
-      oled.dot(x, y);            // Segmentanfang, damit auch einzelne Punkte sichtbar sind
+    int y = yOf(v);
+    if (previousValid) oled.line(x - 1, previousY, x, y);
+    else               oled.dot(x, y);
 
     previousY = y;
     previousValid = true;
+  }
+
+  // Wandernder Punkt: aktuelle Position von LFO1 im Fenster
+  if (playing)
+  {
+    const int r = 2;                                    // Radius: 1 = 3x3, 2 = 5x5, 3 = 7x7 Pixel
+
+    float N = W * f1 / 2.0;                             // Anzahl der gezeigten LFO1-Perioden
+    if (N < 0.1) N = 0.1;
+    float xNorm = fmodf(livePhase, N) / N;
+    int xDot    = left + (int)(xNorm * (right - left));
+    xDot        = constrain(xDot, left + r + 1, right - r - 1);
+
+    float v  = combinedAt(xNorm);
+    int yDot = (v == MUTE_MARK) ? bottom : yOf(v);
+
+    oled.rect(xDot - r - 1, yDot - r - 1, xDot + r + 1, yDot + r + 1, OLED_CLEAR);
+    oled.rect(xDot - r,     yDot - r,     xDot + r,     yDot + r,     OLED_FILL);
   }
 }
 
@@ -1653,10 +1707,31 @@ void drawEnvelopeGraph(int left, int right, int top, int bottom) {
   oled.print("s");
 }
 
+// Balken: aktuelle Tonfrequenz (logarithmisch 20 Hz .. 16 kHz), Strich = Basisfrequenz
+void drawFreqBar(int xLeft, int xRight, int yTop, int yBottom) {
+  float lm = liveModFreq;
+  auto xOf = [&](float f) -> int {
+    if (f < minValMod) f = minValMod;
+    if (f > maxValMod) f = maxValMod;
+    float pos = (log10f(f) - log10f(minValMod)) / (log10f(maxValMod) - log10f(minValMod));
+    return xLeft + (int)(pos * (xRight - xLeft));
+  };
+
+  oled.rect(xLeft, yTop, xRight, yBottom, OLED_STROKE);
+
+  if (runSound && lm > 0) {
+    int xf = xOf(lm);
+    if (xf > xLeft + 1) oled.rect(xLeft + 1, yTop + 1, xf, yBottom - 1, OLED_FILL);
+  }
+
+  int xb = xOf(baseFrequency);
+  oled.line(xb, yTop - 1, xb, yBottom + 1);
+}
+
 void drawOLEDWaveform(){
   const int graphLeft   = 0;
   const int graphRight  = 127;
-  const int graphTop    = 17;
+  const int graphTop    = 11;
   const int graphBottom = 52;
 
   // const float displayCyclesLFO1 = 5.5;
@@ -1810,17 +1885,21 @@ void drawOLEDWaveform(){
   // ------------------------------------------------------------
 
   // Kopfzeile: Frequenz des Basistons, daneben die Pulsbreite als Symbol
-  oled.setCursor(0, 0);
-  oled.print((int)baseFrequency);
-  oled.print(" Hz");
+  // oled.setCursor(0, 0);
+  // oled.print((int)baseFrequency);
+  // oled.print(" Hz");
 
-  drawDutyIcon(108, 0, 20, 5, duty);  // x,y,w,h,duty
+  drawDutyIcon(102, 2, 24, 5, duty); // x,y,w,h,duty Icon oben rechts in der Ecke
   oled.setScale(1);              // danach wieder normale Schriftgröße
+
+  //if (modSelect != 2) drawFreqBar(10, 14);    // im Envelope-Modus liegt dort die Textzeile
+
 
   if (modSelect == 2) {
     drawEnvelopeGraph(graphLeft, graphRight, 20, graphBottom);   // oben Platz für die Textzeile lassen
   } else {
     drawLfoPreview(graphLeft, graphRight, graphTop, graphBottom);
+    drawFreqBar(0, 92, 2, 6);            // Balken links, Marker reicht von y=1 bis y=7
   }
 
 
@@ -1864,7 +1943,7 @@ void setup() {
   previousMillisEnv  = millis();
 
   // Initialize the display
-  setup_display();
+  //setup_display();
 
   // wave-output defaultmäßig as input, da Hochohmig schalten wegen dem knacks
   pinMode(wave_outputPin, INPUT);
@@ -1956,6 +2035,7 @@ void setup() {
   // LittleFS initialisieren und mounten
   if (!LittleFS.begin()) {
       debug("LittleFS mount failed");
+      coreReady = true;
       return;
   }
 
@@ -1972,7 +2052,8 @@ void setup() {
   lastFireButtonPressed = 1;      // die LED von Fire 1 zeigt den aktuellen Speicherplatz
 
   resetLFOParams();               // LFOs und Hüllkurve starten wie nach einem Fire-Druck bei Phase 0
-  requestDisplayUpdateNow();      // erstes Bild sofort zeichnen
+  // requestDisplayUpdateNow();      // erstes Bild sofort zeichnen
+  coreReady = true;
 }
 
 void loop() {
@@ -2083,12 +2164,14 @@ void loop() {
   }
   // beide Shift-Tasten zugleich gedrückt, Reset LFO2 Werte
   if(shiftState == 3){
-    if (lfo2Amplitude != 0 || envelopeAmplitude != 0) {
-      requestDisplayUpdate();      // nur einmal, wenn sich wirklich etwas ändert
-    }
+    // if (lfo2Amplitude != 0 || envelopeAmplitude != 0) {
+    //   requestDisplayUpdate();      // nur einmal, wenn sich wirklich etwas ändert
+    // }
+    bool changed = (lfo2Amplitude != 0 || envelopeAmplitude != 0);
     lfo2Amplitude = 0;
     envelopeAmplitude = 0;
     resetShiftState();
+    if (changed) requestDisplayUpdate();   // erst nach dem Ändern der Werte
   }
 
    // Modulierte Frequenz berechnen
@@ -2107,17 +2190,26 @@ void loop() {
    // Reset LFO values if the start button is false
   // Betriebsanzeige
   blink(50);
-  // OLED-Display aktualisieren, wenn nötig
-  if (displayForce) updateDisplay();
+  // für den Punkt auf dem Display
+  liveModFreq = newModulatedFrequency;
   // Create Tone
   playSound(newModulatedFrequency);
   // Control LED's updaten
   updateLEDs();
-  // Normales Zeichnen NACH dem Ton: beim Loslassen ist er dann schon gestoppt
-  updateDisplay();
 
   // Überwachung und Debugprits
   // if(chkLoop(1000)){
   //   debug(oledUpdateActive?"OLED-Update ON":"OLED-Update OFF");
   // }
+}
+
+////////// CORE 1 /////////////
+void setup1() {
+  setup_display();                 // Wire, OLED-Init und Splash laufen jetzt auf Core 1
+  while (!coreReady) delay(1);     // warten, bis setup() auf Core 0 fertig ist
+}
+
+void loop1() {
+  updateDisplay();
+  delay(2);
 }
