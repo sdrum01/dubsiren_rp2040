@@ -57,15 +57,15 @@ const int LEDWaveSaw = 4;
 // Variablen/Konstanten for display
 unsigned long previousMillisDisplay = 0;  
 
-const int OLED_GRAPH_X_MIN = 1;
-const int OLED_GRAPH_X_MAX = 126;
-const int OLED_GRAPH_Y_MIN = 12;
-const int OLED_GRAPH_Y_MAX = 54;
+// const int OLED_GRAPH_X_MIN = 1;
+// const int OLED_GRAPH_X_MAX = 126;
+// const int OLED_GRAPH_Y_MIN = 12;
+// const int OLED_GRAPH_Y_MAX = 54;
 
-float waveformDisplay[128];
+// float waveformDisplay[128];
 
-byte activeLedRow = 0;
-byte activeLedCol = 0;
+//byte activeLedRow = 0;
+//byte activeLedCol = 0;
 
 // Bounce Objekte erstellen zur Tastenabfrage
 Bounce fire1;
@@ -86,14 +86,11 @@ byte lastFireButtonPressed = 0;
 byte bank = 1;
 byte bankBak = 1;
 
-// Zeitmessung, ob die Firebutton lange gedrückt sind
-unsigned long firePressedTime = 0;
+// wenn die Firebutton lange gedrückt sind
 bool longPressDetected = false;
 
 // globale V. für Schalter für WaveForm, wo der Wert reinwandert, egal ob per Taster oder Kippschalter
 byte valLfoWaveformSwitch = 0;
-// temporärer  Wertes des Waveformschalters zum detektieren der Statusänderung
-byte valLfoWaveformSwitchBak = 0;
 
 
 // Konstanten für den minimalen und maximalen Wert der blanken Frequenz ohne Modulation
@@ -158,16 +155,13 @@ bool runSound = 1;
 
 // shiftToggle-taste
 bool lfoToggleState = 0;
-bool shiftToggleStateBak = 0;
 
 // shiftState: Byte, in dem eine Kombination aus Shift1 und Shift2 gespeichert wird
 byte shiftState = 0;
-byte shiftStateBak = 0;
 
 // Modulationsselektor: 0:LFO1, 1: LFO2, 2:Envelope
 // wird gesetzt bei pos. Flange LFO1 oder LFO2 oder neg.Flange Shift1
 byte modSelect = 0; 
-byte modSelectBak = 0;
 
 
 bool blinkState = 0;
@@ -194,7 +188,7 @@ int valPotiAmpLFOBak = 0;
 
 // Soft-Start gegen Knacken beim Tonbeginn
 const float SOFT_START_DUTY = 2.0;            // Start-Duty in %
-const unsigned long SOFT_START_US = 15000;    // Dauer der Rampe in µs (xx ms)
+const unsigned long SOFT_START_US = 5000;    // Dauer der Rampe in µs (xx ms)
 bool toneActive = false;                      // läuft der Ton gerade?
 unsigned long toneStartMicros = 0;
 
@@ -227,8 +221,6 @@ const unsigned long OLED_UPDATE_INTERVAL = 100;   // Mindestabstand zwischen zwe
 const unsigned long OLED_SETTLE_DELAY    = 200;   // Nachlauf nach der letzten Potibewegung
 
 bool lfo1WaveformChanged = false;
-
-String debugString = "";
 
 String receiveStr = ""; // Hier wird die empfangene Zeichenkette gespeichert
 bool receiveStrComplete = false;
@@ -709,7 +701,7 @@ void playSound(float freqVal){
     }else{
       // Ton Start
       pwm_set_enabled(slice_num_wave, true);
-      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (getSoftStartDuty() / 100));
+      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (getSoftStartDuty() / 100)); // mit Soft-start
       muteSound(false);
     }
   }else{
@@ -765,12 +757,26 @@ void resetLFOParams(){
   previousMillisEnv = currentMillis;
 }
 
+// void resetShiftState(){
+//   dataSaved = true;
+//   lfoToggleState = 0;
+//   //shiftToggleState2 = 0;
+//   modSelect = 0;
+// }
+
 void resetShiftState(){
+  bool changed = (modSelect != 0 || lfoToggleState != 0);
+
   dataSaved = true;
   lfoToggleState = 0;
-  //shiftToggleState2 = 0;
   modSelect = 0;
+
+  if (changed) {
+    setWaveFormSwitch();          // Wellenform-LEDs und -Schalter auf LFO1
+    setChangeState(0,0,0,0);      // Poti-Übernahme zurücksetzen, löst auch den Display-Redraw aus
+  }
 }
+
 
 byte combineBoolsToByte(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7) {
   byte result = 0;
@@ -854,7 +860,6 @@ void enumWaveForm(){
   }
 
   lfo1WaveformChanged = true;
-  //valLfoWaveformSwitchBak = valLfoWaveformSwitch;
 }
 
 void updateFireKeys(){
@@ -910,19 +915,6 @@ void updateFireKeys(){
       longPressDetected = false;     // Reset des Langdruck-Flags
     }
     
-  }
-
-  if (fire1.rose()){
-    firePressedTime = 0;
-  }
-  if (fire2.rose()){
-    firePressedTime = 0;
-  }
-  if (fire3.rose()){
-    firePressedTime = 0;
-  }
-  if (fire4.rose()){
-    firePressedTime = 0;
   }
 }
 
@@ -1379,9 +1371,9 @@ void setup_display(){
 
   oled.init();
   // init buffer
-  for (int i = 0; i < 128; i++) {
-    waveformDisplay[i] = 1.0;
-  }
+  // for (int i = 0; i < 128; i++) {
+  //   waveformDisplay[i] = 1.0;
+  // }
 
   oled.clear();
   oled.setCursor(0, 0);
@@ -1443,21 +1435,6 @@ void updateDisplay() {
 }
 
 
-
-// Rundet W auf die 1-2-5-Reihe (1, 2, 5, 10, 20, 50, ...) auf oder ab
-float snap125(float W, bool up) {
-  //const float steps[] = {1.0, 10.0, 20.0};
-  const float steps[] = {1.0, 2.0, 5.0, 10.0};
-  float decade = powf(10.0, floorf(log10f(W)));
-  float m = W / decade;                              // 1 .. <10
-  if (up) {
-    for (int i = 0; i < 4; i++) if (m <= steps[i] * 1.0001) return steps[i] * decade;
-  } else {
-    for (int i = 3; i >= 0; i--) if (m >= steps[i] * 0.9999) return steps[i] * decade;
-  }
-  return W;
-}
-
 float computeDisplayWindow(float f1) {
   const float N_MIN  = 1.0;             // mindestens so viele LFO1-Perioden sichtbar
   const float N_MAX  = 10.0;            // ab so vielen Perioden springt der Zoom zur nächsten Stufe
@@ -1515,6 +1492,119 @@ void drawDutyIcon(int x, int y, int w, int h, float dutyPercent) {
   }
 }
 
+// Vorschau des Produkts LFO1 * LFO2 (Frequenz-Multiplikator über der Zeit)
+void drawLfoPreview(int left, int right, int top, int bottom)
+{
+  const float displayMin  = 0.0;
+  const float displayMax  = 2.0;
+  const float valueRange  = displayMax - displayMin;
+  const float MUTE_MARK   = -100.0;   // Marker für "Ton aus"
+
+  // Verlauf eines LFO-Waveforms, phase: 1.0 = eine volle Periode
+  auto getWaveformValue = [](eLfoWaveform waveform, float phase) -> float
+  {
+    phase -= floor(phase);
+
+    switch (waveform)
+    {
+      case SQUARE:
+        return (phase >= 0.25 && phase < 0.75) ? 1.0 : 0.0;
+
+      case TRIANGLE:
+        return (phase < 0.5) ? phase * 2.0 : 2.0 - phase * 2.0;
+
+      case SAWTOOTH:
+        return 1.0 - phase;
+    }
+
+    return 0.0;
+  };
+
+  auto triangleValue = [](float phase) -> float
+  {
+    phase -= floor(phase);
+    return (phase < 0.5) ? phase * 2.0 : 2.0 - phase * 2.0;
+  };
+
+  // Frequenz-Multiplikator von LFO1, entspricht calculateLFOWave1()
+  auto getLFO1Multiplier = [&](float phase) -> float
+  {
+    float amplitudeFactor = lfo1Amplitude / 100.0;
+
+    if (optionFlags & 0b00000100)
+      amplitudeFactor *= 2.0;
+
+    float rawValue;
+
+    if (lfo1Waveform == SQUARE && lfo1Amplitude < 0)
+    {
+      float tri = triangleValue(phase);
+
+      // Maximal negativ: Zerhacker, zweite Hälfte der Dreieck-Rampe = Ton aus
+      if (lfo1Amplitude <= -100.0)
+        return (tri <= 0.5) ? 1.0 : MUTE_MARK;
+
+      // 3-Stufen-Raster
+      if (tri < 0.25)      rawValue = 0.0;
+      else if (tri < 0.75) rawValue = 0.5;
+      else                 rawValue = 1.0;
+    }
+    else
+    {
+      rawValue = getWaveformValue(lfo1Waveform, phase);
+    }
+
+    return (((rawValue - 0.5) * 1.5) * amplitudeFactor) + 1.0;
+  };
+
+  // Frequenz-Multiplikator von LFO2, entspricht calculateLFOWave2()
+  auto getLFO2Multiplier = [&](float phase) -> float
+  {
+    float rawValue = getWaveformValue(lfo2Waveform, phase);
+    return (((rawValue - 0.5) * 1.5) * (lfo2Amplitude / 100.0)) + 1.0;
+  };
+
+  float effectiveLFO2Frequency = getLfo2Frequency();   // bei Sync-Flag auf Vielfaches eingerastet
+  float W = computeDisplayWindow(lfo1Frequency);       // Zeitfenster in Sekunden
+
+  bool previousValid = false;   // gibt es einen Vorgängerpunkt, mit dem verbunden wird?
+  int previousY = 0;
+
+  for (int x = left; x <= right; x++)
+  {
+    float normalizedX = (float)(x - left) / (float)(right - left);
+
+    float t = normalizedX * W;                          // Zeit in Sekunden
+    float phaseLFO1 = t * lfo1Frequency / 2.0;
+    float phaseLFO2 = t * effectiveLFO2Frequency / 2.0;
+
+    float lfo1Multiplier = getLFO1Multiplier(phaseLFO1);
+
+    // Mute-Phase: nichts zeichnen, Linie unterbrechen
+    if (lfo1Multiplier == MUTE_MARK)
+    {
+      previousValid = false;
+      continue;
+    }
+
+    float combinedValue = lfo1Multiplier * getLFO2Multiplier(phaseLFO2);
+
+    float normalizedValue = (combinedValue - displayMin) / valueRange;
+    int y = bottom - (int)(normalizedValue * (bottom - top));
+
+    if (y < top)    y = top;
+    if (y > bottom) y = bottom;
+
+    if (previousValid)
+      oled.line(x - 1, previousY, x, y);
+    else
+      oled.dot(x, y);            // Segmentanfang, damit auch einzelne Punkte sichtbar sind
+
+    previousY = y;
+    previousValid = true;
+  }
+}
+
 // Hüllkurve für die LFO-Geschwindigkeit: Faktor (0..2) über der Zeit
 void drawEnvelopeGraph(int left, int right, int top, int bottom) {
   const float windowSec = 6.0;                         // feste Zeitachse: Hüllkurve dauert 0.5 .. 5 s
@@ -1563,8 +1653,7 @@ void drawEnvelopeGraph(int left, int right, int top, int bottom) {
   oled.print("s");
 }
 
-void drawOLEDWaveform()
-{
+void drawOLEDWaveform(){
   const int graphLeft   = 0;
   const int graphRight  = 127;
   const int graphTop    = 17;
@@ -1583,7 +1672,6 @@ void drawOLEDWaveform()
     switch (waveform)
     {
       case SQUARE:
-        //return (phase < 0.5) ? 1.0 : 0.0;
         return (phase >= 0.25 && phase < 0.75) ? 1.0 : 0.0;
 
       case TRIANGLE:
@@ -1593,7 +1681,7 @@ void drawOLEDWaveform()
           return 2.0 - phase * 2.0;
 
       case SAWTOOTH:
-        return 1.0 - phase;      // war: return phase;
+        return 1.0 - phase;
     }
 
     return 0.0;
@@ -1658,11 +1746,6 @@ void drawOLEDWaveform()
       (((rawValue - 0.5) * 1.5) * amplitudeFactor) + 1.0;
   };
 
-
-   
-
-  
-
   // ------------------------------------------------------------
   // Frequenzverhältnis LFO2 zu LFO1
   //
@@ -1679,12 +1762,6 @@ void drawOLEDWaveform()
   // synchronisierter LFO2-Frequenzwert für die Anzeige, damit die Darstellung passt
   float effectiveLFO2Frequency = getLfo2Frequency();
 
-  // if (lfo1Frequency > 0.0)
-    //frequencyRatio = lfo2Frequency / lfo1Frequency;
-    
-    //frequencyRatio = effectiveLFO2Frequency / lfo1Frequency;
-
-
   // ------------------------------------------------------------
   // Zuerst alle Werte berechnen, damit die Darstellung
   // automatisch auf den tatsächlichen Wertebereich skaliert
@@ -1692,15 +1769,11 @@ void drawOLEDWaveform()
   // ------------------------------------------------------------
   float waveformValues[128];
 
-  float minValue =  1000000.0;
-  float maxValue = -1000000.0;
-
   // Phasen aus der Zeit berechnen, damit die Darstellung synchron zu den LFOs ist
   //float W = computeDisplayWindow(lfo1Frequency, lfo1Amplitude, effectiveLFO2Frequency, lfo2Amplitude);
   float W = computeDisplayWindow(lfo1Frequency);
 
-  for (int x = graphLeft; x <= graphRight; x++)
-  {
+  for (int x = graphLeft; x <= graphRight; x++){
     float normalizedX = (float)(x - graphLeft) / (float)(graphRight - graphLeft);
 
     float t = normalizedX * W;                          // Zeit in Sekunden
@@ -1725,113 +1798,29 @@ void drawOLEDWaveform()
 
     waveformValues[x] = combinedValue;
 
-    // min/max nur für echte Werte (werden aktuell ohnehin nicht mehr verwendet)
-    if (combinedValue != MUTE_MARK) {
-      if (combinedValue < minValue) minValue = combinedValue;
-      if (combinedValue > maxValue) maxValue = combinedValue;
-    }
-
   }
-
 
   // ------------------------------------------------------------
   // Display löschen
   // ------------------------------------------------------------
   oled.clear();
 
-
   // ------------------------------------------------------------
   // Kopfzeile
   // ------------------------------------------------------------
-  // oled.setCursor(0, 0);
-  // oled.print("LFO1 * LFO2");
-
-  // oled.setCursor(76, 0);
-  // oled.print(lfo1Frequency, 1);
-  // oled.print("/");
-
-  // oled.print(effectiveLFO2Frequency, 1);
-
-  //Kopfzeile: Frequenz des Basistons
-  // oled.setScale(2);
-  // oled.setCursor(0, 0);
-  // oled.print((int)baseFrequency);
-  // oled.print(" Hz");
-  // oled.setScale(1);              // danach wieder normale Schriftgröße
 
   // Kopfzeile: Frequenz des Basistons, daneben die Pulsbreite als Symbol
   oled.setCursor(0, 0);
   oled.print((int)baseFrequency);
   oled.print(" Hz");
 
-  drawDutyIcon(70, 2, 48, 5, duty);              // 2 Perioden mit je 24 Pixel Breite
-  
+  drawDutyIcon(108, 0, 20, 5, duty);  // x,y,w,h,duty
   oled.setScale(1);              // danach wieder normale Schriftgröße
-
-
-
 
   if (modSelect == 2) {
     drawEnvelopeGraph(graphLeft, graphRight, 20, graphBottom);   // oben Platz für die Textzeile lassen
   } else {
-  // ------------------------------------------------------------
-  // Einen Rand um den Wertebereich lassen
-  // ------------------------------------------------------------
-  // float valueRange = maxValue - minValue;
-
-  float displayMin = 0.0;
-  float displayMax = 2.0;
-
-  float valueRange = displayMax - displayMin;
-
-
-  // ------------------------------------------------------------
-  // Nulllinie / Faktor-1-Linie
-  //
-  // Faktor 1.0 bedeutet:
-  // keine Änderung der Grundfrequenz
-  // ------------------------------------------------------------
-  if (1.0 >= displayMin && 1.0 <= displayMax)
-  {
-    int yOne =
-      graphBottom -
-      (int)(
-        ((1.0 - displayMin) / valueRange) *
-        (graphBottom - graphTop)
-      );
-  }
-
-
-  // ------------------------------------------------------------
-  // Kombinierte Wellenform zeichnen
-  // ------------------------------------------------------------
-  bool previousValid = false;   // gibt es einen Vorgängerpunkt, mit dem verbunden wird?
-  int previousY = 0;
-
-  for (int x = graphLeft; x <= graphRight; x++)
-  {
-    // Mute-Phase: nichts zeichnen, Linie unterbrechen
-    if (waveformValues[x] == MUTE_MARK)
-    {
-      previousValid = false;
-      continue;
-    }
-
-    float normalizedValue = (waveformValues[x] - displayMin) / valueRange;
-
-    int y = graphBottom - (int)(normalizedValue * (graphBottom - graphTop));
-
-    if (y < graphTop)    y = graphTop;
-    if (y > graphBottom) y = graphBottom;
-
-    if (previousValid)
-      oled.line(x - 1, previousY, x, y);
-    else
-      oled.dot(x, y);            // Segmentanfang, damit auch einzelne Punkte sichtbar sind
-
-    previousY = y;
-    previousValid = true;
-  }
+    drawLfoPreview(graphLeft, graphRight, graphTop, graphBottom);
   }
 
 
@@ -1840,21 +1829,6 @@ void drawOLEDWaveform()
   // Aktuellen tatsächlichen Multiplikator anzeigen
   // ------------------------------------------------------------
   // float currentCombinedValue = lfo1ValueActual * lfo2ValueActual;
-  
-
-  // oled.setCursor(0, 56);
-  // oled.print("x");
-
-  // oled.print(currentCombinedValue, 2);
-
-  // oled.setCursor(75, 56);
-  // oled.print("A:");
-
-  // oled.print(lfo1Amplitude);
-
-  // oled.print("/");
-
-  // oled.print(lfo2Amplitude);
 
   // Unten: Wellenform-Symbole mit Amplitude, links LFO1, rechts LFO2
   oled.setCursor(0, 7);
@@ -1872,9 +1846,6 @@ void drawOLEDWaveform()
   drawWaveIcon(75, 56, 24, 7, lfo2Waveform);
   oled.setCursor(102, 7);
   oled.print((int)lfo2Amplitude);
-
-
-  
 
   oled.update();
 }
