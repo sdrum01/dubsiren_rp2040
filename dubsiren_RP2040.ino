@@ -928,7 +928,6 @@ void updateFireKeys(){
     if(!fire1.read() || !fire2.read() ||!fire4.read()){
       longPressDetected = true;
     }else{
-      // loadOrSave(actualFireButton,selectWaveformLFO);
       loadOrSave(actualFireButton);
       longPressDetected = false;     // Reset des Langdruck-Flags
     }
@@ -941,7 +940,6 @@ void updateFireKeys(){
     if(!fire1.read() || !fire2.read() ||!fire3.read()){
       longPressDetected = true;
     }else{
-      // loadOrSave(actualFireButton,selectWaveformLFO);
       loadOrSave(actualFireButton);
       longPressDetected = false;     // Reset des Langdruck-Flags
     }
@@ -1696,15 +1694,15 @@ void drawEnvelopeGraph(int left, int right, int top, int bottom) {
     prevY = y;
   }
 
-  // Textzeile direkt unter der Kopfzeile
-  oled.setCursor(0, 1);
-  oled.print("x");
-  oled.print(vStart, 2);
-  oled.print(">");
-  oled.print(vEnd, 2);
-  oled.print(" ");
-  oled.print(tEnv, 1);
-  oled.print("s");
+  // // Textzeile direkt unter der Kopfzeile
+  // oled.setCursor(0, 1);
+  // oled.print("x");
+  // oled.print(vStart, 2);
+  // oled.print(">");
+  // oled.print(vEnd, 2);
+  // oled.print(" ");
+  // oled.print(tEnv, 1);
+  // oled.print("s");
 }
 
 // Balken: aktuelle Tonfrequenz (logarithmisch 20 Hz .. 16 kHz), Strich = Basisfrequenz
@@ -1758,7 +1756,6 @@ void drawOLEDWaveform(){
       case SAWTOOTH:
         return 1.0 - phase;
     }
-
     return 0.0;
   };
 
@@ -1845,7 +1842,6 @@ void drawOLEDWaveform(){
   float waveformValues[128];
 
   // Phasen aus der Zeit berechnen, damit die Darstellung synchron zu den LFOs ist
-  //float W = computeDisplayWindow(lfo1Frequency, lfo1Amplitude, effectiveLFO2Frequency, lfo2Amplitude);
   float W = computeDisplayWindow(lfo1Frequency);
 
   for (int x = graphLeft; x <= graphRight; x++){
@@ -1870,9 +1866,7 @@ void drawOLEDWaveform(){
     float combinedValue = (lfo1Multiplier == MUTE_MARK)
                           ? MUTE_MARK
                           : lfo1Multiplier * lfo2Multiplier;
-
     waveformValues[x] = combinedValue;
-
   }
 
   // ------------------------------------------------------------
@@ -1884,7 +1878,6 @@ void drawOLEDWaveform(){
   // Kopfzeile
   // ------------------------------------------------------------
 
-  // Kopfzeile: Frequenz des Basistons, daneben die Pulsbreite als Symbol
   // oled.setCursor(0, 0);
   // oled.print((int)baseFrequency);
   // oled.print(" Hz");
@@ -1917,6 +1910,7 @@ void drawOLEDWaveform(){
   drawWaveIcon(9, 56, 24, 7, lfo1Waveform);
   oled.setCursor(36, 7);
   oled.print((int)lfo1Amplitude);
+  
 
   oled.setCursor(66, 7);
   oled.invertText(modSelect == 1);
@@ -1929,7 +1923,6 @@ void drawOLEDWaveform(){
   oled.update();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
