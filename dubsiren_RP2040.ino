@@ -60,16 +60,6 @@ const int LEDWaveSaw = 4;
 // Variablen/Konstanten for display
 unsigned long previousMillisDisplay = 0;  
 
-// const int OLED_GRAPH_X_MIN = 1;
-// const int OLED_GRAPH_X_MAX = 126;
-// const int OLED_GRAPH_Y_MIN = 12;
-// const int OLED_GRAPH_Y_MAX = 54;
-
-// float waveformDisplay[128];
-
-//byte activeLedRow = 0;
-//byte activeLedCol = 0;
-
 // Bounce Objekte erstellen zur Tastenabfrage
 Bounce fire1;
 Bounce fire2;
@@ -227,6 +217,8 @@ volatile bool displayDirty = true;               // true = beim Start einmal zei
 volatile unsigned long displaySettleTime = 0;    // Zeitpunkt für den "Nachlauf"-Refresh
 const unsigned long OLED_UPDATE_INTERVAL = 50;   // Mindestabstand zwischen zwei Redraws
 const unsigned long OLED_SETTLE_DELAY    = 200;  // Nachlauf nach der letzten Potibewegung
+
+volatile unsigned long lastPotMoveTime = 0;   // Zeitpunkt der letzten Potibewegung (für den Zoom)
 
 bool lfo1WaveformChanged = false;
 
@@ -1099,6 +1091,7 @@ void updatePotis(){
 
     requestDisplayUpdate();
     displaySettleTime = millis() + OLED_SETTLE_DELAY;
+    lastPotMoveTime = millis();            // neu
 
     oledPotiPitchBak   = valPotiPitch;
     oledPotiFreqLFOBak = valPotiFreqLFO;
@@ -1429,6 +1422,57 @@ void requestDisplayUpdate() {
   displayDirty = true;
 }
 
+// Test: automatischer Zoom
+// Weicher Zoom der LFO-Vorschau (läuft nur auf Core 1)
+const float ZOOM_N_LOW    = 3.0;            // außerhalb von 3 bis 5 sichtbaren Perioden wird nachgezoomt
+const float ZOOM_N_HIGH   = 5.0;
+const float ZOOM_N_TARGET = 4.0;            // Ziel beim Nachzoomen
+const unsigned long ZOOM_HOLD_MS = 400;     // so lange nach der letzten Potibewegung nicht zoomen
+const float ZOOM_TAU_MS   = 150.0;          // Zeitkonstante der weichen Anpassung
+
+float zoomWindow = 0;                       // aktuelle Fensterlänge in Sekunden (0 = noch nicht gesetzt)
+unsigned long zoomLastUpdate = 0;
+bool zoomAnimating = false;
+
+void updateZoom(unsigned long now) {
+  float f1 = lfo1Frequency;
+  if (f1 < 0.01) f1 = 0.01;
+  float T1 = 2.0 / f1;                      // Periodendauer von LFO1 in Sekunden
+
+  if (zoomWindow <= 0.0) {                  // erster Aufruf: ohne Animation auf den Zielwert
+    zoomWindow = ZOOM_N_TARGET * T1;
+    zoomLastUpdate = now;
+    return;
+  }
+
+  float dt = (float)(now - zoomLastUpdate);
+  zoomLastUpdate = now;
+  if (dt > 50.0) dt = 50.0;                 // Schutz gegen Sprünge nach langen Pausen
+
+  // Beim Drehen: Zoom eingefroren, laufende Animation abbrechen
+  if ((now - lastPotMoveTime) < ZOOM_HOLD_MS) {
+    zoomAnimating = false;
+    return;
+  }
+
+  float N = zoomWindow / T1;                // so viele LFO1-Perioden sind gerade sichtbar
+
+  if (!zoomAnimating) {
+    if (N >= ZOOM_N_LOW && N <= ZOOM_N_HIGH) return;   // passt schon, nichts tun
+    zoomAnimating = true;                               // Nachzoomen starten
+  }
+
+  // Weich zum Ziel, im Logarithmus gerechnet: große und kleine Zoomsprünge wirken gleich schnell
+  float target = ZOOM_N_TARGET * T1;
+  float k = 1.0 - expf(-dt / ZOOM_TAU_MS);
+  zoomWindow = expf(logf(zoomWindow) + (logf(target) - logf(zoomWindow)) * k);
+
+  if (fabsf(logf(zoomWindow / target)) < 0.01) {        // angekommen
+    zoomWindow = target;
+    zoomAnimating = false;
+  }
+}
+
 // Neue Version läuft nur noch auf CORE1
 void updateDisplay() {
   unsigned long now = millis();
@@ -1438,8 +1482,10 @@ void updateDisplay() {
     displayDirty = true;
   }
 
+  updateZoom(now);
+
   static bool wasLive = false;
-  bool live = runSound;                         // während des Tons laufend neu zeichnen
+  bool live = runSound || zoomAnimating;        // beim Ton oder beim weichen Zoomen laufend neu zeichnen
   if (wasLive && !live) displayDirty = true;    // ein letztes Bild ohne Punkt und Balken
   wasLive = live;
 
@@ -1451,25 +1497,8 @@ void updateDisplay() {
   drawOLEDWaveform();
 }
 
+
 /*
-void updateDisplay() {
-  unsigned long now = millis();
-
-  if (displaySettleTime && now >= displaySettleTime) {
-    displaySettleTime = 0;
-    displayDirty = true;
-  }
-
-  if (!displayDirty) return;
-  if (now - previousMillisDisplay < OLED_UPDATE_INTERVAL) return;
-
-  displayDirty = false;            // vor dem Zeichnen löschen: Änderungen währenddessen lösen einen weiteren Redraw aus
-  previousMillisDisplay = now;
-  drawOLEDWaveform();
-}
-*/
-
-
 float computeDisplayWindow(float f1) {
   const float N_MIN  = 1.0;             // mindestens so viele LFO1-Perioden sichtbar
   const float N_MAX  = 10.0;            // ab so vielen Perioden springt der Zoom zur nächsten Stufe
@@ -1484,6 +1513,7 @@ float computeDisplayWindow(float f1) {
   while (W * FACTOR < limit) W *= FACTOR;
   return W;
 }
+*/
 
 // Kleines Wellenform-Symbol (2 Perioden) in das Rechteck x..x+w, y..y+h-1
 void drawWaveIcon(int x, int y, int w, int h, eLfoWaveform wf) {
@@ -1601,7 +1631,8 @@ void drawLfoPreview(int left, int right, int top, int bottom)
     return (((getWaveformValue(wf2, phase) - 0.5) * 1.5) * (a2 / 100.0)) + 1.0;
   };
 
-  float W = computeDisplayWindow(f1);
+  // float W = computeDisplayWindow(f1); // zum stufigen Darstellen der LFO-Vorschau
+  float W = zoomWindow;                 // zum weichen Zoomen der LFO-Vorsch
 
   // Produkt der Multiplikatoren an der Position xNorm (0..1) im Fenster; MUTE_MARK = Ton aus
   auto combinedAt = [&](float xNorm) -> float
@@ -1732,143 +1763,6 @@ void drawOLEDWaveform(){
   const int graphTop    = 11;
   const int graphBottom = 52;
 
-  // const float displayCyclesLFO1 = 5.5;
-
-  // ------------------------------------------------------------
-  // Effektiven Wert eines LFO-Waveforms für die Anzeige berechnen
-  // phase: 0.0 ... 1.0
-  // ------------------------------------------------------------
-  auto getWaveformValue = [](eLfoWaveform waveform, float phase) -> float
-  {
-    phase -= floor(phase);
-
-    switch (waveform)
-    {
-      case SQUARE:
-        return (phase >= 0.25 && phase < 0.75) ? 1.0 : 0.0;
-
-      case TRIANGLE:
-        if (phase < 0.5)
-          return phase * 2.0;
-        else
-          return 2.0 - phase * 2.0;
-
-      case SAWTOOTH:
-        return 1.0 - phase;
-    }
-    return 0.0;
-  };
-
-
-  // ------------------------------------------------------------
-  // Effektiven Frequenz-Multiplikator von LFO1 berechnen
-  // Entspricht calculateLFOWave1()
-  // ------------------------------------------------------------
-
-  auto triangleValue = [](float phase) -> float
-  {
-    phase -= floor(phase);
-    return (phase < 0.5) ? phase * 2.0 : 2.0 - phase * 2.0;
-  };
-
-  const float MUTE_MARK = -100.0;   // Marker für "Ton aus"
-
-  auto getLFO1Multiplier = [&](float phase) -> float
-  {
-    float amplitudeFactor = lfo1Amplitude / 100.0;
-
-    if (optionFlags & 0b00000100)
-      amplitudeFactor *= 2.0;
-
-    float rawValue;
-
-    if (lfo1Waveform == SQUARE && lfo1Amplitude < 0)
-    {
-      float tri = triangleValue(phase);
-
-      // Maximal negativ: Zerhacker, zweite Hälfte der Dreieck-Rampe = Ton aus
-      if (lfo1Amplitude <= -100.0)
-        return (tri <= 0.5) ? 1.0 : MUTE_MARK;
-
-      // 3-Stufen-Raster
-      if (tri < 0.25)      rawValue = 0.0;
-      else if (tri < 0.75) rawValue = 0.5;
-      else                 rawValue = 1.0;
-    }
-    else
-    {
-      rawValue = getWaveformValue(lfo1Waveform, phase);
-    }
-
-    return (((rawValue - 0.5) * 1.5) * amplitudeFactor) + 1.0;
-  };
-
-
-  // ------------------------------------------------------------
-  // Effektiven Frequenz-Multiplikator von LFO2 berechnen
-  // Entspricht calculateLFOWave2()
-  // ------------------------------------------------------------
-  auto getLFO2Multiplier = [&](float phase) -> float
-  {
-    float rawValue = getWaveformValue(lfo2Waveform, phase);
-
-    float amplitudeFactor = (lfo2Amplitude / 100.0);
-
-    return
-      (((rawValue - 0.5) * 1.5) * amplitudeFactor) + 1.0;
-  };
-
-  // ------------------------------------------------------------
-  // Frequenzverhältnis LFO2 zu LFO1
-  //
-  // Damit LFO1 genau 5 Perioden darstellt, wird LFO2
-  // entsprechend seiner Frequenz mitgeführt.
-  //
-  // Beim SAWTOOTH wird in deinen LFO-Funktionen mit
-  // schrittweite / 2 gearbeitet. Deshalb berücksichtigen
-  // wir das hier ebenfalls.
-  // ------------------------------------------------------------
-  
-
-  //float frequencyRatio = 0.0;
-  // synchronisierter LFO2-Frequenzwert für die Anzeige, damit die Darstellung passt
-  float effectiveLFO2Frequency = getLfo2Frequency();
-
-  // ------------------------------------------------------------
-  // Zuerst alle Werte berechnen, damit die Darstellung
-  // automatisch auf den tatsächlichen Wertebereich skaliert
-  // werden kann.
-  // ------------------------------------------------------------
-  float waveformValues[128];
-
-  // Phasen aus der Zeit berechnen, damit die Darstellung synchron zu den LFOs ist
-  float W = computeDisplayWindow(lfo1Frequency);
-
-  for (int x = graphLeft; x <= graphRight; x++){
-    float normalizedX = (float)(x - graphLeft) / (float)(graphRight - graphLeft);
-
-    float t = normalizedX * W;                          // Zeit in Sekunden
-    float phaseLFO1 = t * lfo1Frequency / 2.0;          // 1.0 = eine volle Periode
-    float phaseLFO2 = t * effectiveLFO2Frequency / 2.0;
-
-    // LFO1 läuft exakt 5 Perioden über die Anzeige
-    // float phaseLFO1 = normalizedX * displayCyclesLFO1;
-
-    // LFO2 läuft entsprechend seines Frequenzverhältnisses
-    // float phaseLFO2 = phaseLFO1 * frequencyRatio;
-
-    float lfo1Multiplier = getLFO1Multiplier(phaseLFO1);
-
-    float lfo2Multiplier = getLFO2Multiplier(phaseLFO2);
-
-    // Stummgeschaltet = Frequenz 0 = Linie am Boden des Graphen
-    // Genau das Produkt, das auch den Frequenzgenerator beeinflusst
-    float combinedValue = (lfo1Multiplier == MUTE_MARK)
-                          ? MUTE_MARK
-                          : lfo1Multiplier * lfo2Multiplier;
-    waveformValues[x] = combinedValue;
-  }
-
   // ------------------------------------------------------------
   // Display löschen
   // ------------------------------------------------------------
@@ -1885,14 +1779,11 @@ void drawOLEDWaveform(){
   drawDutyIcon(102, 2, 24, 5, duty); // x,y,w,h,duty Icon oben rechts in der Ecke
   oled.setScale(1);              // danach wieder normale Schriftgröße
 
-  //if (modSelect != 2) drawFreqBar(10, 14);    // im Envelope-Modus liegt dort die Textzeile
-
-
+  drawFreqBar(0, 92, 2, 6);            // Balken links, Marker reicht von y=1 bis y=7
   if (modSelect == 2) {
     drawEnvelopeGraph(graphLeft, graphRight, 20, graphBottom);   // oben Platz für die Textzeile lassen
   } else {
     drawLfoPreview(graphLeft, graphRight, graphTop, graphBottom);
-    drawFreqBar(0, 92, 2, 6);            // Balken links, Marker reicht von y=1 bis y=7
   }
 
 
