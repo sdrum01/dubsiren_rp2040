@@ -76,7 +76,7 @@ byte actualFireButtonBak = 0;
 byte lastFireButtonPressed = 0;
 
 // 4 Bänke * 4 FireButtons = 16 Speicherplätze;
-byte bank = 1;
+volatile byte bank = 1;
 byte bankBak = 1;
 
 // wenn die Firebutton lange gedrückt sind
@@ -168,6 +168,11 @@ byte blinkCounter1 = 0;
 byte selectedFireLed = 0;
 bool selectedFireLedState = 0;
 
+// Diese Variable merkt sich die zuletzt im Save-Modus ausgewählte Taste. 
+// 0 bedeutet: noch keine Taste ausgewählt.
+// brauchen wir für die Display-Darstellung in den Bank Select und Save-Screen
+volatile byte shiftSelectedFireButton = 0;
+
 // LED1+2
 
 int pwm_led = 1000;
@@ -224,6 +229,12 @@ bool lfo1WaveformChanged = false;
 
 String receiveStr = ""; // Hier wird die empfangene Zeichenkette gespeichert
 bool receiveStrComplete = false;
+
+// für die save-Anzeige
+volatile bool saveConfirmation = false;
+volatile bool saveSucceeded = false;
+volatile byte savedFireNumber = 0;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 // Beispiel
 
@@ -242,6 +253,10 @@ bool receiveStrComplete = false;
 void drawOLEDWaveform();
 void drawLfoPreview(int left, int right, int top, int bottom);
 void drawFreqBar(int xLeft, int xRight, int yTop, int yBottom);
+void drawBankSelectScreen();
+void drawSaveScreen();
+void drawFireSlotBoxes();
+void drawResetScreen();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -822,19 +837,23 @@ void loadOrSave(byte fireButton){
 
   // Shifttaste 1 gedrückt : Bank wechseln, aber nicht sofort JSON laden
   if(shiftState == 1){ 
+    shiftSelectedFireButton = fireButton;
     bank = fireButton; // Bank schreiben
     selectedFireLed = bank;
     //actualFireButton = 0;
     lastFireButtonPressed = 0;
+    requestDisplayUpdate();  // OLED nach Bankwechsel aktualisieren
     resetShiftState();
-  }else if(shiftState == 4){ // SelectLFO gehalten
+  }
+  else if(shiftState == 4){ // SelectLFO gehalten
     // Maskieren des jeweiligen Bytes (entspricht dem Fire-Button)
     uint8_t mask = 1 << fireButton -1; // weil es bei 0 losgeht und nicht bei 1
     // Bit toggeln mit XOR
     optionFlags ^= mask;
     dataSaved = true;          // neu: LFO-Taste wurde als Modifier benutzt, kein LFO-Wechsel beim Loslassen
     requestDisplayUpdate();    // falls noch nicht vorhanden
-  }else{
+  }
+  else{
     // virtuelle Taste ausrechnen 1..16
     byte buttonName = (bank * 4) - 4 + fireButton;
     // den Filename bestimmen
@@ -844,12 +863,24 @@ void loadOrSave(byte fireButton){
     if(longPressDetected == 0){
       resetLFOParams();
     }
-    // 
-    if(shiftState == 2){ // Shifttaste 2 gedrückt : save
-      // Save values
+    // SAVE: Shifttaste 2 gedrückt : Werte speichern
+    if(shiftState == 2){ 
+      // Fire-Taste merken
+      shiftSelectedFireButton = fireButton;
+
+      // Tatsächlichen Speicherplatz merken (1-16)
+      savedFireNumber = buttonName;
+
+      // Daten speichern
       String _json = values2JSON();
       dataSaved = writeSettings(_json,fileName);
-      //debug("Write");
+
+      // Ergebnis für OLED bereitstellen
+      saveSucceeded = dataSaved;
+      saveConfirmation = true;
+
+      // Display nach Bankwechsel aktualisieren
+      requestDisplayUpdate();
     } else {
       
       // longPressDetected: wenn Ton gerade gehalten wird sollen die Werte nicht neu geladen werden bei drücken des selben Buttons
@@ -1473,6 +1504,7 @@ void updateZoom(unsigned long now) {
   }
 }
 
+/*
 // Neue Version läuft nur noch auf CORE1
 void updateDisplay() {
   unsigned long now = millis();
@@ -1494,6 +1526,94 @@ void updateDisplay() {
 
   displayDirty = false;
   previousMillisDisplay = now;
+  drawOLEDWaveform();
+}
+*/
+
+
+// Neue Version läuft nur noch auf CORE1
+void updateDisplay() {
+
+  unsigned long now = millis();
+
+  // --------------------------------------------------
+  // Änderung des Shift-Status erkennen
+  // --------------------------------------------------
+
+  static byte previousShiftState = 255;
+
+  if (shiftState != previousShiftState) {
+    previousShiftState = shiftState;
+    // Neue Auswahl bei Bank Select oder Save beginnen
+    if (shiftState == 1 || shiftState == 2) {
+        shiftSelectedFireButton = 0;
+        // Save-Bestätigung beim Eintritt in Save zurücksetzen
+        if (shiftState == 2) {
+            saveConfirmation = false;
+        }
+    }
+    displayDirty = true;
+  }
+
+  // --------------------------------------------------
+  // Display-Update nach Poti-Bewegung
+  // --------------------------------------------------
+
+  if (displaySettleTime && now >= displaySettleTime) {
+    displaySettleTime = 0;
+    displayDirty = true;
+  }
+
+  // --------------------------------------------------
+  // Sonderbildschirme: Bank Select, Save, Reset
+  // --------------------------------------------------
+
+
+  if (shiftState == 1 || shiftState == 2 || shiftState == 3) {
+
+    if (!displayDirty) return;
+
+    if (now - previousMillisDisplay < OLED_UPDATE_INTERVAL) return;
+
+    displayDirty = false;
+    previousMillisDisplay = now;
+
+    if (shiftState == 1) {
+      drawBankSelectScreen();
+    }
+    else if (shiftState == 2) {
+      drawSaveScreen();
+    }
+    else if (shiftState == 3) {
+      drawResetScreen();
+    }
+
+    return;
+  }
+
+  // --------------------------------------------------
+  // Normale Displaysteuerung
+  // --------------------------------------------------
+
+  updateZoom(now);
+
+  static bool wasLive = false;
+
+  bool live = runSound || zoomAnimating; // beim Ton oder beim weichen Zoomen laufend neu zeichnen
+
+  if (wasLive && !live) {
+    displayDirty = true; // ein letztes Bild ohne Punkt und Balken
+  }
+
+  wasLive = live;
+
+  if (!displayDirty && !live) return;
+
+  if (now - previousMillisDisplay < OLED_UPDATE_INTERVAL) return;
+
+  displayDirty = false;
+  previousMillisDisplay = now;
+
   drawOLEDWaveform();
 }
 
@@ -1755,6 +1875,191 @@ void drawFreqBar(int xLeft, int xRight, int yTop, int yBottom) {
 
   int xb = xOf(baseFrequency);
   oled.line(xb, yTop - 1, xb, yBottom + 1);
+}
+
+
+// Zeichnet die vier Fire-Speicherplätze
+void drawFireSlotBoxes(byte selectedButton) {
+
+  const int boxWidth = 24;
+  const int boxTop = 35;
+  const int boxBottom = 61;
+  const int startX = 4;
+  const int boxGap = 8;
+
+  for (byte i = 0; i < 4; i++) {
+
+    int x = startX + i * (boxWidth + boxGap);
+
+    // Tatsächliche Speicherplatznummer 1 bis 16
+    byte slotNumber = (bank - 1) * 4 + i + 1;
+
+    bool selected = (selectedButton == i + 1);
+
+    // Rechteck zeichnen
+    if (selected) {
+      oled.rect(
+        x,
+        boxTop,
+        x + boxWidth - 1,
+        boxBottom,
+        OLED_FILL
+      );
+    } else {
+      oled.rect(
+        x,
+        boxTop,
+        x + boxWidth - 1,
+        boxBottom,
+        OLED_STROKE
+      );
+    }
+
+    // Nummer mittig platzieren
+    int textWidth = (slotNumber < 10) ? 6 : 12;
+    int textX = x + (boxWidth - textWidth) / 2;
+
+    oled.setCursor(textX, 6);
+
+    // Schrift im gefüllten Rechteck invertieren
+    oled.invertText(selected);
+    oled.print(slotNumber);
+    oled.invertText(false);
+  }
+}
+
+// Screen, wenn Shift1 + Shift2 gedrückt wird (Reset)
+void drawResetScreen() {
+
+  oled.clear();
+
+  // Überschrift
+  oled.setScale(2);
+  oled.setCursor(38, 0);
+  oled.print("RESET");
+
+  oled.setScale(1);
+
+  // Status LFO2
+  oled.setCursor(18, 3);
+  oled.print("LFO2: OFF");
+
+  // Status Envelope
+  oled.setCursor(18, 5);
+  oled.print("ENVELOPE: OFF");
+
+  oled.update();
+}
+
+// Bank-Select-Bildschirm
+
+void drawBankSelectScreen() {
+
+  oled.clear();
+
+  // --------------------------------------------------
+  // Überschrift: Aktuell gewählte Bank
+  // --------------------------------------------------
+
+  oled.setScale(2);
+  oled.setCursor(2, 0);
+  oled.print("Bank ");
+  oled.print(bank);
+
+  oled.setScale(1);
+
+  // --------------------------------------------------
+  // Fire-Button-Nummern oberhalb der Rechtecke
+  // --------------------------------------------------
+
+  const int boxWidth = 24;
+  const int startX = 4;
+  const int boxGap = 8;
+
+  for (byte i = 0; i < 4; i++) {
+
+    int x = startX + i * (boxWidth + boxGap);
+
+    // Fire-Button-Nummer 1 bis 4
+    oled.setCursor(x + 9, 3);
+    oled.print(i + 1);
+  }
+
+  // --------------------------------------------------
+  // Vier Speicherplätze der gewählten Bank
+  // --------------------------------------------------
+
+  drawFireSlotBoxes(bank);
+
+  oled.update();
+}
+
+
+/*
+// Save-Bildschirm
+void drawSaveScreen() {
+
+  oled.clear();
+
+  // Überschrift
+  oled.setScale(2);
+  oled.setCursor(0, 0);
+  oled.print("Save to...");
+
+  oled.setScale(1);
+
+  // Vier Speicherplätze der gewählten Bank
+  drawFireSlotBoxes(shiftSelectedFireButton);
+
+  oled.update();
+}
+*/
+
+void drawSaveScreen() {
+
+    oled.clear();
+
+    // --------------------------------------------------
+    // Überschrift / Speicherbestätigung
+    // --------------------------------------------------
+
+    if (saveConfirmation) {
+
+        oled.setScale(2);
+        oled.setCursor(25, 0);
+
+        if (saveSucceeded) {
+            oled.print("Saved!");
+        } else {
+            oled.print("ERROR!");
+        }
+
+        oled.setScale(1);
+        oled.setCursor(30, 3);
+
+        if (saveSucceeded) {
+            oled.print("to Fire ");
+            oled.print(savedFireNumber);
+        } else {
+            oled.print("Save failed");
+        }
+
+    } else {
+
+        oled.setScale(2);
+        oled.setCursor(0, 0);
+        oled.print("Save to...");
+
+        oled.setScale(1);
+    }
+
+    // --------------------------------------------------
+    // Vier Fire-Speicherplätze
+    // --------------------------------------------------
+
+    drawFireSlotBoxes(shiftSelectedFireButton);
+
+    oled.update();
 }
 
 void drawOLEDWaveform(){
