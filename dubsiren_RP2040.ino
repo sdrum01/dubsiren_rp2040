@@ -17,9 +17,6 @@ GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 
 const byte LOGLEVEL = 1;
 
-
-
-
 // Definition der IO's
 const int freqPotPin = A0;
 const int lfoFreqPotPin = A1;  // Potentiometer für die Frequenz des LFO
@@ -127,33 +124,33 @@ bool dataSaved = false;
 
 // globale Variablen, die der LFO und envelope zurückgibt
 
-volatile float lfo1Value = 0;
-volatile float lfo2Value = 0;
-volatile float envelopeValue = 1;
-volatile int lfo1Direction = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
-volatile int lfo2Direction = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
+float lfo1Value = 0;
+float lfo2Value = 0;
+float envelopeValue = 1;
+int lfo1Direction = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
+int lfo2Direction = 1;  // Richtung des LFO: 1 aufwärts, -1 abwärts
 
-volatile unsigned long previousMillisLFO1 = 0;
-volatile unsigned long previousMillisLFO2 = 0;
-volatile unsigned long previousMillisEnv = 0;
-volatile unsigned long previousMillisLED = 0;
+unsigned long previousMillisLFO1 = 0;
+unsigned long previousMillisLFO2 = 0;
+unsigned long previousMillisEnv = 0;
+unsigned long previousMillisLED = 0;
 // volatile unsigned long previousMillisLEDPoll = 0;
 
-volatile float lfovalue_finalLFO1 = 0;
-volatile float lfovalue_finalLFO2 = 0;
+float lfovalue_finalLFO1 = 0;
+float lfovalue_finalLFO2 = 0;
 
 
-// Wenn Ton abgefeuert werden soll:
+// Wenn Ton abgefeuert werden soll (coreübergreifend):
 volatile bool runSound = 1;
-
 volatile float liveLfo1Phase = 0;  // Phase von LFO1 seit dem Tonstart, in Perioden (1.0 = eine volle Periode)
 volatile float liveModFreq = 0;    // aktuelle Tonfrequenz in Hz (-100 = Ton aus)
 
 // shiftToggle-taste
 bool lfoToggleState = 0;
 
-// shiftState: Byte, in dem eine Kombination aus Shift1 und Shift2 gespeichert wird
-byte shiftState = 0;
+// shiftState: Byte, in dem eine Kombination aus Shift1 und Shift2 gespeichert wird, 
+// coreübergreifend, damit CORE0 und CORE1 darauf zugreifen können
+volatile byte shiftState = 0;
 
 // Modulationsselektor: 0:LFO1, 1: LFO2, 2:Envelope
 // wird gesetzt bei pos. Flange LFO1 oder LFO2 oder neg.Flange Shift1
@@ -216,7 +213,7 @@ int oledPotiAmpLFOBak = 0;
 // Volatile Variablen für die Displaydarstellung, die von beiden Kernen genutzt werden, 
 // weil CORE0 und CORE1 auf diese Variablen zugreifen dürfen
 volatile bool coreReady = false;        // Core 0 meldet: setup() ist fertig
-// Display-Refresh
+// Display-Refresh notwendig
 volatile bool displayDirty = true;               // true = beim Start einmal zeichnen
 //bool displayForce = false;                     // Erzwingen des Display-refresh, brauchen wir angelblich nicht mehr wegen CORE1
 volatile unsigned long displaySettleTime = 0;    // Zeitpunkt für den "Nachlauf"-Refresh
@@ -249,13 +246,14 @@ volatile byte savedFireNumber = 0;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Vorab Deklaration von Funktionen, falls der Kompiler keine Prototyp erzeugt
+// Prototypen von Funktionen, falls der Kompiler keine Prototyp erzeugt
 void drawOLEDWaveform();
-void drawLfoPreview(int left, int right, int top, int bottom);
+//void drawLfoPreview(int left, int right, int top, int bottom);
+void drawLfoPreview(int left, int right, int top, int bottom, bool withEnv);
 void drawFreqBar(int xLeft, int xRight, int yTop, int yBottom);
 void drawBankSelectScreen();
 void drawSaveScreen();
-void drawFireSlotBoxes();
+void drawFireSlotBoxes(byte selectedButton);
 void drawResetScreen();
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +313,6 @@ void JSON2values(String jsonString) {
     Serial.println(error.f_str());
     return;
   }
-
 
   baseFrequency = dataSet["pitch"];
   lfo1Frequency = dataSet["lfoFreq"];
@@ -850,8 +847,8 @@ void loadOrSave(byte fireButton){
     uint8_t mask = 1 << fireButton -1; // weil es bei 0 losgeht und nicht bei 1
     // Bit toggeln mit XOR
     optionFlags ^= mask;
-    dataSaved = true;          // neu: LFO-Taste wurde als Modifier benutzt, kein LFO-Wechsel beim Loslassen
-    requestDisplayUpdate();    // falls noch nicht vorhanden
+    dataSaved = true;          // LFO-Taste wurde als Modifier benutzt, kein LFO-Wechsel beim Loslassen
+    requestDisplayUpdate();    // OLED nach optionsflagSelect aktualisieren
   }
   else{
     // virtuelle Taste ausrechnen 1..16
@@ -991,7 +988,7 @@ void updateKeys(){
   }
 
   if (selectLFO.fell()) {
-    dataSaved = false;       // neu: jeder Druck der LFO-Taste macht das Umschalten wieder scharf
+    dataSaved = false;       // jeder Druck der LFO-Taste macht das Umschalten wieder scharf
   }
 
 
@@ -1031,6 +1028,15 @@ void updateKeys(){
   selectedFireLedState = 0;
   shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),!selectLFO.read(),0,0,0,0,0);
   //Shiftstate ist > 0 wenn irgendeine Shift-taste gedrückt ist, die eine 2.FUnktion während des Drückens haben soll
+  static byte prevShift = 255;
+  if (shiftState != prevShift) {
+    if (shiftState == 1 || shiftState == 2) shiftSelectedFireButton = 0;
+    if (shiftState == 2) saveConfirmation = false;
+    prevShift = shiftState;
+    requestDisplayUpdate();
+  }
+  
+  
   if(shiftState == 1){ 
     // Shift 1 gedrückt: Bank wählen
     selectedFireLed = bank;
@@ -1099,15 +1105,33 @@ void updateKeys(){
   selectedFireLedState = runSound | selectedFireLedState;
 }
 
+// Hilfsfunktion zum einlesen und glätten
+// Poti einlesen: Mittelwert aus 4 Messungen, Änderung erst ab 2 Schritten übernehmen
+int readPotiFiltered(int pin, int &held) {
+  int sum = 0;
+  for (int i = 0; i < 4; i++) sum += analogRead(pin);
+  int v = sum / 4;
+  if (abs(v - held) >= 2) held = v;
+  return held;
+}
+
 void updatePotis(){
 
+ 
+  
   // --------------------------------------------------
   // Potis einlesen
   // --------------------------------------------------
 
-  valPotiPitch   = analogRead(freqPotPin);
-  valPotiFreqLFO = analogRead(lfoFreqPotPin);
-  valPotiAmpLFO  = analogRead(lfoAmpPotPin);
+  static int heldPitch = 0, heldFreq = 0, heldAmp = 0;
+
+  valPotiPitch   = readPotiFiltered(freqPotPin,    heldPitch);
+  valPotiFreqLFO = readPotiFiltered(lfoFreqPotPin, heldFreq);
+  valPotiAmpLFO  = readPotiFiltered(lfoAmpPotPin,  heldAmp);
+
+  // valPotiPitch   = analogRead(freqPotPin);
+  // valPotiFreqLFO = analogRead(lfoFreqPotPin);
+  // valPotiAmpLFO  = analogRead(lfoAmpPotPin);
 
 
   // --------------------------------------------------
@@ -1504,32 +1528,6 @@ void updateZoom(unsigned long now) {
   }
 }
 
-/*
-// Neue Version läuft nur noch auf CORE1
-void updateDisplay() {
-  unsigned long now = millis();
-
-  if (displaySettleTime && now >= displaySettleTime) {
-    displaySettleTime = 0;
-    displayDirty = true;
-  }
-
-  updateZoom(now);
-
-  static bool wasLive = false;
-  bool live = runSound || zoomAnimating;        // beim Ton oder beim weichen Zoomen laufend neu zeichnen
-  if (wasLive && !live) displayDirty = true;    // ein letztes Bild ohne Punkt und Balken
-  wasLive = live;
-
-  if (!displayDirty && !live) return;
-  if (now - previousMillisDisplay < OLED_UPDATE_INTERVAL) return;
-
-  displayDirty = false;
-  previousMillisDisplay = now;
-  drawOLEDWaveform();
-}
-*/
-
 
 // Neue Version läuft nur noch auf CORE1
 void updateDisplay() {
@@ -1541,7 +1539,7 @@ void updateDisplay() {
   // --------------------------------------------------
 
   static byte previousShiftState = 255;
-
+  /*
   if (shiftState != previousShiftState) {
     previousShiftState = shiftState;
     // Neue Auswahl bei Bank Select oder Save beginnen
@@ -1554,7 +1552,26 @@ void updateDisplay() {
     }
     displayDirty = true;
   }
+  */
+  static byte rawShift = 255;
+  static unsigned long rawShiftSince = 0;
+  static byte stableShift = 255;
 
+  if (shiftState != rawShift) {              // Rohwert hat sich geändert: Zeitmessung neu starten
+    rawShift = shiftState;
+    rawShiftSince = now;
+  }
+
+  if (rawShift != stableShift && (now - rawShiftSince) >= 60) {
+    stableShift = rawShift;                  // erst nach 60 ms Ruhe übernehmen
+    /*
+    if (stableShift == 1 || stableShift == 2) {
+      shiftSelectedFireButton = 0;
+      if (stableShift == 2) saveConfirmation = false;
+    }
+    */
+    displayDirty = true;
+  }
   // --------------------------------------------------
   // Display-Update nach Poti-Bewegung
   // --------------------------------------------------
@@ -1568,8 +1585,8 @@ void updateDisplay() {
   // Sonderbildschirme: Bank Select, Save, Reset
   // --------------------------------------------------
 
-
-  if (shiftState == 1 || shiftState == 2 || shiftState == 3) {
+  if (stableShift == 1 || stableShift == 2 || stableShift == 3) { 
+  //if (shiftState == 1 || shiftState == 2 || shiftState == 3) {
 
     if (!displayDirty) return;
 
@@ -1578,13 +1595,13 @@ void updateDisplay() {
     displayDirty = false;
     previousMillisDisplay = now;
 
-    if (shiftState == 1) {
+    if (stableShift == 1) {
       drawBankSelectScreen();
     }
-    else if (shiftState == 2) {
+    else if (stableShift == 2) {
       drawSaveScreen();
     }
-    else if (shiftState == 3) {
+    else if (stableShift == 3) {
       drawResetScreen();
     }
 
@@ -1677,18 +1694,14 @@ void drawDutyIcon(int x, int y, int w, int h, float dutyPercent) {
   }
 }
 
-
-
-
-
-// Vorschau des Produkts LFO1 * LFO2 (Frequenz-Multiplikator über der Zeit)
-void drawLfoPreview(int left, int right, int top, int bottom)
+// LFO-Vorschau, normal (withEnv = false) oder mit angewandter Hüllkurve (withEnv = true)
+void drawLfoPreview(int left, int right, int top, int bottom, bool withEnv)
 {
   const float displayMin = 0.0;
   const float displayMax = 2.0;
   const float valueRange = displayMax - displayMin;
   const float MUTE_MARK  = -100.0;
-
+  const float ENV_TAIL_PERIODS = 2.5;      // so viele LFO1-Perioden mit konstanter Endgeschwindigkeit bleiben hinter der Hüllkurve sichtbar
   // Schnappschuss: Core 0 ändert die Parameter laufend, während hier gezeichnet wird
   const float f1         = lfo1Frequency;
   const float a1         = lfo1Amplitude;
@@ -1699,6 +1712,23 @@ void drawLfoPreview(int left, int right, int top, int bottom)
   const float f2         = syncedLfo2Frequency(f1, lfo2Frequency, flags);
   const float livePhase  = liveLfo1Phase;
   const bool playing     = runSound;
+
+  // Hüllkurve: Geschwindigkeitsfaktor läuft linear von s0 auf s1 in envT Sekunden, danach konstant
+  const float envDur = (envelopeDuration < 0.1) ? 0.1 : envelopeDuration;
+  const float envA   = envelopeAmplitude / 100.0;
+  const float s0     = 1.0 + 0.95 * envA;
+  const float s1     = 1.0 - 0.95 * envA;
+  const float envT   = 5.0 / envDur;
+  const float envNow = envelopeValue;            // 1 = Start, 0 = Ende
+
+  // Fenster = Hüllkurvendauer + ein kurzes Stück mit konstanter Endgeschwindigkeit
+  const float f1Safe   = (f1 < 0.01) ? 0.01 : f1;
+  const float s1Safe   = (s1 < 0.05) ? 0.05 : s1;
+  float envTail = ENV_TAIL_PERIODS * 2.0 / (f1Safe * s1Safe);   // so lange dauern die gewünschten Perioden bei Endgeschwindigkeit
+  if (envTail < 0.1 * envT) envTail = 0.1 * envT;                // mindestens 10 % des Fensters, damit das Ende sichtbar bleibt
+  if (envTail > 0.5 * envT) envTail = 0.5 * envT;                // höchstens halb so lang wie die Hüllkurve
+  const float envWindow = envT + envTail;
+
 
   auto getWaveformValue = [](eLfoWaveform waveform, float phase) -> float
   {
@@ -1718,7 +1748,6 @@ void drawLfoPreview(int left, int right, int top, int bottom)
     return (phase < 0.5) ? phase * 2.0 : 2.0 - phase * 2.0;
   };
 
-  // Frequenz-Multiplikator von LFO1, entspricht calculateLFOWave1()
   auto getLFO1Multiplier = [&](float phase) -> float
   {
     float amplitudeFactor = a1 / 100.0;
@@ -1745,22 +1774,28 @@ void drawLfoPreview(int left, int right, int top, int bottom)
     return (((rawValue - 0.5) * 1.5) * amplitudeFactor) + 1.0;
   };
 
-  // Frequenz-Multiplikator von LFO2, entspricht calculateLFOWave2()
   auto getLFO2Multiplier = [&](float phase) -> float
   {
     return (((getWaveformValue(wf2, phase) - 0.5) * 1.5) * (a2 / 100.0)) + 1.0;
   };
 
-  // float W = computeDisplayWindow(f1); // zum stufigen Darstellen der LFO-Vorschau
-  float W = zoomWindow;                 // zum weichen Zoomen der LFO-Vorsch
+  const float W = withEnv ? envWindow : zoomWindow;      // Zeitfenster definieren
+
+  // Effektive Zeit unter der Hüllkurve: Integral der LFO-Geschwindigkeit
+  auto envTime = [&](float t) -> float
+  {
+    if (!withEnv) return t;
+    if (t <= envT) return s0 * t + (s1 - s0) * t * t / (2.0 * envT);
+    return (s0 + s1) * envT / 2.0 + s1 * (t - envT);
+  };
 
   // Produkt der Multiplikatoren an der Position xNorm (0..1) im Fenster; MUTE_MARK = Ton aus
   auto combinedAt = [&](float xNorm) -> float
   {
-    float t = xNorm * W;
-    float m1 = getLFO1Multiplier(t * f1 / 2.0);
+    float tau = envTime(xNorm * W);
+    float m1  = getLFO1Multiplier(tau * f1 / 2.0);
     if (m1 == MUTE_MARK) return MUTE_MARK;
-    return m1 * getLFO2Multiplier(t * f2 / 2.0);
+    return m1 * getLFO2Multiplier(tau * f2 / 2.0);
   };
 
   auto yOf = [&](float v) -> int
@@ -1771,26 +1806,85 @@ void drawLfoPreview(int left, int right, int top, int bottom)
     return y;
   };
 
-  // Kurve
-  bool previousValid = false;
-  int previousY = 0;
-
-  for (int x = left; x <= right; x++)
+  if (!withEnv)
   {
-    float v = combinedAt((float)(x - left) / (float)(right - left));
+    // Normale Kurve: ein Wert pro Pixel, mit Linien verbunden
+    bool previousValid = false;
+    int previousY = 0;
 
-    if (v == MUTE_MARK) { previousValid = false; continue; }
+    for (int x = left; x <= right; x++)
+    {
+      float v = combinedAt((float)(x - left) / (float)(right - left));
 
-    int y = yOf(v);
-    if (previousValid) oled.line(x - 1, previousY, x, y);
-    else               oled.dot(x, y);
+      if (v == MUTE_MARK) { previousValid = false; continue; }
 
-    previousY = y;
-    previousValid = true;
+      int y = yOf(v);
+      if (previousValid) oled.line(x - 1, previousY, x, y);
+      else               oled.dot(x, y);
+
+      previousY = y;
+      previousValid = true;
+    }
+  }
+  else
+  {
+    // Dichte Kurve: pro Pixelspalte mehrere Teilwerte, von Minimum bis Maximum eine senkrechte Linie
+    const int SUB = 6;
+    bool prevValid = false;
+    int prevLastY = 0;
+
+    for (int x = left; x <= right; x++)
+    {
+      int yMin = 10000, yMax = -1, lastY = 0;
+      bool any = false;
+
+      for (int s = 0; s < SUB; s++)
+      {
+        float xs = x + (float)s / SUB;
+        float v = combinedAt((xs - left) / (float)(right - left));
+        if (v == MUTE_MARK) continue;
+
+        int y = yOf(v);
+        if (y < yMin) yMin = y;
+        if (y > yMax) yMax = y;
+        lastY = y;
+        any = true;
+      }
+
+      if (!any) { prevValid = false; continue; }
+
+      if (prevValid)                              // lückenlos an die Vorgängerspalte anschließen
+      {
+        if (prevLastY < yMin) yMin = prevLastY;
+        if (prevLastY > yMax) yMax = prevLastY;
+      }
+
+      if (yMin == yMax) oled.dot(x, yMin);
+      else              oled.line(x, yMin, x, yMax);
+
+      prevLastY = lastY;
+      prevValid = true;
+    }
+
+    // Wo die Hüllkurve endet (gepunktet)
+    int xEnd = left + (int)(envT / W * (right - left));
+    if (xEnd < right - 1) {
+      for (int y = top; y <= bottom; y += 3) oled.dot(xEnd, y);
+    }
+
+    // Wo sie gerade steht, solange der Ton läuft
+    if (playing)
+    {
+      float tNow = (1.0 - envNow) * envT;
+      float frac = tNow / W;
+      if (frac > 1.0) frac = 1.0;
+      int xNow = left + (int)(frac * (right - left));
+      oled.line(xNow, top, xNow, bottom);
+    }
   }
 
-  // Wandernder Punkt: aktuelle Position von LFO1 im Fenster
-  if (playing)
+  // Wandernder Punkt nur in der normalen Vorschau
+  if (!withEnv && playing)
   {
     const int r = 2;                                    // Radius: 1 = 3x3, 2 = 5x5, 3 = 7x7 Pixel
 
@@ -1809,6 +1903,7 @@ void drawLfoPreview(int left, int right, int top, int bottom)
 }
 
 // Hüllkurve für die LFO-Geschwindigkeit: Faktor (0..2) über der Zeit
+/*
 void drawEnvelopeGraph(int left, int right, int top, int bottom) {
   const float windowSec = 6.0;                         // feste Zeitachse: Hüllkurve dauert 0.5 .. 5 s
   const float vMin = 0.0, vMax = 2.0;
@@ -1856,6 +1951,23 @@ void drawEnvelopeGraph(int left, int right, int top, int bottom) {
   // oled.print("s");
 }
 
+*/
+
+// Textzeile direkt unter der Kopfzeile, die die Hüllkurvenparameter anzeigt
+void drawEnvelopeText() {
+  float dur = (envelopeDuration < 0.1) ? 0.1 : envelopeDuration;
+  float a   = envelopeAmplitude / 100.0;
+
+  oled.setCursor(0, 1);
+  //oled.print("x");
+  //oled.print(1.0 + 0.95 * a, 2);
+  // oled.print(">");
+  // oled.print(1.0 - 0.95 * a, 2);
+  // oled.print(" ");
+  oled.print(5.0 / dur, 1);
+  oled.print("s");
+}
+
 // Balken: aktuelle Tonfrequenz (logarithmisch 20 Hz .. 16 kHz), Strich = Basisfrequenz
 void drawFreqBar(int xLeft, int xRight, int yTop, int yBottom) {
   float lm = liveModFreq;
@@ -1874,7 +1986,7 @@ void drawFreqBar(int xLeft, int xRight, int yTop, int yBottom) {
   }
 
   int xb = xOf(baseFrequency);
-  oled.line(xb, yTop - 1, xb, yBottom + 1);
+  oled.line(xb, yTop, xb, yBottom );
 }
 
 
@@ -1882,7 +1994,7 @@ void drawFreqBar(int xLeft, int xRight, int yTop, int yBottom) {
 void drawFireSlotBoxes(byte selectedButton) {
 
   const int boxWidth = 24;
-  const int boxTop = 35;
+  const int boxTop = 40;
   const int boxBottom = 61;
   const int startX = 4;
   const int boxGap = 8;
@@ -1916,7 +2028,7 @@ void drawFireSlotBoxes(byte selectedButton) {
     }
 
     // Nummer mittig platzieren
-    int textWidth = (slotNumber < 10) ? 6 : 12;
+    int textWidth = (slotNumber < 10) ? 6 : 12; // wenn 2stellig, dann 12 Pixel breit, sonst 6 Pixel
     int textX = x + (boxWidth - textWidth) / 2;
 
     oled.setCursor(textX, 6);
@@ -1962,7 +2074,7 @@ void drawBankSelectScreen() {
   // --------------------------------------------------
 
   oled.setScale(2);
-  oled.setCursor(2, 0);
+  oled.setCursor(30, 0);
   oled.print("Bank ");
   oled.print(bank);
 
@@ -2068,30 +2180,25 @@ void drawOLEDWaveform(){
   const int graphTop    = 11;
   const int graphBottom = 52;
 
-  // ------------------------------------------------------------
-  // Display löschen
-  // ------------------------------------------------------------
   oled.clear();
 
   // ------------------------------------------------------------
   // Kopfzeile
   // ------------------------------------------------------------
 
-  // oled.setCursor(0, 0);
-  // oled.print((int)baseFrequency);
-  // oled.print(" Hz");
-
-  drawDutyIcon(102, 2, 24, 5, duty); // x,y,w,h,duty Icon oben rechts in der Ecke
+  drawDutyIcon(102, 0, 24, 5, duty); // x,y,w,h,duty Icon oben rechts in der Ecke
   oled.setScale(1);              // danach wieder normale Schriftgröße
 
-  drawFreqBar(0, 92, 2, 6);            // Balken links, Marker reicht von y=1 bis y=7
+  drawFreqBar(0, 35, 0, 5);            // Balken links, Marker reicht von y=1 bis y=7
+
   if (modSelect == 2) {
-    drawEnvelopeGraph(graphLeft, graphRight, 20, graphBottom);   // oben Platz für die Textzeile lassen
+    // drawEnvelopeGraph(graphLeft, graphRight, 20, graphBottom);   // oben Platz für die Textzeile lassen
+    drawEnvelopeText();
+    drawLfoPreview(graphLeft, graphRight, 20, graphBottom, true);
   } else {
-    drawLfoPreview(graphLeft, graphRight, graphTop, graphBottom);
+    //drawLfoPreview(graphLeft, graphRight, graphTop, graphBottom);
+    drawLfoPreview(graphLeft, graphRight, graphTop, graphBottom, false);
   }
-
-
 
   // ------------------------------------------------------------
   // Aktuellen tatsächlichen Multiplikator anzeigen
@@ -2387,9 +2494,10 @@ void loop() {
   updateLEDs();
 
   // Überwachung und Debugprits
-  // if(chkLoop(1000)){
-  //   debug(oledUpdateActive?"OLED-Update ON":"OLED-Update OFF");
-  // }
+  //  if(chkLoop(200)){
+  //    //debug(oledUpdateActive?"OLED-Update ON":"OLED-Update OFF");
+  //    debug(String(valPotiFreqLFO) + " " + String(lfo1Frequency, 2));
+  //  }
 }
 
 ////////// CORE 1 /////////////
