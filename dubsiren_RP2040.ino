@@ -152,6 +152,14 @@ bool lfoToggleState = 0;
 // coreübergreifend, damit CORE0 und CORE1 darauf zugreifen können
 volatile byte shiftState = 0;
 
+// zeitliche Verzögerung der Shift1-Taste für BankSelect - ShiftMode
+unsigned long shift1PressStart = 0;
+bool shift1BankSelectActive = false;
+
+// zeitliche Verzögerung der LFO-Taste – Spezial-Flags
+unsigned long selectLFOoptionFlagsPressStart = 0;
+bool selectLFOoptionFlagsActive = false;
+
 // Modulationsselektor: 0:LFO1, 1: LFO2, 2:Envelope
 // wird gesetzt bei pos. Flange LFO1 oder LFO2 oder neg.Flange Shift1
 byte modSelect = 0; 
@@ -210,6 +218,9 @@ int oledPotiPitchBak = 0;
 int oledPotiFreqLFOBak = 0;
 int oledPotiAmpLFOBak = 0;
 
+// Display-Konstanten und variablen
+const unsigned long OLED_UPDATE_INTERVAL = 50;   // Mindestabstand zwischen zwei Redraws
+const unsigned long OLED_SETTLE_DELAY    = 200;  // Nachlauf nach der letzten Potibewegung
 // Volatile Variablen für die Displaydarstellung, die von beiden Kernen genutzt werden, 
 // weil CORE0 und CORE1 auf diese Variablen zugreifen dürfen
 volatile bool coreReady = false;        // Core 0 meldet: setup() ist fertig
@@ -217,8 +228,7 @@ volatile bool coreReady = false;        // Core 0 meldet: setup() ist fertig
 volatile bool displayDirty = true;               // true = beim Start einmal zeichnen
 //bool displayForce = false;                     // Erzwingen des Display-refresh, brauchen wir angelblich nicht mehr wegen CORE1
 volatile unsigned long displaySettleTime = 0;    // Zeitpunkt für den "Nachlauf"-Refresh
-const unsigned long OLED_UPDATE_INTERVAL = 50;   // Mindestabstand zwischen zwei Redraws
-const unsigned long OLED_SETTLE_DELAY    = 200;  // Nachlauf nach der letzten Potibewegung
+
 
 volatile unsigned long lastPotMoveTime = 0;   // Zeitpunkt der letzten Potibewegung (für den Zoom)
 
@@ -255,6 +265,7 @@ void drawBankSelectScreen();
 void drawSaveScreen();
 void drawFireSlotBoxes(byte selectedButton);
 void drawResetScreen();
+void drawLFOOptionsScreen();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -969,6 +980,9 @@ void updateFireKeys(){
 
 void updateKeys(){
 
+  // Dauer für Langdruck der Shift und LFOSelect in Millisekunden
+  const unsigned long longPressDuration = 500;
+
   shift1.update();
   shift2.update();
   selectLFO.update();
@@ -978,47 +992,80 @@ void updateKeys(){
   fire2.update();
   fire3.update();
   fire4.update();
-
+  // Beginn des Shift1-Tastendrucks
+  
+  // Shift1 gedrückt
   if (shift1.fell()) {
-    dataSaved = false;
-    //selectedFireLed = bank;
+      dataSaved = false;
+      shift1PressStart = millis();
+      shift1BankSelectActive = false;
   }
+
+  // Bank Select nach einer Sekunde aktivieren
+  if (!shift1.read() &&
+      !shift1BankSelectActive &&
+      millis() - shift1PressStart >= longPressDuration) {
+
+      shift1BankSelectActive = true;
+  }
+
+  // LFOSelect gedrückt
+  if (selectLFO.fell()) {
+      dataSaved = false;
+      selectLFOoptionFlagsPressStart = millis();
+      selectLFOoptionFlagsActive = false;
+  }
+
+  // LFOSelect nach einer Sekunde aktivieren
+  if (!selectLFO.read() &&
+      !selectLFOoptionFlagsActive &&
+      millis() - selectLFOoptionFlagsPressStart >= longPressDuration) {
+
+      selectLFOoptionFlagsActive = true;
+  }
+
+ 
   if (shift2.fell()) {
     dataSaved = false;
   }
 
-  if (selectLFO.fell()) {
-    dataSaved = false;       // jeder Druck der LFO-Taste macht das Umschalten wieder scharf
-  }
+  // if (selectLFO.fell()) {
+  //   dataSaved = false;       // jeder Druck der LFO-Taste macht das Umschalten wieder scharf
+  // }
 
-
- 
-    // fallende Flanke (Taster losgelassen)
+  // fallende Flanke (Taster losgelassen)
   // LFO1 oder LFO2 wählen  
   if (selectLFO.rose()) {
-    if (!dataSaved){
+    if (!selectLFOoptionFlagsActive && !dataSaved){
       lfoToggleState = !lfoToggleState;
       modSelect = lfoToggleState; // Modulationsquelle ist 0 oder 1, weil LFO-Selektor gedrückt wurde
       setWaveFormSwitch();
       setChangeState(0,0,0,0);
       
     }
-  }
     
-  
-  // Button Bank Select (Shift1) neg.Flanke
-  if (shift1.rose()){
-    if(!dataSaved){
-      if(modSelect == 2){
-        modSelect = lfoToggleState;
-      }else{
-        modSelect = 2;
-        // lfoToggleState = 0;
-      }
-      
-      setChangeState(0,0,0,0);
-    }
   }
+
+  // Shift1 losgelassen
+  // Button Bank Select (Shift1) – positive Flanke
+  if (shift1.rose()) {
+
+      // Nur bei kurzem Tastendruck und wenn nicht gespeichert wurde
+      if (!shift1BankSelectActive && !dataSaved) {
+
+          if (modSelect == 2) {
+              modSelect = lfoToggleState;
+          } else {
+              modSelect = 2;
+              // lfoToggleState = 0;
+          }
+
+          setChangeState(0,0,0,0);
+      }
+      // Für den nächsten Tastendruck zurücksetzen
+      shift1BankSelectActive = false;
+  }
+  
 
   if (selectWaveForm.rose()) {
       setChangeState(0,0,0,0);
@@ -1026,8 +1073,17 @@ void updateKeys(){
   }
 
   selectedFireLedState = 0;
-  shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),!selectLFO.read(),0,0,0,0,0);
+  // SHiftstate setzen
+  // shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),!selectLFO.read(),0,0,0,0,0);
+  shiftState = combineBoolsToByte(
+    shift1BankSelectActive && !shift1.read(),
+    !shift2.read(),
+    selectLFOoptionFlagsActive && !selectLFO.read(),
+    0,0,0,0,0
+  ); 
+  
   //Shiftstate ist > 0 wenn irgendeine Shift-taste gedrückt ist, die eine 2.FUnktion während des Drückens haben soll
+  
   static byte prevShift = 255;
   if (shiftState != prevShift) {
     if (shiftState == 1 || shiftState == 2) shiftSelectedFireButton = 0;
@@ -1539,20 +1595,7 @@ void updateDisplay() {
   // --------------------------------------------------
 
   static byte previousShiftState = 255;
-  /*
-  if (shiftState != previousShiftState) {
-    previousShiftState = shiftState;
-    // Neue Auswahl bei Bank Select oder Save beginnen
-    if (shiftState == 1 || shiftState == 2) {
-        shiftSelectedFireButton = 0;
-        // Save-Bestätigung beim Eintritt in Save zurücksetzen
-        if (shiftState == 2) {
-            saveConfirmation = false;
-        }
-    }
-    displayDirty = true;
-  }
-  */
+ 
   static byte rawShift = 255;
   static unsigned long rawShiftSince = 0;
   static byte stableShift = 255;
@@ -1585,8 +1628,8 @@ void updateDisplay() {
   // Sonderbildschirme: Bank Select, Save, Reset
   // --------------------------------------------------
 
-  if (stableShift == 1 || stableShift == 2 || stableShift == 3) { 
-  //if (shiftState == 1 || shiftState == 2 || shiftState == 3) {
+  if (stableShift == 1 || stableShift == 2 ||  stableShift == 3 || stableShift == 4) {
+
 
     if (!displayDirty) return;
 
@@ -1603,6 +1646,9 @@ void updateDisplay() {
     }
     else if (stableShift == 3) {
       drawResetScreen();
+    }
+    else if (stableShift == 4) {
+      drawLFOOptionsScreen();
     }
 
     return;
@@ -1958,7 +2004,7 @@ void drawEnvelopeText() {
   float dur = (envelopeDuration < 0.1) ? 0.1 : envelopeDuration;
   float a   = envelopeAmplitude / 100.0;
 
-  oled.setCursor(0, 1);
+  oled.setCursor(105, 1);
   //oled.print("x");
   //oled.print(1.0 + 0.95 * a, 2);
   // oled.print(">");
@@ -2060,6 +2106,69 @@ void drawResetScreen() {
   oled.setCursor(18, 5);
   oled.print("ENVELOPE: OFF");
 
+  oled.update();
+}
+
+// LFO-Optionen-Bildschirm (ShiftState == 4)
+void drawLFOOptionsScreen() {
+
+  oled.clear();
+
+  // --------------------------------------------------
+  // Überschrift
+  // --------------------------------------------------
+
+  oled.setScale(1);
+  //oled.setCursor(0, 0);
+  //oled.print("LFO-Optionen");
+
+  // Trennlinie unter der Überschrift
+  // oled.line(0, 8, 127, 10);
+
+  // --------------------------------------------------
+  // Optionstexte und zugehörige Bitmasken
+  // --------------------------------------------------
+
+  const char* optionNames[4] = {
+    "LFO2 Restart",
+    "LFO2 Sync",
+    "LFO1 Amp x2",
+    "no function"
+  };
+
+  const byte optionMasks[4] = {
+    0b00000001,
+    0b00000010,
+    0b00000100,
+    0b00001000
+  };
+
+const byte rowPositions[4] = {1, 3, 5, 7};
+const byte rowHeights = 8;
+const byte rectHeight = 10;
+//oled.setScale(1);
+for (byte i = 0; i < 4; i++) {
+
+    byte row = rowPositions[i];
+    bool active = (optionFlags & optionMasks[i]);
+
+    // Aktivierte Option: gesamte Zeile invertieren
+    if (active) {
+      oled.rect(0, row * rowHeights -3, 127, row * rowHeights + rectHeight, OLED_FILL);
+      oled.invertText(true);
+    }
+
+    // Bezeichnung
+    oled.setCursor(15, row);
+    oled.print(optionNames[i]);
+
+    // Status
+    oled.setCursor(0, row);
+    oled.print(String(i + 1));
+
+    oled.invertText(false);
+  }
+  //oled.setScale(1);
   oled.update();
 }
 
