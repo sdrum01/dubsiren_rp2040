@@ -14,7 +14,6 @@ GyverOLED<SSD1306_128x64, OLED_BUFFER> oled;
 
 // Version
 #define VER "1.2.1"
-
 const byte LOGLEVEL = 1;
 
 // Definition der IO's
@@ -25,18 +24,15 @@ const int lfoAmpPotPin = A2;   // Potentiometer für die Amplitude des LFO
 const int wave_outputPin = 5; // Pin, an dem der Rechteckton ausgegeben wird
 const int wave_mutePin = 22; // Pin zum Muten des Ausgangssignals
 
-
 const int shiftPin1 = 6;  // shift-Button : Envelope / Bank Select (during hold)
 const int shiftPin2 = 7;  // SAVE Button
 const int selectWaveFormPin = 8; // WaveForm Select Button
 const int selectLFOPin = 9;  // Togglebutton LFO Source / Toggle Special Flags (during hold)
 
-
 const int firePin1 = 18;  // Steuerpin für die Tonaktivierung1
 const int firePin2 = 19;  // Steuerpin für die Tonaktivierung2
 const int firePin3 = 20;  // Steuerpin für die Tonaktivierung3
 const int firePin4 = 21;  // Steuerpin für die Tonaktivierung4
-
 
 // LED 
 const int LEDLfo1 = 17; 
@@ -149,7 +145,7 @@ volatile float liveModFreq = 0;    // aktuelle Tonfrequenz in Hz (-100 = Ton aus
 bool lfoToggleState = 0;
 
 // shiftState: Byte, in dem eine Kombination aus Shift1 und Shift2 gespeichert wird, 
-// coreübergreifend, damit CORE0 und CORE1 darauf zugreifen können
+// coreübergreifend
 volatile byte shiftState = 0;
 
 // zeitliche Verzögerung der Shift1-Taste für BankSelect - ShiftMode
@@ -221,12 +217,12 @@ int oledPotiAmpLFOBak = 0;
 // Display-Konstanten und variablen
 const unsigned long OLED_UPDATE_INTERVAL = 50;   // Mindestabstand zwischen zwei Redraws
 const unsigned long OLED_SETTLE_DELAY    = 200;  // Nachlauf nach der letzten Potibewegung
-// Volatile Variablen für die Displaydarstellung, die von beiden Kernen genutzt werden, 
-// weil CORE0 und CORE1 auf diese Variablen zugreifen dürfen
+
+// volatile, weil CORE0 und CORE1 auf diese Variablen zugreifen dürfen
 volatile bool coreReady = false;        // Core 0 meldet: setup() ist fertig
 // Display-Refresh notwendig
 volatile bool displayDirty = true;               // true = beim Start einmal zeichnen
-//bool displayForce = false;                     // Erzwingen des Display-refresh, brauchen wir angelblich nicht mehr wegen CORE1
+
 volatile unsigned long displaySettleTime = 0;    // Zeitpunkt für den "Nachlauf"-Refresh
 
 
@@ -258,7 +254,6 @@ volatile byte savedFireNumber = 0;
 
 // Prototypen von Funktionen, falls der Kompiler keine Prototyp erzeugt
 void drawOLEDWaveform();
-//void drawLfoPreview(int left, int right, int top, int bottom);
 void drawLfoPreview(int left, int right, int top, int bottom, bool withEnv);
 void drawFreqBar(int xLeft, int xRight, int yTop, int yBottom);
 void drawBankSelectScreen();
@@ -899,8 +894,7 @@ void loadOrSave(byte fireButton){
         JSON2values(_json);
         setChangeState(0,0,0,0);
         setWaveFormSwitch();
-        // requestDisplayUpdateNow();   // Display sofort aktualisieren, damit die Werte sofort sichtbar sind
-
+       
         // Merker, welcher Firebutton als letztes gedrückt wurde
         
         actualFireButtonBak = fireButton;
@@ -915,7 +909,7 @@ void loadOrSave(byte fireButton){
 
 // Wahlschalter, welche WaveForm der LFO machen soll
 void enumWaveForm(){
-  // 
+  
   valLfoWaveformSwitch++;
   if( (valLfoWaveformSwitch < 0)||(valLfoWaveformSwitch > 2)){
     valLfoWaveformSwitch = 0;
@@ -936,8 +930,6 @@ void updateFireKeys(){
       loadOrSave(actualFireButton);
       longPressDetected = false;     // Reset des Langdruck-Flags
     }
-    
-    
   }
   if (fire2.fell()){
     actualFireButton = 2;
@@ -962,7 +954,6 @@ void updateFireKeys(){
       loadOrSave(actualFireButton);
       longPressDetected = false;     // Reset des Langdruck-Flags
     }
-    
   }
   if (fire4.fell()){
     actualFireButton = 4;
@@ -974,7 +965,6 @@ void updateFireKeys(){
       loadOrSave(actualFireButton);
       longPressDetected = false;     // Reset des Langdruck-Flags
     }
-    
   }
 }
 
@@ -1029,10 +1019,6 @@ void updateKeys(){
     dataSaved = false;
   }
 
-  // if (selectLFO.fell()) {
-  //   dataSaved = false;       // jeder Druck der LFO-Taste macht das Umschalten wieder scharf
-  // }
-
   // fallende Flanke (Taster losgelassen)
   // LFO1 oder LFO2 wählen  
   if (selectLFO.rose()) {
@@ -1059,7 +1045,6 @@ void updateKeys(){
               modSelect = 2;
               // lfoToggleState = 0;
           }
-
           setChangeState(0,0,0,0);
       }
       // Für den nächsten Tastendruck zurücksetzen
@@ -1152,11 +1137,9 @@ void updateKeys(){
     lastFireButtonPressed = actualFireButton;
   }
 
-  
   if(shiftState == 0){
     
     selectedFireLed = lastFireButtonPressed;
-    
   }
   selectedFireLedState = runSound | selectedFireLedState;
 }
@@ -1173,8 +1156,6 @@ int readPotiFiltered(int pin, int &held) {
 
 void updatePotis(){
 
- 
-  
   // --------------------------------------------------
   // Potis einlesen
   // --------------------------------------------------
@@ -1259,7 +1240,6 @@ void updateLEDs(){
   uint slice_num_led_green = pwm_gpio_to_slice_num(LEDLfo2);
   uint slice_num_led_red = pwm_gpio_to_slice_num(LEDLfo1);
 
-
   // LED Grün
   
   if(lfoToggleState == 0){
@@ -1282,15 +1262,10 @@ void updateLEDs(){
 
   digitalWrite(LEDShift1,modSelect == 2);
   digitalWrite(LEDSave,shiftState == 2 && blinkState);
-
-  // Debug
-  //digitalWrite(LEDSave,oledUpdateActive);
   
   digitalWrite(LEDWaveSquare,valLfoWaveformSwitch == 0);
   digitalWrite(LEDWaveTri,valLfoWaveformSwitch == 1);
   digitalWrite(LEDWaveSaw,valLfoWaveformSwitch == 2);
-
-
 
   if(shiftState == 4){
     digitalWrite(LEDFire1,optionFlags & 0b00000001);
@@ -1303,8 +1278,6 @@ void updateLEDs(){
     digitalWrite(LEDFire3,selectedFireLedState && selectedFireLed == 3);
     digitalWrite(LEDFire4,selectedFireLedState && selectedFireLed == 4);
   }
-  
-
 }
  
 
@@ -1476,7 +1449,6 @@ void readSerial(){
           String fileName = "fire" + slot + ".json";
           bool success = writeSettings(jsonOut, fileName);
 
-
           Serial.println("");
           Serial.print("Saved slot ");
           Serial.print(slot);
@@ -1503,11 +1475,6 @@ void setup_display(){
   Wire.setClock(500000);
 
   oled.init();
-  // init buffer
-  // for (int i = 0; i < 128; i++) {
-  //   waveformDisplay[i] = 1.0;
-  // }
-
   oled.clear();
   oled.setCursor(0, 0);
 
@@ -1680,23 +1647,6 @@ void updateDisplay() {
   drawOLEDWaveform();
 }
 
-
-/*
-float computeDisplayWindow(float f1) {
-  const float N_MIN  = 1.0;             // mindestens so viele LFO1-Perioden sichtbar
-  const float N_MAX  = 10.0;            // ab so vielen Perioden springt der Zoom zur nächsten Stufe
-  const float W0     = 0.1;             // kleinste Fensterlänge in Sekunden
-  const float FACTOR = N_MAX / N_MIN;   // Abstand der Zoomstufen
-
-  if (f1 < 0.01) f1 = 0.01;             // Schutz gegen Division durch 0
-
-  float limit = N_MAX * 2.0 / f1;       // N_MAX Perioden von LFO1 in Sekunden (Periode = 2 / f1)
-
-  float W = W0;
-  while (W * FACTOR < limit) W *= FACTOR;
-  return W;
-}
-*/
 
 // Kleines Wellenform-Symbol (2 Perioden) in das Rechteck x..x+w, y..y+h-1
 void drawWaveIcon(int x, int y, int w, int h, eLfoWaveform wf) {
@@ -1948,56 +1898,6 @@ void drawLfoPreview(int left, int right, int top, int bottom, bool withEnv)
   }
 }
 
-// Hüllkurve für die LFO-Geschwindigkeit: Faktor (0..2) über der Zeit
-/*
-void drawEnvelopeGraph(int left, int right, int top, int bottom) {
-  const float windowSec = 6.0;                         // feste Zeitachse: Hüllkurve dauert 0.5 .. 5 s
-  const float vMin = 0.0, vMax = 2.0;
-
-  float dur = (envelopeDuration < 0.1) ? 0.1 : envelopeDuration;
-  float tEnv   = 5.0 / dur;                            // Dauer bis zum Endwert in Sekunden
-  float a      = envelopeAmplitude / 100.0;
-  float vStart = 1.0 + 0.95 * a;                       // Faktor beim Tastendruck
-  float vEnd   = 1.0 - 0.95 * a;                       // Faktor am Ende
-
-  auto yOf = [&](float v) -> int {
-    float n = (v - vMin) / (vMax - vMin);
-    int y = bottom - (int)(n * (bottom - top));
-    if (y < top)    y = top;
-    if (y > bottom) y = bottom;
-    return y;
-  };
-
-  // Neutrallinie (Faktor 1.0), gepunktet
-  int yOne = yOf(1.0);
-  for (int x = left; x <= right; x += 4) oled.dot(x, yOne);
-
-  // Hüllkurve, exakt wie in calculateEnvelope()
-  int prevY = 0;
-  for (int x = left; x <= right; x++) {
-    float t  = (float)(x - left) / (float)(right - left) * windowSec;
-    float ev = 1.0 - t / tEnv;                         // entspricht envelopeValue
-    if (ev < 0.0) ev = 0.0;
-    float v = ((ev - 0.5) * 1.9) * a + 1.0;
-
-    int y = yOf(v);
-    if (x > left) oled.line(x - 1, prevY, x, y);
-    else          oled.dot(x, y);
-    prevY = y;
-  }
-
-  // // Textzeile direkt unter der Kopfzeile
-  // oled.setCursor(0, 1);
-  // oled.print("x");
-  // oled.print(vStart, 2);
-  // oled.print(">");
-  // oled.print(vEnd, 2);
-  // oled.print(" ");
-  // oled.print(tEnv, 1);
-  // oled.print("s");
-}
-
-*/
 
 // Textzeile direkt unter der Kopfzeile, die die Hüllkurvenparameter anzeigt
 void drawEnvelopeText() {
@@ -2143,11 +2043,11 @@ void drawLFOOptionsScreen() {
     0b00001000
   };
 
-const byte rowPositions[4] = {1, 3, 5, 7};
-const byte rowHeights = 8;
-const byte rectHeight = 10;
-//oled.setScale(1);
-for (byte i = 0; i < 4; i++) {
+  const byte rowPositions[4] = {1, 3, 5, 7};
+  const byte rowHeights = 8;
+  const byte rectHeight = 10;
+
+  for (byte i = 0; i < 4; i++) {
 
     byte row = rowPositions[i];
     bool active = (optionFlags & optionMasks[i]);
@@ -2215,27 +2115,7 @@ void drawBankSelectScreen() {
   oled.update();
 }
 
-
-/*
 // Save-Bildschirm
-void drawSaveScreen() {
-
-  oled.clear();
-
-  // Überschrift
-  oled.setScale(2);
-  oled.setCursor(0, 0);
-  oled.print("Save to...");
-
-  oled.setScale(1);
-
-  // Vier Speicherplätze der gewählten Bank
-  drawFireSlotBoxes(shiftSelectedFireButton);
-
-  oled.update();
-}
-*/
-
 void drawSaveScreen() {
 
     oled.clear();
@@ -2346,9 +2226,6 @@ void setup() {
   previousMillisLFO1 = millis();
   previousMillisLFO2 = millis();
   previousMillisEnv  = millis();
-
-  // Initialize the display
-  //setup_display();
 
   // wave-output defaultmäßig as input, da Hochohmig schalten wegen dem knacks
   pinMode(wave_outputPin, INPUT);
@@ -2569,9 +2446,6 @@ void loop() {
   }
   // beide Shift-Tasten zugleich gedrückt, Reset LFO2 Werte
   if(shiftState == 3){
-    // if (lfo2Amplitude != 0 || envelopeAmplitude != 0) {
-    //   requestDisplayUpdate();      // nur einmal, wenn sich wirklich etwas ändert
-    // }
     bool changed = (lfo2Amplitude != 0 || envelopeAmplitude != 0);
     lfo2Amplitude = 0;
     envelopeAmplitude = 0;
@@ -2583,16 +2457,15 @@ void loop() {
 
   envelope = calculateEnvelope(envelopeDuration,envelopeAmplitude);
   lfo1ValueActual = calculateLFOWave1(lfo1Frequency * (envelope), lfo1Amplitude);
-  //lfo2ValueActual = calculateLFOWave2(lfo2Frequency * (envelope), lfo2Amplitude);
-    lfo2ValueActual = calculateLFOWave2(getLfo2Frequency() * (envelope), lfo2Amplitude);
+  lfo2ValueActual = calculateLFOWave2(getLfo2Frequency() * (envelope), lfo2Amplitude);
    
-   float newModulatedFrequency = 0;
-   if(lfo1ValueActual == -100){
+  float newModulatedFrequency = 0;
+  if(lfo1ValueActual == -100){
     newModulatedFrequency = lfo1ValueActual;
-   }else{
+  }else{
     newModulatedFrequency = baseFrequency * lfo1ValueActual * lfo2ValueActual;
-   }
-   // Reset LFO values if the start button is false
+  }
+
   // Betriebsanzeige
   blink(50);
   // für den Punkt auf dem Display
@@ -2604,7 +2477,6 @@ void loop() {
 
   // Überwachung und Debugprits
   //  if(chkLoop(200)){
-  //    //debug(oledUpdateActive?"OLED-Update ON":"OLED-Update OFF");
   //    debug(String(valPotiFreqLFO) + " " + String(lfo1Frequency, 2));
   //  }
 }
