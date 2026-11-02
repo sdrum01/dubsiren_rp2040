@@ -72,6 +72,8 @@ byte lastFireButtonPressed = 0;
 volatile byte bank = 1;
 byte bankBak = 1;
 
+volatile byte activeSlot = 1;      // Speicherplatz (1..16), dessen Daten gerade geladen sind
+
 // wenn die Firebutton lange gedrückt sind
 bool longPressDetected = false;
 
@@ -878,6 +880,8 @@ void loadOrSave(byte fireButton){
       String _json = values2JSON();
       dataSaved = writeSettings(_json,fileName);
 
+      if (dataSaved) activeSlot = buttonName;     // gespeichert: dieser Platz ist jetzt der aktive
+
       // Ergebnis für OLED bereitstellen
       saveSucceeded = dataSaved;
       saveConfirmation = true;
@@ -898,6 +902,7 @@ void loadOrSave(byte fireButton){
         // Merker, welcher Firebutton als letztes gedrückt wurde
         
         actualFireButtonBak = fireButton;
+        activeSlot = buttonName; // übergeben ans Display, damit es die richtige Fire-Taste anzeigt
         //debug("actualFireButtonBak="+actualFireButtonBak);
         debug(_json);
       }
@@ -1027,7 +1032,7 @@ void updateKeys(){
       modSelect = lfoToggleState; // Modulationsquelle ist 0 oder 1, weil LFO-Selektor gedrückt wurde
       setWaveFormSwitch();
       setChangeState(0,0,0,0);
-      
+      selectLFOoptionFlagsActive = false;     // für den nächsten Druck zurücksetzen
     }
     
   }
@@ -1058,14 +1063,20 @@ void updateKeys(){
   }
 
   selectedFireLedState = 0;
+
+  bool shift1Down = !shift1.read();
+  // Save erst melden, wenn Shift 1 nicht gedrückt ist, aber der Langdruck noch aussteht
+  bool saveKey = !shift2.read() && !(shift1Down && !shift1BankSelectActive);
+
+
   // SHiftstate setzen
   // shiftState = combineBoolsToByte(!shift1.read(),!shift2.read(),!selectLFO.read(),0,0,0,0,0);
   shiftState = combineBoolsToByte(
-    shift1BankSelectActive && !shift1.read(),
-    !shift2.read(),
+    shift1BankSelectActive && shift1Down,
+    saveKey,
     selectLFOoptionFlagsActive && !selectLFO.read(),
     0,0,0,0,0
-  ); 
+  );
   
   //Shiftstate ist > 0 wenn irgendeine Shift-taste gedrückt ist, die eine 2.FUnktion während des Drückens haben soll
   
@@ -1560,8 +1571,6 @@ void updateDisplay() {
   // --------------------------------------------------
   // Änderung des Shift-Status erkennen
   // --------------------------------------------------
-
-  static byte previousShiftState = 255;
  
   static byte rawShift = 255;
   static unsigned long rawShiftSince = 0;
@@ -1649,25 +1658,57 @@ void updateDisplay() {
 
 
 // Kleines Wellenform-Symbol (2 Perioden) in das Rechteck x..x+w, y..y+h-1
-void drawWaveIcon(int x, int y, int w, int h, eLfoWaveform wf) {
+// void drawWaveIcon(int x, int y, int w, int h, eLfoWaveform wf) {
+//   const float periods = 2.0;
+//   float perW = (float)w / periods;
+//   int prevY = 0;
+
+//   for (int px = 0; px < w; px++) {
+//     float phase = fmodf(px / perW, 1.0);
+
+//     float v = 0.0;
+//     switch (wf) {
+//       case SQUARE:   v = (phase >= 0.25 && phase < 0.75) ? 1.0 : 0.0; break;   // wie im LFO: erst low
+//       case TRIANGLE: v = (phase < 0.5) ? phase * 2.0 : 2.0 - phase * 2.0; break;
+//       case SAWTOOTH: v = 1.0 - phase; break;                                   // fallend wie im LFO
+//     }
+
+//     int py = y + (h - 1) - (int)(v * (h - 1) + 0.5);
+
+//     if (px > 0) oled.line(x + px - 1, prevY, x + px, py);
+//     else        oled.dot(x + px, py);
+
+//     prevY = py;
+//   }
+// }
+
+// Kleines Wellenform-Symbol (2 Perioden) in das Rechteck x..x+w, y..y+h-1; inverted = weiß hinterlegt, Kurve schwarz
+void drawWaveIcon(int x, int y, int w, int h, eLfoWaveform wf, bool inverted) {
   const float periods = 2.0;
   float perW = (float)w / periods;
   int prevY = 0;
+
+  const byte ink = inverted ? OLED_CLEAR : OLED_FILL;      // Farbe der Kurve
+
+  if (inverted) {
+    int yBot = (y + h < 63) ? y + h : 63;                  // nicht über den unteren Displayrand hinaus
+    oled.rect(x - 2, y - 1, x + w + 1, yBot, OLED_FILL);   // weißer Hintergrund mit Rand
+  }
 
   for (int px = 0; px < w; px++) {
     float phase = fmodf(px / perW, 1.0);
 
     float v = 0.0;
     switch (wf) {
-      case SQUARE:   v = (phase >= 0.25 && phase < 0.75) ? 1.0 : 0.0; break;   // wie im LFO: erst low
+      case SQUARE:   v = (phase >= 0.25 && phase < 0.75) ? 1.0 : 0.0; break;
       case TRIANGLE: v = (phase < 0.5) ? phase * 2.0 : 2.0 - phase * 2.0; break;
-      case SAWTOOTH: v = 1.0 - phase; break;                                   // fallend wie im LFO
+      case SAWTOOTH: v = 1.0 - phase; break;
     }
 
     int py = y + (h - 1) - (int)(v * (h - 1) + 0.5);
 
-    if (px > 0) oled.line(x + px - 1, prevY, x + px, py);
-    else        oled.dot(x + px, py);
+    if (px > 0) oled.line(x + px - 1, prevY, x + px, py, ink);
+    else        oled.line(x + px, py, x + px, py, ink);    // Startpunkt als Linie der Länge 0
 
     prevY = py;
   }
@@ -1904,14 +1945,13 @@ void drawEnvelopeText() {
   float dur = (envelopeDuration < 0.1) ? 0.1 : envelopeDuration;
   float a   = envelopeAmplitude / 100.0;
 
-  oled.setCursor(105, 1);
-  //oled.print("x");
-  //oled.print(1.0 + 0.95 * a, 2);
-  // oled.print(">");
-  // oled.print(1.0 - 0.95 * a, 2);
-  // oled.print(" ");
-  oled.print(5.0 / dur, 1);
-  oled.print("s");
+  // oled.setCursor(105, 1);
+
+  // oled.print(5.0 / dur, 1);
+  // oled.print("s");
+  char buf[8];
+  formatTime(buf, sizeof(buf), 5.0 / dur); 
+  printRight(1, buf);
 }
 
 // Balken: aktuelle Tonfrequenz (logarithmisch 20 Hz .. 16 kHz), Strich = Basisfrequenz
@@ -2054,7 +2094,7 @@ void drawLFOOptionsScreen() {
 
     // Aktivierte Option: gesamte Zeile invertieren
     if (active) {
-      oled.rect(0, row * rowHeights -3, 127, row * rowHeights + rectHeight, OLED_FILL);
+      oled.rect(0, row * rowHeights - 4, 127, min(row * rowHeights + rectHeight, 63), OLED_FILL); // Mit Begrenzung, damit die Box nicht über den Rand hinausgeht
       oled.invertText(true);
     }
 
@@ -2163,10 +2203,47 @@ void drawSaveScreen() {
     oled.update();
 }
 
+// Hilfsfunktionen zum Anzeigen einer Textzeile auf dem OLED-Display
+// Text rechtsbündig in einer Textzeile ausgeben (6 Pixel pro Zeichen bei Schriftgröße 1)
+
+// void printRight(int row, const char* text) {
+//   int x = 128 - (int)strlen(text) * 6;
+//   if (x < 0) x = 0;
+//   oled.setCursor(x, row);
+//   oled.print(text);
+// }
+
+// Text rechtsbündig in einer Textzeile, mit schwarzem Hintergrund (überdeckt die Kurve darunter)
+void printRight(int row, const char* text) {
+  int w = (int)strlen(text) * 6;
+  int x = 128 - w;
+  if (x < 2) x = 2;
+  int y = row * 8;
+
+  int yTop = (y > 0) ? y - 1 : 0;                      // 1 Pixel Rand oben und unten
+  int yBot = (y + 8 < 63) ? y + 8 : 63;
+  oled.rect(x - 2, yTop, 127, yBot, OLED_CLEAR);       // schwarzer Balken bis zum Displayrand
+
+  oled.setCursor(x, row);
+  oled.print(text);
+}
+
+// Zeit als Text: unter 1 s in ms, darüber in Sekunden mit einer Nachkommastelle
+void formatTime(char* buf, size_t n, float seconds) {
+  if (seconds < 1.0) {
+    snprintf(buf, n, "%dms", (int)(seconds * 1000.0 + 0.5));
+  } else if (seconds < 10.0) {
+    int tenths = (int)(seconds * 10.0 + 0.5);
+    snprintf(buf, n, "%d.%ds", tenths / 10, tenths % 10);
+  } else {
+    snprintf(buf, n, "%ds", (int)(seconds + 0.5));
+  }
+}
+
 void drawOLEDWaveform(){
   const int graphLeft   = 0;
   const int graphRight  = 127;
-  const int graphTop    = 11;
+  const int graphTop    = 11; // 11
   const int graphBottom = 52;
 
   oled.clear();
@@ -2182,12 +2259,29 @@ void drawOLEDWaveform(){
 
   if (modSelect == 2) {
     // drawEnvelopeGraph(graphLeft, graphRight, 20, graphBottom);   // oben Platz für die Textzeile lassen
-    drawEnvelopeText();
     drawLfoPreview(graphLeft, graphRight, 20, graphBottom, true);
+    drawEnvelopeText();
   } else {
-    //drawLfoPreview(graphLeft, graphRight, graphTop, graphBottom);
+    // erst Wellenform, dann Textzeile, damit die Textzeile nicht von der Kurve überdeckt wird
     drawLfoPreview(graphLeft, graphRight, graphTop, graphBottom, false);
+    // Textzeile mit Dauer der Perioden, nur wenn die Hüllkurve nicht angezeigt wird
+    //char buf[8];
+    //formatTime(buf, sizeof(buf), zoomWindow);
+    //printRight(5, buf);                        // Zeile 4, rechts unter der Kopfzeile
   }
+
+    // Aktiver Speicherplatz als große Zahl ganz oben, mittig
+    char buf[4];
+    snprintf(buf, sizeof(buf), "%d", (int)activeSlot);
+
+    int w = (int)strlen(buf) * 12;                     // 12 Pixel pro Zeichen bei Schriftgröße 2
+    int x = (128 - w) / 2;
+    oled.rect(x - 2, 0, x + w + 1, 16, OLED_CLEAR);    // schwarzer Hintergrund hinter der Zahl
+
+    oled.setScale(2);
+    oled.setCursor(x, 0);
+    oled.print(buf);
+    oled.setScale(1);
 
   // ------------------------------------------------------------
   // Aktuellen tatsächlichen Multiplikator anzeigen
@@ -2196,21 +2290,23 @@ void drawOLEDWaveform(){
 
   // Unten: Wellenform-Symbole mit Amplitude, links LFO1, rechts LFO2
   oled.setCursor(0, 7);
-  oled.invertText(modSelect == 0);        // aktuell mit den Potis bearbeiteter LFO: Label invertiert
+  //oled.invertText(modSelect == 0);        // aktuell mit den Potis bearbeiteter LFO: Label invertiert
   oled.print("1");
   oled.invertText(false);
-  drawWaveIcon(9, 56, 24, 7, lfo1Waveform);
-  oled.setCursor(36, 7);
-  oled.print((int)lfo1Amplitude);
+  //drawWaveIcon(9, 56, 24, 8, lfo1Waveform);
+  drawWaveIcon(9,  56, 24, 7, lfo1Waveform, modSelect == 0);
+  //oled.setCursor(36, 7);
+  //oled.print((int)lfo1Amplitude);
   
 
-  oled.setCursor(66, 7);
-  oled.invertText(modSelect == 1);
+  oled.setCursor(93, 7);
+  //oled.invertText(modSelect == 1);
   oled.print("2");
   oled.invertText(false);
-  drawWaveIcon(75, 56, 24, 7, lfo2Waveform);
-  oled.setCursor(102, 7);
-  oled.print((int)lfo2Amplitude);
+  //drawWaveIcon(102, 56, 24, 8, lfo2Waveform);
+  drawWaveIcon(102, 56, 24, 7, lfo2Waveform, modSelect == 1);
+  //oled.setCursor(102, 7);
+  //oled.printnt)lfo2Amplitude);
 
   oled.update();
 }
@@ -2332,6 +2428,7 @@ void setup() {
   actualFireButton = 1;
   actualFireButtonBak = 1;
   lastFireButtonPressed = 1;      // die LED von Fire 1 zeigt den aktuellen Speicherplatz
+  activeSlot = 1; // Das Display zeigt den aktiven Speicherplatz an, der mit Fire 1 gespeichert wurde
 
   resetLFOParams();               // LFOs und Hüllkurve starten wie nach einem Fire-Druck bei Phase 0
   // requestDisplayUpdateNow();      // erstes Bild sofort zeichnen
