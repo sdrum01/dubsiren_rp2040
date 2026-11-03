@@ -2406,9 +2406,20 @@ void setup() {
   fire4.interval(10);
 
   // Ausgangsstellung der Potis merken, damit sie beim Start nicht als "bewegt" gelten
+  // Potis einschwingen lassen, Referenzen aus den gefilterten Werten holen
+  for (int i = 0; i < 10; i++) { updatePotis(); delay(2); }
+  valPotiPitchBak   = valPotiPitch;
+  valPotiFreqLFOBak = valPotiFreqLFO;
+  valPotiAmpLFOBak  = valPotiAmpLFO;
+  oledPotiPitchBak   = valPotiPitch;
+  oledPotiFreqLFOBak = valPotiFreqLFO;
+  oledPotiAmpLFOBak  = valPotiAmpLFO;
+  /*
   valPotiPitchBak   = analogRead(freqPotPin);
   valPotiFreqLFOBak = analogRead(lfoFreqPotPin);
   valPotiAmpLFOBak  = analogRead(lfoAmpPotPin);
+  */
+  
   
   // LittleFS initialisieren und mounten
   if (!LittleFS.begin()) {
@@ -2426,7 +2437,7 @@ void setup() {
   bank = 1;
   bankBak = 1;
   actualFireButton = 1;
-  actualFireButtonBak = 1;
+  actualFireButtonBak = 0;
   lastFireButtonPressed = 1;      // die LED von Fire 1 zeigt den aktuellen Speicherplatz
   activeSlot = 1; // Das Display zeigt den aktiven Speicherplatz an, der mit Fire 1 gespeichert wurde
 
@@ -2435,6 +2446,13 @@ void setup() {
   coreReady = true;
 }
 
+// Setup Core1
+void setup1() {
+  setup_display();                 // Wire, OLED-Init und Splash laufen jetzt auf Core 1
+  while (!coreReady) delay(1);     // warten, bis setup() auf Core 0 fertig ist
+}
+
+// Loop Core0 //
 void loop() {
   
   updateKeys();
@@ -2578,11 +2596,7 @@ void loop() {
   //  }
 }
 
-////////// CORE 1 /////////////
-void setup1() {
-  setup_display();                 // Wire, OLED-Init und Splash laufen jetzt auf Core 1
-  while (!coreReady) delay(1);     // warten, bis setup() auf Core 0 fertig ist
-}
+//////////Loop CORE 1 /////////////
 
 void loop1() {
   updateDisplay();
