@@ -687,10 +687,11 @@ float setFrequency(float freq){
 }
 
 void muteSound(bool mute){
-  digitalWrite(wave_mutePin, mute);
+  digitalWrite(wave_mutePin, !mute);
 }
 
 // Hilfsfunktion für Rampe beim Tonstart, um Knacksen zu vermeiden
+// nur testweise
 float getSoftStartDuty() {
   if (!toneActive) {              // erster Aufruf nach einer Pause = Tonbeginn
     toneActive = true;
@@ -743,7 +744,10 @@ void playSound(float freqVal){
     }else{
       // Ton Start
       pwm_set_enabled(slice_num_wave, true);
-      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (getSoftStartDuty() / 100)); // mit Soft-start
+      // mit soft-start
+      //pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (getSoftStartDuty() / 100)); // mit Soft-start
+      // ohne soft-start
+      pwm_set_chan_level(slice_num_wave, pwm_gpio_to_channel(wave_outputPin), pwm_val * (duty / 100.0f));
       muteSound(false);
     }
   }else{
